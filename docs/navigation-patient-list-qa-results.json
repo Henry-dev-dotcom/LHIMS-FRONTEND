@@ -1,0 +1,20 @@
+{
+  "package": "diagnosis-center-navigation-patient-list-fixes",
+  "changes": [
+    "Desktop navigation pane fixed to viewport",
+    "Main content offset to prevent overlap with fixed sidebar",
+    "Doctor New Order matching patients converted from cards to compact scrollable list"
+  ],
+  "cssChanged": false,
+  "qa": {
+    "npmRunQa": "passed",
+    "routeRegistry": "passed: 36 navigation items",
+    "auth": "passed: 6 PRD roles and 6 landing pages",
+    "uiPolish": "passed",
+    "prdCoverage": "passed",
+    "workflowIntegrity": "passed",
+    "npmAudit": "0 vulnerabilities",
+    "productionBuild": "passed",
+    "standaloneBuild": "passed"
+  }
+}

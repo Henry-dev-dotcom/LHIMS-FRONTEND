@@ -1,0 +1,20 @@
+{
+  "change": "Patient Trends SUNKWA HTML logic port",
+  "cssChanged": false,
+  "checks": {
+    "lintRoutes": "passed",
+    "lintAuth": "passed",
+    "lintUi": "passed",
+    "lintPrd": "passed",
+    "lintWorkflow": "passed",
+    "npmAudit": "0 vulnerabilities",
+    "productionBuild": "passed",
+    "standaloneBuild": "passed"
+  },
+  "notes": [
+    "Patient search no longer auto-selects the first match.",
+    "Trend navigation now follows patient -> test -> parameter -> chart.",
+    "Trend test list is based on finalized/completed orders with finalized result data.",
+    "Parameter list is based on catalog reference-range parameters, like the original HTML logic."
+  ]
+}

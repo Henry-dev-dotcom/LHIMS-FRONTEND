@@ -1,0 +1,34 @@
+{
+  "name": "diagnosis-center-frontend-live-api-ready",
+  "version": "12.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "lint:routes": "node ./scripts/check-routes.mjs",
+    "lint:auth": "node ./scripts/check-auth.mjs",
+    "lint:ui": "node ./scripts/check-ui-polish.mjs",
+    "lint:prd": "node ./scripts/check-prd-coverage.mjs",
+    "lint:workflow": "node ./scripts/check-workflow-integrity.mjs",
+    "build:standalone": "node ./scripts/make-standalone.mjs",
+    "qa": "npm run lint:routes && npm run lint:auth && npm run lint:ui && npm run lint:prd && npm run lint:workflow && npm run lint:api && npm run lint:live-api && npm run lint:production && npm audit --audit-level=moderate && npm run build && npm run build:standalone",
+    "lint:api": "node ./scripts/check-api-readiness.mjs",
+    "lint:live-api": "node ./scripts/check-live-api-integration.mjs",
+    "lint:production": "node ./scripts/check-production-readiness.mjs"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "clsx": "latest",
+    "lucide-react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "vite": "latest"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^3.4.17"
+  }
+}

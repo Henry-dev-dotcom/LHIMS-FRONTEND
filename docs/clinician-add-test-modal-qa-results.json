@@ -1,0 +1,13 @@
+{
+  "change": "Clinician Add Test / Scan modal usability fix",
+  "cssChanged": false,
+  "summary": [
+    "Added Done — Save Selected Tests button",
+    "Removed duplicate All types dropdown",
+    "Kept Laboratory vs Scan / Radiology department filter",
+    "Selections persist after closing the modal",
+    "Full QA passed"
+  ],
+  "qaCommand": "npm run qa",
+  "qaStatus": "PASSED"
+}

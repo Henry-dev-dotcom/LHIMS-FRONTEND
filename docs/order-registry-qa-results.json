@@ -1,0 +1,25 @@
+{
+  "fix": "Order Registry usability restructuring",
+  "cssChanged": false,
+  "cssHashUnchanged": true,
+  "sections": [
+    "Registry Overview",
+    "New / Submitted",
+    "Active Processing",
+    "Pending Review",
+    "Released Results",
+    "Cancelled"
+  ],
+  "qa": {
+    "command": "npm run qa",
+    "status": "passed",
+    "routeCoverage": "36 navigation items covered",
+    "auth": "6 PRD roles and 6 landing pages configured",
+    "ui": "9 visual-system markers found",
+    "prdCoverage": "14 section coverage groups verified",
+    "workflow": "35 workflow and route markers verified",
+    "npmAudit": "0 vulnerabilities",
+    "build": "passed",
+    "standalone": "generated"
+  }
+}

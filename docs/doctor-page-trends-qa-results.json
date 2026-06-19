@@ -1,0 +1,21 @@
+{
+  "changePack": "doctor-page-trends-fixes",
+  "cssStylingChanged": false,
+  "cssFileChecked": "src/styles/index.css",
+  "newDoctorRoutes": [
+    "doctor-active-orders",
+    "doctor-completed-orders",
+    "doctor-patient-trends"
+  ],
+  "qa": {
+    "npmRunQa": "passed",
+    "routeRegistry": "passed - 36 navigation items",
+    "auth": "passed - 6 PRD roles and 6 landing pages",
+    "uiPolish": "passed",
+    "prdCoverage": "passed",
+    "workflowIntegrity": "passed",
+    "npmAudit": "0 vulnerabilities",
+    "productionBuild": "passed",
+    "standaloneOfflineBuild": "passed"
+  }
+}

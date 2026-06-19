@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "checks": [
+    "lint:routes",
+    "lint:auth",
+    "lint:ui",
+    "lint:prd",
+    "lint:workflow",
+    "npm audit --audit-level=moderate",
+    "npm run build",
+    "npm run build:standalone"
+  ],
+  "navigationItems": 33,
+  "cssChanged": false,
+  "notes": [
+    "Lab result entry now previews flags against editable ranges.",
+    "Admin can edit lab parameter ranges with structured fields.",
+    "Lab sample acceptance no longer auto-navigates to Accepted Samples.",
+    "Scan workflow now includes Scan Queue, Accept Scan, Accepted Scans and Equipment Booking."
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "package": "diagnosis-center-finance-dicom-final.zip",
+  "dicom": {
+    "frontendUploadCompatible": true,
+    "acceptsExtensions": [".dcm", ".dicom", "image/*", ".pdf"],
+    "fullDiagnosticViewer": false,
+    "productionNeeds": ["PACS", "DICOMweb", "secure storage", "viewer library", "metadata indexing"]
+  },
+  "finance": {
+    "invoices": true,
+    "activeShiftRequiredForPayments": true,
+    "floatTracker": true,
+    "expenses": true,
+    "accountLedger": true,
+    "billingAnalytics": true,
+    "paymentMethods": ["Cash", "Mobile Money", "Card", "Transfer", "Insurance"]
+  },
+  "qa": {
+    "routes": "passed",
+    "auth": "passed",
+    "ui": "passed",
+    "prd": "passed",
+    "workflow": "passed",
+    "npmAudit": "0 vulnerabilities",
+    "build": "passed",
+    "standalone": "passed"
+  }
+}
