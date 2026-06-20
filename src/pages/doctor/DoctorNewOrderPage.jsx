@@ -67,7 +67,7 @@ function CatalogSearchModal({ open, onClose, catalog, selectedItems, toggleItem,
         </div>
 
         <div className="rounded-2xl bg-slate-50 p-3">
-          <p className="text-xs font-black uppercase tracking-wider text-slate-400">Quick common requests</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Quick common requests</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {COMMON_TEST_IDS.map((id) => catalog.find((item) => item.id === id)).filter(Boolean).map((item) => (
               <button
@@ -96,7 +96,7 @@ function CatalogSearchModal({ open, onClose, catalog, selectedItems, toggleItem,
               </button>
             );
           })}
-          {matches.length === 0 && <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">No tests or scans match your search.</p>}
+          {matches.length === 0 && <p className="rounded-2xl bg-slate-50 p-3 text-sm font-semibold text-slate-500">No tests or scans match your search.</p>}
         </div>
       </div>
     </Modal>
@@ -121,35 +121,35 @@ function ReviewOrderModal({ open, onClose, onConfirm, patient, newPatient, patie
           </div>
         )}
         <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-2xl bg-slate-50 p-4">
-            <p className="text-xs font-black uppercase tracking-wider text-slate-400">Patient</p>
+          <div className="rounded-2xl bg-slate-50 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Patient</p>
             <p className="mt-1 font-black text-slate-950">{patientName || '—'}</p>
             <p className="text-sm text-slate-500">{patientMode === 'existing' ? patient?.id : 'New patient record will be created'}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 p-4">
-            <p className="text-xs font-black uppercase tracking-wider text-slate-400">Doctor / Hospital</p>
+          <div className="rounded-2xl bg-slate-50 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Doctor / Hospital</p>
             <p className="mt-1 font-black text-slate-950">{doctor?.name}</p>
             <p className="text-sm text-slate-500">{hospital?.name}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 p-4">
-            <p className="text-xs font-black uppercase tracking-wider text-slate-400">Urgency</p>
+          <div className="rounded-2xl bg-slate-50 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Urgency</p>
             <div className="mt-1"><StatusBadge status={urgency} /></div>
             <p className="mt-2 text-sm text-slate-500">Expected: {expected ? formatDateTime(expected) : '—'}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 p-4">
-            <p className="text-xs font-black uppercase tracking-wider text-slate-400">Selected items</p>
+          <div className="rounded-2xl bg-slate-50 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Selected items</p>
             <p className="mt-1 font-black text-slate-950">{items.length} test/scan item(s)</p>
             <p className="text-sm text-slate-500">Prices hidden from clinicians.</p>
           </div>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-400">Tests / Scans</p>
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Tests / Scans</p>
           <div className="flex flex-wrap gap-2">
             {items.map((item) => <span key={item.id} className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-700">{item.id} · {item.name}</span>)}
           </div>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-400">Clinical notes</p>
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Clinical notes</p>
           <p className="text-sm leading-6 text-slate-600">{clinicalNotes || 'No clinical notes entered.'}</p>
         </div>
       </div>
@@ -332,7 +332,7 @@ export function DoctorNewOrderPage() {
           <Card title="3. Clinical Context" subtitle="Add urgency and notes for the receiving departments.">
             <div className="grid gap-4 md:grid-cols-2">
               <FormField label="Urgency"><select className={inputClass} value={urgency} onChange={(event) => setUrgency(event.target.value)}><option>Routine</option><option>Urgent</option></select></FormField>
-              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Expected completion</p><p className="mt-1 font-black text-slate-950">{expected ? formatDateTime(expected) : 'Select tests/scans first'}</p></div>
+              <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Expected completion</p><p className="mt-1 font-black text-slate-950">{expected ? formatDateTime(expected) : 'Select tests/scans first'}</p></div>
               <FormField label="Clinical Notes" className="md:col-span-2"><textarea className={inputClass} rows={4} value={clinicalNotes} onChange={(event) => setClinicalNotes(event.target.value)} placeholder="Clinical indication, patient history, and special instructions..." /></FormField>
             </div>
           </Card>
@@ -341,15 +341,15 @@ export function DoctorNewOrderPage() {
         <aside className="space-y-5">
           <Card title="Order Summary" subtitle="Review before submitting." compact>
             <div className="space-y-4 text-sm">
-              <div><p className="text-xs font-black uppercase tracking-wider text-slate-400">Patient</p><p className="font-black text-slate-950">{patientMode === 'existing' ? selectedPatient?.fullName || 'None selected' : newPatient.fullName || 'New patient'}</p></div>
-              <div><p className="text-xs font-black uppercase tracking-wider text-slate-400">Doctor</p><p className="font-black text-slate-950">{doctor?.name}</p><p className="text-slate-500">{hospital?.name}</p></div>
-              <div><p className="text-xs font-black uppercase tracking-wider text-slate-400">Items</p><p className="font-black text-slate-950">{chosenCatalogItems.length}</p><p className="text-slate-500">{chosenCatalogItems.map((item) => item.name).join(', ') || 'No items selected'}</p></div>
-              <div><p className="text-xs font-black uppercase tracking-wider text-slate-400">Urgency</p><StatusBadge status={urgency} /></div>
+              <div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Patient</p><p className="font-black text-slate-950">{patientMode === 'existing' ? selectedPatient?.fullName || 'None selected' : newPatient.fullName || 'New patient'}</p></div>
+              <div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Doctor</p><p className="font-black text-slate-950">{doctor?.name}</p><p className="text-slate-500">{hospital?.name}</p></div>
+              <div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Items</p><p className="font-black text-slate-950">{chosenCatalogItems.length}</p><p className="text-slate-500">{chosenCatalogItems.map((item) => item.name).join(', ') || 'No items selected'}</p></div>
+              <div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Urgency</p><StatusBadge status={urgency} /></div>
               <Button type="submit" className="w-full"><ClipboardList className="h-4 w-4" /> Review Order</Button>
             </div>
           </Card>
 
-          <Card title="Backend-ready flow" subtitle="This frontend flow maps directly to future backend APIs." compact>
+          <Card title="Order workflow" subtitle="Submission routes to reception and the required departments." compact>
             <ol className="space-y-2 text-sm font-semibold text-slate-600">
               <li>1. Select patient</li><li>2. Add investigations</li><li>3. Confirm order</li><li>4. Reception routes to departments</li><li>5. Results return to doctor</li>
             </ol>

@@ -43,7 +43,7 @@ export function AccountLedgerPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Phase 5 — Finance" title="Account Ledger" description="Complete cash-flow breakdown: billing credits, expense debits, float adjustments, running balance and cashier traceability." />
+      <PageHeader eyebrow="Finance" title="Account Ledger" description="Complete cash-flow breakdown: billing credits, expense debits, float adjustments, running balance and cashier traceability." />
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard label="Total Credit" value={money(totalCredit)} icon={ArrowUpCircle} tone="green" />
         <MetricCard label="Total Debit" value={money(totalDebit)} icon={ArrowDownCircle} tone="red" />

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useReducer } from
 import { seedData } from '../data/seedData';
 import { ROLES } from '../data/roles';
 import { createOrder, transitionOrder, updateBillingStatus, idWithPrefix, addAudit, nowIso, createResultDeliveryBundle, retryDeliveryNotification, markReportDownloaded } from '../workflow/workflowEngine';
-import { buildParameterEntries } from '../utils/labFlags';
+import { buildParameterEntries, computeResultFlag } from '../utils/labFlags';
 
 const STORAGE_KEY = 'diagnosis-center-change-pack-v1-state';
 
@@ -48,6 +48,69 @@ function getInitialState() {
 
 function toast(type, message) {
   return { type, message };
+}
+
+function stableSerialize(value) {
+  if (value === null || value === undefined) return '';
+  if (typeof value !== 'object') return String(value);
+  if (Array.isArray(value)) return `[${value.map(stableSerialize).join(',')}]`;
+  return `{${Object.keys(value).sort().map((key) => `${key}:${stableSerialize(value[key])}`).join('|')}}`;
+}
+
+function simpleHash(value) {
+  const input = stableSerialize(value);
+  let hash = 2166136261;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `SHA256-DEMO-${(hash >>> 0).toString(16).padStart(8, '0').toUpperCase()}-${String(input.length).padStart(6, '0')}`;
+}
+
+function createResultSnapshot(result = {}) {
+  return {
+    status: result.status || '',
+    parameters: (result.parameters || []).map((parameter) => ({
+      testId: parameter.testId || '',
+      testName: parameter.testName || '',
+      name: parameter.name || '',
+      value: parameter.value || '',
+      unit: parameter.unit || '',
+      referenceRange: parameter.referenceRange || '',
+      flag: parameter.flag || ''
+    })),
+    reportText: result.reportText || '',
+    internalNotes: result.internalNotes || ''
+  };
+}
+
+function createReportHashPayload(result = {}) {
+  return {
+    id: result.id,
+    orderId: result.orderId,
+    department: result.department,
+    status: result.status,
+    parameters: result.parameters,
+    reportText: result.reportText,
+    approvedBy: result.approvedBy,
+    approvedAt: result.approvedAt,
+    signedBy: result.signedBy,
+    signedAt: result.signedAt,
+    previousHash: result.previousHash || ''
+  };
+}
+
+function getNextVersionNumber(result = {}) {
+  const versions = result.versionHistory || result.amendments || [];
+  const maxVersion = versions
+    .map((entry) => Number(entry.version || entry.versionAfter || 1))
+    .filter(Number.isFinite)
+    .reduce((max, version) => Math.max(max, version), 1);
+  return maxVersion + 1;
+}
+
+function createSecureId(result = {}) {
+  return result.secureId || `SEC-${String(result.orderId || result.id || 'LAB').replace(/[^A-Z0-9]/gi, '').toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
 }
 
 
@@ -161,7 +224,16 @@ function upsertDepartmentResult(data, payload, auth) {
     approvedBy: payload.status === 'Final / Released' ? (auth?.userName || 'Approver') : (existing?.approvedBy || ''),
     approvedAt: payload.status === 'Final / Released' ? timestamp : (existing?.approvedAt || ''),
     createdAt: existing?.createdAt || timestamp,
-    updatedAt: timestamp
+    updatedAt: timestamp,
+    versionHistory: existing?.versionHistory || [],
+    reportHash: existing?.reportHash || '',
+    previousHash: existing?.previousHash || '',
+    secureId: existing?.secureId || '',
+    verificationUrl: existing?.verificationUrl || '',
+    digitalSignature: existing?.digitalSignature || '',
+    signedBy: existing?.signedBy || '',
+    signedAt: existing?.signedAt || '',
+    signatureStatus: existing?.signatureStatus || ''
   };
   return {
     ...data,
@@ -354,7 +426,7 @@ function reducer(state, action) {
       const username = String(action.username || '').trim().toLowerCase();
       const password = String(action.password || '').trim();
       const role = ROLES.find((item) => item.demoUsername === username && item.demoPassword === password);
-      if (!role) return { ...state, ui: { ...state.ui, toast: toast('error', 'Invalid demo username or password.') } };
+      if (!role) return { ...state, ui: { ...state.ui, toast: toast('error', 'Invalid username or password.') } };
       const auth = buildAuthFromRole(role);
       return {
         ...state,
@@ -378,7 +450,7 @@ function reducer(state, action) {
     case 'CLEAR_TOAST':
       return { ...state, ui: { ...state.ui, toast: null } };
     case 'RESET_DEMO_DATA':
-      return { ...initialState, ui: { sidebarOpen: false, toast: toast('success', 'Demo data reset. Please choose a role to continue.') } };
+      return { ...initialState, ui: { sidebarOpen: false, toast: toast('success', 'Workspace data reset. Please choose a role to continue.') } };
     case 'TRANSITION_ORDER': {
       const result = transitionOrder(state.data, { ...action.payload, ...actorFromAuth(state.auth) });
       if (result.error) return { ...state, ui: { ...state.ui, toast: toast('error', result.error) } };
@@ -391,7 +463,7 @@ function reducer(state, action) {
     }
     case 'CREATE_DEMO_ORDER': {
       const nextData = createOrder(state.data, action.payload, state.auth?.userName, state.auth?.role);
-      return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', 'Demo order created and sent to reception') } };
+      return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', 'Order created and sent to reception') } };
     }
     case 'CREATE_PATIENT': {
       const result = createPatientRecord(state.data, action.payload, state.auth);
@@ -596,7 +668,7 @@ function reducer(state, action) {
         internalNotes,
         files: files || [],
         abnormal: /mass|fracture|lesion|abnormal|opacity|infiltration|critical/i.test(`${findings} ${impression}`),
-        dicomMetadata: dicomFiles.map((file) => ({ name: file.name, size: file.size, contentType: file.type || 'application/dicom', storageStatus: 'Frontend metadata only' }))
+        dicomMetadata: dicomFiles.map((file) => ({ name: file.name, size: file.size, contentType: file.type || 'application/dicom', storageStatus: 'Metadata captured' }))
       }, state.auth);
       const nextStatus = status === 'Pending Review' ? 'Pending Review' : 'In Progress';
       nextData = {
@@ -1231,7 +1303,7 @@ function reducer(state, action) {
           action: 'Admin configuration export reviewed',
           module: 'Admin / Settings',
           entityId: 'CONFIG-EXPORT',
-          details: 'Catalog, ranges, departments, equipment, hospitals, doctors and user mappings marked as reviewed for backend readiness.'
+          details: 'Catalog, ranges, departments, equipment, hospitals, doctors and user mappings marked as reviewed.'
         })
       };
       return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', 'Configuration export review recorded') } };
@@ -1336,7 +1408,7 @@ function reducer(state, action) {
         role: state.auth?.role || 'admin',
         target: action.scope || 'Security dataset',
         severity: 'Low',
-        details: 'Security and reliability dataset exported from frontend control surface.',
+        details: 'Security and reliability dataset exported.',
         acknowledged: true,
         createdAt: timestamp
       };
@@ -1512,6 +1584,135 @@ function reducer(state, action) {
       };
       return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', isDraft ? `${testItem.name} draft saved` : `${testItem.name} sent for review`) } };
     }
+
+    case 'UPDATE_LAB_RESULT_ARCHIVE': {
+      const result = (state.data.results || []).find((item) => item.id === action.resultId && item.department === 'Laboratory');
+      if (!result) return { ...state, ui: { ...state.ui, toast: toast('error', 'Laboratory result not found.') } };
+      const timestamp = nowIso();
+      const previousSnapshot = createResultSnapshot(result);
+      const nextParameters = (action.payload?.parameters || result.parameters || []).map((parameter) => ({
+        ...parameter,
+        flag: parameter.value === '' ? 'Pending' : computeResultFlag(parameter.value, parameter.low, parameter.high, parameter.criticalLow, parameter.criticalHigh)
+      }));
+      const unsignedResult = {
+        ...result,
+        parameters: nextParameters,
+        reportText: action.payload?.reportText ?? result.reportText,
+        internalNotes: action.payload?.internalNotes ?? result.internalNotes,
+        status: action.payload?.status || result.status,
+        abnormal: nextParameters.some((parameter) => ['High', 'Low', 'Critical'].includes(parameter.flag)),
+        updatedAt: timestamp,
+        approvedAt: (action.payload?.status || result.status) === 'Final / Released' ? (result.approvedAt || timestamp) : result.approvedAt,
+        approvedBy: (action.payload?.status || result.status) === 'Final / Released' ? (result.approvedBy || state.auth?.userName || 'Lab Staff') : result.approvedBy
+      };
+      const nextSnapshot = createResultSnapshot(unsignedResult);
+      const nextVersion = getNextVersionNumber(result);
+      const amendment = {
+        id: `AMEND-${String(nextVersion).padStart(3, '0')}-${Date.now().toString(36).toUpperCase()}`,
+        version: nextVersion,
+        versionBefore: Math.max(1, nextVersion - 1),
+        versionAfter: nextVersion,
+        changedBy: state.auth?.userName || 'Lab Staff',
+        changedAt: timestamp,
+        reason: String(action.payload?.reason || '').trim() || 'Laboratory result corrected.',
+        previousSnapshot,
+        updatedSnapshot: nextSnapshot,
+        previousValues: previousSnapshot.parameters,
+        updatedValues: nextSnapshot.parameters,
+        previousHash: result.reportHash || '',
+        updatedHash: simpleHash(createReportHashPayload(unsignedResult))
+      };
+      const updatedResult = {
+        ...unsignedResult,
+        amendments: [amendment, ...(result.amendments || [])],
+        versionHistory: [...(result.versionHistory || []), amendment],
+        previousHash: result.reportHash || result.previousHash || '',
+        reportHash: simpleHash(createReportHashPayload(unsignedResult)),
+        signatureStatus: result.digitalSignature ? 'Needs re-sign after correction' : (result.signatureStatus || 'Unsigned'),
+        digitalSignature: result.digitalSignature ? '' : result.digitalSignature,
+        signedBy: result.digitalSignature ? '' : result.signedBy,
+        signedAt: result.digitalSignature ? '' : result.signedAt
+      };
+      const nextData = {
+        ...state.data,
+        results: state.data.results.map((item) => item.id === result.id ? updatedResult : item),
+        auditLogs: addAudit(state.data.auditLogs || [], {
+          actor: state.auth?.userName || 'Lab Staff',
+          role: state.auth?.role || 'lab',
+          action: 'Laboratory result corrected',
+          module: 'Laboratory',
+          entityId: result.orderId,
+          details: `${amendment.reason} · v${amendment.versionBefore} → v${amendment.versionAfter}`
+        })
+      };
+      return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', 'Laboratory result updated, versioned and stored') } };
+    }
+
+    case 'SIGN_LAB_RESULT_WITH_SIGNATURE': {
+      const result = (state.data.results || []).find((item) => item.id === action.resultId && item.department === 'Laboratory');
+      if (!result) return { ...state, ui: { ...state.ui, toast: toast('error', 'Laboratory result not found.') } };
+      const timestamp = nowIso();
+      const secureId = createSecureId(result);
+      const signedResultBase = {
+        ...result,
+        status: 'Final / Released',
+        approvedBy: action.payload?.signedBy || state.auth?.userName || 'Lab Supervisor',
+        approvedAt: timestamp,
+        signedBy: action.payload?.signedBy || state.auth?.userName || 'Lab Supervisor',
+        signedAt: timestamp,
+        digitalSignature: action.payload?.signatureDataUrl || result.digitalSignature || '',
+        signatureNote: action.payload?.note || '',
+        signatureStatus: 'Signed',
+        secureId,
+        verificationUrl: `#/verify-report/${secureId}`,
+        patientPortalUrl: `#/patient/results/${secureId}`,
+        previousHash: result.reportHash || result.previousHash || '',
+        updatedAt: timestamp
+      };
+      const signedResult = {
+        ...signedResultBase,
+        reportHash: simpleHash(createReportHashPayload(signedResultBase))
+      };
+      const doctorNotification = createRoleNotification(state.data, {
+        title: 'Lab result finalised',
+        body: `${signedResult.orderId} has been signed off and is ready for doctor review.`,
+        audience: 'doctor',
+        entityId: signedResult.orderId,
+        deliveryType: 'Lab Result Finalised'
+      });
+      const receptionNotification = createRoleNotification({ ...state.data, notifications: [doctorNotification, ...(state.data.notifications || [])] }, {
+        title: 'Lab report ready for release',
+        body: `${signedResult.orderId} is ready for patient-safe delivery and printing.`,
+        audience: 'receptionist',
+        entityId: signedResult.orderId,
+        deliveryType: 'Lab Report Ready'
+      });
+      const patientNotification = createRoleNotification({ ...state.data, notifications: [receptionNotification, doctorNotification, ...(state.data.notifications || [])] }, {
+        title: 'Result ready',
+        body: `Your result is ready. Use the secure patient portal link or contact reception for access. No clinical values are included in this notice.`,
+        audience: 'patient',
+        channel: 'SMS',
+        status: 'Queued',
+        entityId: signedResult.orderId,
+        deliveryType: 'Privacy-safe Patient Result Notice'
+      });
+      let nextData = {
+        ...state.data,
+        results: state.data.results.map((item) => item.id === result.id ? signedResult : item),
+        notifications: [patientNotification, receptionNotification, doctorNotification, ...(state.data.notifications || [])],
+        auditLogs: addAudit(state.data.auditLogs || [], {
+          actor: signedResult.signedBy,
+          role: state.auth?.role || 'lab',
+          action: 'Laboratory result digitally signed',
+          module: 'Laboratory',
+          entityId: result.orderId,
+          details: `${result.id} signed. Hash ${signedResult.reportHash}. Secure ID ${secureId}.`
+        })
+      };
+      nextData = maybeReleaseOrderAfterResultApproval(nextData, result.orderId, state.auth);
+      return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', 'Lab result signed, hashed and released') } };
+    }
+
     case 'PRINT_SAMPLE_LABEL': {
       const sample = (state.data.sampleLogs || []).find((item) => item.id === action.sampleId);
       if (!sample) return { ...state, ui: { ...state.ui, toast: toast('error', 'Sample not found.') } };
@@ -1521,7 +1722,7 @@ function reducer(state, action) {
         action: 'Sample label printed',
         module: 'Laboratory',
         entityId: sample.id,
-        details: `Label placeholder printed for ${sample.orderId}`
+        details: `Label printed for ${sample.orderId}`
       }) }, ui: { ...state.ui, toast: toast('success', `Label print recorded for ${sample.id}`) } };
     }
     case 'REQUEST_SAMPLE_RECOLLECTION': {

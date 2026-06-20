@@ -1,23 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect } from 'react';
 import clsx from 'clsx';
-import { Activity, ChevronRight, LogOut, Menu, Search, X } from 'lucide-react';
+import { Activity, ChevronRight, Menu, X } from 'lucide-react';
 import { useAppStore } from '../store/AppStore';
 import { getNavForRole, groupNavItems } from '../utils/permissions';
 import { ROLES } from '../data/roles';
-import { Button } from '../components/ui/Button';
 
 export function Sidebar() {
   const { state, dispatch } = useAppStore();
-  const [query, setQuery] = useState('');
   const role = state.auth?.role || 'admin';
   const roleInfo = ROLES.find((item) => item.id === role);
   const allItems = getNavForRole(role);
-  const filteredItems = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return allItems;
-    return allItems.filter((item) => `${item.label} ${item.section}`.toLowerCase().includes(q));
-  }, [allItems, query]);
-  const groups = groupNavItems(filteredItems);
+  const groups = groupNavItems(allItems);
 
   useEffect(() => {
     if (!state.ui.sidebarOpen) return undefined;
@@ -54,19 +47,9 @@ export function Sidebar() {
         </div>
       </div>
 
-      <div className="border-b border-white/10 px-5 py-4">
+      <div className="border-b border-white/10 px-5 py-3">
         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-300">Active workspace</p>
         <p className="mt-1 font-black text-white">{roleInfo?.label}</p>
-        <p className="mt-2 text-xs leading-5 text-slate-200">{roleInfo?.accessSummary}</p>
-        <div className="mt-4 flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-slate-100">
-          <Search className="h-4 w-4 text-slate-300" />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search menu..."
-            className="min-w-0 flex-1 bg-transparent text-xs font-semibold outline-none placeholder:text-slate-300"
-          />
-        </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
@@ -102,23 +85,12 @@ export function Sidebar() {
           </div>
         ))}
       </nav>
-
-      <div className="border-t border-white/10 p-4">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-          <p className="text-xs font-semibold text-slate-200">Signed in as</p>
-          <p className="mt-1 font-black text-white">{state.auth?.userName}</p>
-          <p className="text-xs text-slate-200">{roleInfo?.demoUsername}</p>
-          <Button variant="danger" className="mt-4 w-full" onClick={() => dispatch({ type: 'LOGOUT' })}>
-            <LogOut className="h-4 w-4" /> Sign Out
-          </Button>
-        </div>
-      </div>
     </>
   );
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-30 hidden h-screen w-[19rem] flex-col bg-slate-950 print:hidden lg:flex">{content}</aside>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden h-screen w-[19rem] flex-col bg-slate-950 print:hidden lg:flex">{content}</aside>
       <button
         className="fixed left-4 top-4 z-40 grid h-11 w-11 place-items-center rounded-2xl bg-slate-950 text-white shadow-lg print:hidden lg:hidden"
         onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}

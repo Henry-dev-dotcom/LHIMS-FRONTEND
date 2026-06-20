@@ -39,11 +39,11 @@ export function SampleLogPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Section 7 — Laboratory Unit"
+        eyebrow="Laboratory Unit"
         title="Sample collection log"
         description="Track sample ID, collection time, collector, sample type, acceptance status, rejection reasons and recollection requirements."
       />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Samples Logged" value={(state.data.sampleLogs || []).length} icon={Database} tone="blue" />
         <MetricCard label="Accepted" value={(state.data.sampleLogs || []).filter((sample) => sample.status === 'Accepted').length} icon={CheckCircle2} tone="green" />
         <MetricCard label="Rejected" value={(state.data.sampleLogs || []).filter((sample) => sample.status === 'Rejected').length} icon={AlertTriangle} tone="red" />

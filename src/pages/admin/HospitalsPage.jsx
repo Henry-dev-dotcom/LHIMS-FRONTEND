@@ -49,7 +49,7 @@ export function HospitalsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Section 10 — Admin"
+        eyebrow="Administration"
         title="Hospital / partner management"
         description="Register partner hospitals, maintain billing contacts, manage account status and affiliated doctors."
         actions={<><Button variant="secondary" onClick={() => openDoctor()}><Stethoscope className="h-4 w-4" /> Add doctor</Button><Button onClick={() => openHospital()}><Plus className="h-4 w-4" /> Add hospital</Button></>}

@@ -67,7 +67,7 @@ function ParameterRangeEditor({ parameters, onChange, disabled }) {
   const removeRow = (index) => onChange(rows.filter((_, rowIndex) => rowIndex !== index));
 
   if (disabled) {
-    return <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Reference ranges are only required for laboratory tests. Scan items do not need parameter ranges.</p>;
+    return <p className="rounded-2xl bg-slate-50 p-3 text-sm font-semibold text-slate-500">Reference ranges are only required for laboratory tests. Scan items do not need parameter ranges.</p>;
   }
 
   return (
@@ -122,12 +122,12 @@ function ParameterRangeEditor({ parameters, onChange, disabled }) {
 
 function ConfigReadinessCard({ label, ok, detail }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-black text-slate-900">{label}</p>
+    <div className="rounded-[1.25rem] border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-black text-slate-900">{label}</p>
         <StatusBadge status={ok ? 'Ready' : 'Needs Setup'} />
       </div>
-      <p className="mt-2 text-xs font-semibold leading-5 text-slate-500">{detail}</p>
+      <p className="mt-1.5 text-[11px] font-semibold leading-5 text-slate-500">{detail}</p>
     </div>
   );
 }
@@ -204,26 +204,26 @@ export function AdminSettingsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Phase 6 — Admin Settings"
+        eyebrow="Administration"
         title="Admin settings and catalog control"
-        description="Configure the operational master data that the backend will later persist: test catalog, reference ranges, departments, equipment, users, doctors and partner facilities."
+        description="Configure operational master data: test catalog, reference ranges, departments, equipment, users, doctors and partner facilities."
         actions={<Button onClick={exportConfig}><Download className="h-4 w-4" /> Export configuration</Button>}
       />
-      <div className="mb-6 grid gap-4 md:grid-cols-4">
-        <MetricCard label="Catalog Items" value={catalog.length} icon={Database} tone="blue" />
-        <MetricCard label="Lab Parameters" value={parameterCount} icon={SlidersHorizontal} tone="green" />
-        <MetricCard label="Scan Items" value={scanCatalog.length} icon={ScanLine} tone="purple" />
-        <MetricCard label="Equipment Alerts" value={unavailableEquipment.length} icon={Settings} tone="yellow" />
+      <div className="mb-5 grid gap-3 md:grid-cols-4">
+        <MetricCard compact label="Catalog Items" value={catalog.length} icon={Database} tone="blue" />
+        <MetricCard compact label="Lab Parameters" value={parameterCount} icon={SlidersHorizontal} tone="green" />
+        <MetricCard compact label="Scan Items" value={scanCatalog.length} icon={ScanLine} tone="purple" />
+        <MetricCard compact label="Equipment Alerts" value={unavailableEquipment.length} icon={Settings} tone="yellow" />
       </div>
 
-      <Card className="mb-6">
+      <Card compact className="mb-5">
         <div className="flex flex-wrap gap-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`rounded-2xl px-4 py-2 text-sm font-black transition ${activeTab === tab.id ? 'bg-clinical-600 text-white shadow-lift' : 'bg-slate-100 text-slate-600 hover:bg-clinical-50 hover:text-clinical-800'}`}
+              className={`rounded-xl px-3 py-1.5 text-xs font-black transition ${activeTab === tab.id ? 'bg-clinical-600 text-white shadow-lift' : 'bg-slate-100 text-slate-600 hover:bg-clinical-50 hover:text-clinical-800'}`}
             >
               {tab.label}
             </button>
@@ -232,7 +232,7 @@ export function AdminSettingsPage() {
       </Card>
 
       {activeTab === 'catalog' && (
-        <Card className="mb-6" title="Test / scan catalog" subtitle="Search, add and edit investigations. Prices remain for reception/billing/admin only; clinical roles do not see them.">
+        <Card compact className="mb-5" title="Test / scan catalog" subtitle="Search, add and edit investigations. Prices remain for reception/billing/admin only; clinical roles do not see them.">
           <div className="mb-4 grid gap-3 lg:grid-cols-[1fr_180px_auto]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -263,8 +263,8 @@ export function AdminSettingsPage() {
       )}
 
       {activeTab === 'ranges' && (
-        <Card className="mb-6" title="Reference range workbench" subtitle="A focused list of lab tests and their configured result parameters. Use this before lab result-entry testing.">
-          <div className="mb-4 grid gap-4 md:grid-cols-3">
+        <Card compact className="mb-5" title="Reference range workbench" subtitle="A focused list of lab tests and their configured result parameters. Use this before lab result-entry testing.">
+          <div className="mb-4 grid gap-3 md:grid-cols-3">
             <ConfigReadinessCard label="Lab tests configured" ok={labCatalog.length > 0} detail={`${labCatalog.length} lab tests available for result entry.`} />
             <ConfigReadinessCard label="Parameter coverage" ok={missingRanges.length === 0} detail={missingRanges.length ? `${missingRanges.length} lab test(s) still have no parameter ranges.` : 'Every lab test has at least one parameter.'} />
             <ConfigReadinessCard label="Flagging engine" ok={parameterCount > 0} detail="Low, high and critical limits feed the live flagging system in Accepted Samples." />
@@ -284,7 +284,7 @@ export function AdminSettingsPage() {
       )}
 
       {activeTab === 'departments' && (
-        <Card title="Department management" subtitle="Configure lab/scan sub-units, finance and reception teams before backend role mapping.">
+        <Card compact title="Department management" subtitle="Configure lab/scan sub-units, finance and reception teams.">
           <div className="mb-4 flex justify-end"><Button onClick={() => openDepartment()}><Plus className="h-4 w-4" /> Add department</Button></div>
           <DataTable
             columns={[
@@ -301,7 +301,7 @@ export function AdminSettingsPage() {
       )}
 
       {activeTab === 'equipment' && (
-        <Card title="Equipment and analyzers" subtitle="Track imaging rooms/machines and lab analyzer references used by result workflows.">
+        <Card compact title="Equipment and analyzers" subtitle="Track imaging rooms/machines and lab analyzer references used by result workflows.">
           <div className="mb-4 flex justify-end"><Button onClick={() => openEquipment()}><Plus className="h-4 w-4" /> Add equipment</Button></div>
           <DataTable
             columns={[
@@ -316,7 +316,7 @@ export function AdminSettingsPage() {
             ]}
             rows={scanEquipment}
           />
-          <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+          <div className="mt-4 rounded-2xl bg-slate-50 p-3">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Lab analyzers</p>
             <p className="mt-2 text-sm font-semibold text-slate-700">{labAnalyzers.join(' • ') || 'No analyzers configured yet'}</p>
           </div>
@@ -324,20 +324,20 @@ export function AdminSettingsPage() {
       )}
 
       {activeTab === 'exports' && (
-        <div className="grid gap-6 xl:grid-cols-2">
-          <Card title="Backend readiness export" subtitle="Export current frontend configuration so the backend schema can be seeded with matching master data.">
+        <div className="grid gap-4 xl:grid-cols-2">
+          <Card compact title="Configuration export" subtitle="Export current configuration for system setup and record keeping.">
             <div className="space-y-3 text-sm font-semibold text-slate-600">
               <p>Included: catalog, reference ranges, departments, imaging equipment, hospitals, doctors and user-role mappings.</p>
-              <p>The export is a frontend simulation file, not a production database backup.</p>
+              <p>The export contains current configuration data for review and setup.</p>
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
               <Button onClick={exportConfig}><Download className="h-4 w-4" /> Export JSON</Button>
               <Button variant="secondary" onClick={() => dispatch({ type: 'ADMIN_CONFIGURATION_EXPORT_RECORDED' })}><UploadCloud className="h-4 w-4" /> Mark export reviewed</Button>
             </div>
           </Card>
-          <Card title="Configuration readiness checklist" subtitle="These checks identify gaps before backend implementation.">
+          <Card compact title="Configuration checklist" subtitle="These checks identify setup gaps in the current configuration.">
             <div className="grid gap-3">
-              <ConfigReadinessCard label="Users and roles" ok={users.length > 0} detail={`${users.length} users configured across demo roles.`} />
+              <ConfigReadinessCard label="Users and roles" ok={users.length > 0} detail={`${users.length} users configured across system roles.`} />
               <ConfigReadinessCard label="Hospitals and doctors" ok={hospitals.length > 0 && doctors.length > 0} detail={`${hospitals.length} hospitals and ${doctors.length} affiliated doctors configured.`} />
               <ConfigReadinessCard label="Catalog and ranges" ok={catalog.length > 0 && missingRanges.length === 0} detail={`${catalog.length} catalog items; ${missingRanges.length} lab tests missing ranges.`} />
               <ConfigReadinessCard label="Imaging equipment" ok={scanEquipment.length > 0} detail={`${scanEquipment.length} imaging rooms/machines available for booking.`} />

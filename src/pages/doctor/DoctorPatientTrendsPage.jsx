@@ -19,7 +19,7 @@ export function DoctorPatientTrendsPage() {
         data={data}
         allowedPatientIds={doctorPatients.map((patient) => patient.id)}
         title="Repeated Test Progress Chart"
-        subtitle="This section only uses finalized historical results. A patient must have the same test and parameter recorded more than once to produce a progress line."
+        subtitle="Select a patient, repeated test and parameter to view the progress line."
       />
     </div>
   );

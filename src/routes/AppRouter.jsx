@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useAppStore } from '../store/AppStore';
 import { canAccessPage } from '../utils/permissions';
 import { OverviewPage } from '../pages/dashboards/OverviewPage';
@@ -25,6 +26,7 @@ import { SampleLogPage } from '../pages/lab/SampleLogPage';
 import { LabAcceptPage } from '../pages/lab/LabAcceptPage';
 import { AcceptedSamplesPage } from '../pages/lab/AcceptedSamplesPage';
 import { LabReviewPage } from '../pages/lab/LabReviewPage';
+import { LabResultsPage } from '../pages/lab/LabResultsPage';
 import { LabRejectedSamplesPage } from '../pages/lab/LabRejectedSamplesPage';
 import { ScanQueuePage } from '../pages/scan/ScanQueuePage';
 import { ScanAcceptPage } from '../pages/scan/ScanAcceptPage';
@@ -34,6 +36,7 @@ import { ScanRejectedPage } from '../pages/scan/ScanRejectedPage';
 import { EquipmentBookingPage } from '../pages/scan/EquipmentBookingPage';
 import { IncomingOrdersPage } from '../pages/reception/IncomingOrdersPage';
 import { PatientCheckInPage } from '../pages/reception/PatientCheckInPage';
+import { ReceptionWalkInsPage } from '../pages/reception/ReceptionWalkInsPage';
 import { AppointmentsPage } from '../pages/reception/AppointmentsPage';
 import { ReceptionDailyVisitsPage } from '../pages/reception/ReceptionDailyVisitsPage';
 import { ReceptionResultsInboxPage } from '../pages/reception/ReceptionResultsInboxPage';
@@ -61,6 +64,17 @@ export function AppRouter() {
   const pageId = state.currentPage || 'overview';
   const role = state.auth?.role || 'admin';
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    const main = document.getElementById('main-content');
+    if (main) {
+      main.scrollTop = 0;
+      main.scrollLeft = 0;
+    }
+  }, [pageId]);
+
   if (!canAccessPage(role, pageId)) {
     return <AccessRestrictedPage pageId={pageId} />;
   }
@@ -87,6 +101,7 @@ export function AppRouter() {
   if (pageId === 'lab-accept') return <LabAcceptPage />;
   if (pageId === 'accepted-samples') return <AcceptedSamplesPage />;
   if (pageId === 'lab-review') return <LabReviewPage />;
+  if (pageId === 'lab-results') return <LabResultsPage />;
   if (pageId === 'lab-rejections') return <LabRejectedSamplesPage />;
   if (pageId === 'scan-queue') return <ScanQueuePage />;
   if (pageId === 'scan-accept') return <ScanAcceptPage />;
@@ -96,6 +111,7 @@ export function AppRouter() {
   if (pageId === 'equipment-booking') return <EquipmentBookingPage />;
   if (pageId === 'incoming-orders') return <IncomingOrdersPage />;
   if (pageId === 'patient-checkin') return <PatientCheckInPage />;
+  if (pageId === 'reception-walkins') return <ReceptionWalkInsPage />;
   if (pageId === 'appointments') return <AppointmentsPage />;
   if (pageId === 'daily-visits') return <ReceptionDailyVisitsPage />;
   if (pageId === 'reception-results') return <ReceptionResultsInboxPage />;
@@ -110,9 +126,9 @@ export function AppRouter() {
   if (roleDashboardMap[pageId]) return <RoleDashboard role={roleDashboardMap[pageId]} />;
 
   const meta = PAGE_META[pageId] || {
-    title: 'Module Placeholder',
+    title: 'Module Overview',
     section: 'Foundation',
-    description: 'This module route exists as part of the Section 1 foundation.',
+    description: 'This module is available from the navigation workspace.',
     requirements: []
   };
 

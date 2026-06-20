@@ -19,8 +19,8 @@ export function useApiReadiness() {
       endpointCount: endpoints.length,
       serviceCount: services.length,
       mappedModels: ['Patient','Order','Result','Invoice','Catalog Item','Notification','File Metadata','DICOM Study'],
-      blockers: client.mode === 'mock' ? ['Mock mode is active. Switch to live mode after the backend is running and seeded.'] : [],
-      liveRequirements: ['Backend running on port 5000', 'PostgreSQL running', 'Prisma migrations applied', 'Seed data loaded', 'Valid JWT after login'],
+      blockers: client.mode === 'mock' ? ['Mock mode is active. Switch to live mode when server requests should be used.'] : [],
+      liveRequirements: ['API server running on port 5000', 'PostgreSQL running', 'Prisma migrations applied', 'Seed data loaded', 'Valid JWT after login'],
       hasStoredAccessToken: Boolean(tokens.accessToken),
       services
     };

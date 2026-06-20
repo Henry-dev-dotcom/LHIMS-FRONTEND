@@ -28,25 +28,25 @@ export function OverviewPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Section 14 — UI/UX Polish"
+        eyebrow="Clinical Operations"
         title="Diagnosis Center command workspace"
         description="A polished healthcare operations interface for role-based ordering, reception routing, laboratory and imaging work, billing, reporting, delivery, security and audit monitoring."
       />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <MetricCard label="Patients" value={patients.length} icon={UsersRound} tone="blue" />
         <MetricCard label="Orders" value={orders.length} icon={ClipboardList} tone="purple" />
         <MetricCard label="Lab routed" value={labOrders} icon={FlaskConical} tone="green" />
         <MetricCard label="Scan routed" value={scanOrders} icon={ScanLine} tone="yellow" />
         {canSeeFinance ? <MetricCard label="Outstanding" value={money(outstanding)} icon={CreditCard} tone="red" /> : <MetricCard label="Open invoices" value={invoices.filter((invoice) => invoice.status !== 'Paid').length} icon={CreditCard} tone="red" />}
       </div>
-      <InsightStrip className="mt-5" items={insightItems} />
+      <InsightStrip className="mt-3" items={insightItems} />
       {latestOrder && (
-        <div className="mt-6">
+        <div className="mt-4">
           <WorkflowTimeline status={latestOrder.status} timeline={latestOrder.timeline} />
         </div>
       )}
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-        <Card title="Recent order registry" subtitle="Seeded order data used to validate routing, role dashboards, and shared table components.">
+        <Card title="Recent order registry" subtitle="Recent orders across routing, billing and results workflows.">
           <DataTable
             columns={[
               { key: 'id', label: 'Order ID' },
@@ -58,7 +58,7 @@ export function OverviewPage() {
             rows={orders}
           />
         </Card>
-        <Card title="Platform polish status" subtitle="Section 14 visual and usability checklist.">
+        <Card title="Platform status" subtitle="Current workspace capabilities and operational checks.">
           <div className="space-y-3 text-sm">
             {[
               'Consistent polished app shell',
@@ -66,7 +66,7 @@ export function OverviewPage() {
               'Refined dashboard metric cards',
               'Responsive permission-aware navigation',
               'Accessible protected-route feedback',
-              'LocalStorage demo persistence',
+              'Local session persistence',
               'Mobile tables become readable cards',
               'Print-ready report and dashboard styling'
             ].map((item) => (

@@ -149,7 +149,7 @@ export function ResultsDeliveryPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Phase 8 — Results Delivery & Reporting Refinement"
+        eyebrow="Results Delivery"
         title="Results delivery control center"
         description="Released results can be converted into PDF-ready reports, delivered to doctors, printed by reception and shared with patients using privacy-safe notices."
         actions={<Button onClick={prepareMissingDelivery}><Send className="h-4 w-4" /> Prepare Missing Delivery</Button>}

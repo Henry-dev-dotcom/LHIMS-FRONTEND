@@ -32,9 +32,9 @@ function DetailedResultModal({ order, data, dispatch, onClose }) {
     >
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Patient</p><p className="mt-2 font-black text-slate-950">{order.patient?.fullName}</p><p className="text-sm text-slate-500">{order.patient?.id}</p></div>
-          <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Released</p><p className="mt-2 font-black text-slate-950">{formatDateTime(order.updatedAt)}</p><p className="text-sm text-slate-500">{orderItemsText(order)}</p></div>
-          <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Status</p><div className="mt-2"><StatusBadge status={order.status} /></div><p className="mt-2 text-sm text-slate-500">Prices hidden from clinicians.</p></div>
+          <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Patient</p><p className="mt-2 font-black text-slate-950">{order.patient?.fullName}</p><p className="text-sm text-slate-500">{order.patient?.id}</p></div>
+          <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Released</p><p className="mt-2 font-black text-slate-950">{formatDateTime(order.updatedAt)}</p><p className="text-sm text-slate-500">{orderItemsText(order)}</p></div>
+          <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Status</p><div className="mt-2"><StatusBadge status={order.status} /></div><p className="mt-2 text-sm text-slate-500">Prices hidden from clinicians.</p></div>
         </div>
         {order.results.map((result) => (
           <Card key={result.id} title={`${result.department} · ${result.status}`} subtitle={result.reportText}>
@@ -48,7 +48,7 @@ function DetailedResultModal({ order, data, dispatch, onClose }) {
                 ]}
                 rows={result.parameters.map((row, index) => ({ ...row, id: `${result.id}-${index}` }))}
               />
-            ) : <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">{result.reportText}</div>}
+            ) : <div className="rounded-2xl bg-slate-50 p-3 text-sm leading-6 text-slate-700">{result.reportText}</div>}
           </Card>
         ))}
       </div>
@@ -95,9 +95,9 @@ export function DoctorCompletedOrdersPage() {
         {[
           ['Completed', summary.all], ['Lab Results', summary.lab], ['Scan Reports', summary.scan], ['Abnormal Flags', summary.abnormal]
         ].map(([label, value]) => (
-          <div key={label} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
-            <p className="text-2xl font-black text-slate-950">{value}</p>
-            <p className="text-xs font-black uppercase tracking-wider text-slate-400">{label}</p>
+          <div key={label} className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+            <p className="text-xl font-black text-slate-950">{value}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</p>
           </div>
         ))}
       </div>

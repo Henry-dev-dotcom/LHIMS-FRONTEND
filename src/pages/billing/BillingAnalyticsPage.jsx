@@ -87,7 +87,7 @@ export function BillingAnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Phase 5 — Finance" title="Billing Analytics" description="Period-end dashboard for visits, collections, outstanding balances, paid invoices, write-offs, cashier performance and ageing." />
+      <PageHeader eyebrow="Finance" title="Billing Analytics" description="Period-end dashboard for visits, collections, outstanding balances, paid invoices, write-offs, cashier performance and ageing." />
       <Card title="Analytics filters" subtitle="Use period, custom dates, cashier and hospital filters for weekly/monthly/micro-level reviews.">
         <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
           <select className={inputClass} value={range} onChange={(event) => setRange(event.target.value)}><option value="week">Last 7 days</option><option value="month">This month</option><option value="quarter">This quarter</option><option value="all">All time</option></select>

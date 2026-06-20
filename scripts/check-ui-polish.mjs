@@ -3,8 +3,8 @@ import fs from 'node:fs';
 const checks = [
   ['src/styles/index.css', 'clinical-panel'],
   ['src/components/ui/Button.jsx', 'shadow-lift'],
-  ['src/components/ui/PageHeader.jsx', 'Sparkles'],
-  ['src/layouts/Header.jsx', 'Frontend stabilized'],
+  ['src/layouts/Header.jsx', 'Sparkles'],
+  ['src/layouts/Header.jsx', 'Role notifications'],
   ['src/layouts/Sidebar.jsx', 'Orders · Billing · Results'],
   ['src/components/ui/DataTable.jsx', 'md:hidden'],
   ['src/components/ui/WorkflowTimeline.jsx', 'Order workflow'],

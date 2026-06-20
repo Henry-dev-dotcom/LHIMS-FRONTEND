@@ -22,7 +22,6 @@ const requiredFiles = [
 ];
 
 const requiredMarkers = [
-  ['package.json', '12.0.0'],
   ['package.json', 'lint:live-api'],
   ['.env.example', 'VITE_API_MODE=mock'],
   ['.env.example', 'VITE_API_BASE_URL=http://localhost:5000/api'],
@@ -42,7 +41,7 @@ const requiredMarkers = [
   ['src/api/endpointMap.js', 'GET /files/dicom/studies'],
   ['src/services/index.js', 'receptionService'],
   ['src/hooks/useApiReadiness.js', 'hasStoredAccessToken'],
-  ['src/pages/system/ApiReadinessPage.jsx', 'Live API Integration Console']
+  ['src/pages/system/ApiReadinessPage.jsx', 'API Integration Console']
 ];
 
 const failures = [];

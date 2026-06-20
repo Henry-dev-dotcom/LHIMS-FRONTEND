@@ -427,7 +427,7 @@ export const seedData = {
     { id: 'NOT-005', title: 'SMS result alert queued', body: 'A diagnosis center result is ready for order ORD-2026-0004. Please log in to view the finalized report.', audience: 'doctor', channel: 'SMS', status: 'Queued', deliveryType: 'Result Release', read: false, retryCount: 0, maxRetries: 3, target: '+233 24 555 0101', privacyChecked: true, createdAt: '2026-06-16T18:31:00Z', deliveredAt: '', lastAttemptAt: '2026-06-16T18:31:00Z', entityId: 'ORD-2026-0004' }
   ],
   securityEvents: [
-    { id: 'SEC-0001', type: 'Security Baseline', actor: 'System', role: 'system', target: 'Section 13', severity: 'Low', details: 'Security, audit and reliability layer initialized.', acknowledged: true, createdAt: '2026-06-17T12:30:00Z' }
+    { id: 'SEC-0001', type: 'Security Baseline', actor: 'System', role: 'system', target: 'Security', severity: 'Low', details: 'Security, audit and reliability layer initialized.', acknowledged: true, createdAt: '2026-06-17T12:30:00Z' }
   ],
   backupExports: []
 };

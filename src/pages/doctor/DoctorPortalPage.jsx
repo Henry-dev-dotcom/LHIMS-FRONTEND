@@ -37,17 +37,17 @@ function CompactDoctorProfile({ doctor, hospital, dispatch }) {
 
         <dl className="space-y-3 text-sm">
           <div className="rounded-2xl bg-slate-50 p-3">
-            <dt className="text-xs font-black uppercase tracking-wider text-slate-400">Hospital</dt>
+            <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Hospital</dt>
             <dd className="mt-1 font-black text-slate-950">{hospital?.name}</dd>
             <dd className="mt-1"><StatusBadge status={hospital?.accountStatus || 'Unknown'} /></dd>
           </div>
           <div className="rounded-2xl bg-slate-50 p-3">
-            <dt className="text-xs font-black uppercase tracking-wider text-slate-400">License No.</dt>
+            <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">License No.</dt>
             <dd className="mt-1 font-black text-slate-950">{doctor?.licenseNumber}</dd>
             <dd className="text-sm text-slate-500">Medical and Dental Council</dd>
           </div>
           <div className="rounded-2xl bg-slate-50 p-3">
-            <dt className="text-xs font-black uppercase tracking-wider text-slate-400">Contact</dt>
+            <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Contact</dt>
             <dd className="mt-1 font-black text-slate-950">{doctor?.phone}</dd>
             <dd className="break-words text-sm text-slate-500">{doctor?.email}</dd>
           </div>
@@ -129,15 +129,15 @@ export function DoctorPortalPage() {
         <div className="space-y-5">
           <div className="grid gap-4 md:grid-cols-4">
             {metricCards.map(([label, value, Icon]) => (
-              <div key={label} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
+              <div key={label} className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
                 <Icon className="mb-3 h-5 w-5 text-clinical-600" />
-                <p className="text-2xl font-black text-slate-950">{value}</p>
-                <p className="text-xs font-black uppercase tracking-wider text-slate-400">{label}</p>
+                <p className="text-xl font-black text-slate-950">{value}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</p>
               </div>
             ))}
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <button onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-new-order' })} className="rounded-3xl border border-clinical-100 bg-clinical-50 p-5 text-left transition hover:border-clinical-300 hover:bg-white">
               <Send className="mb-3 h-5 w-5 text-clinical-700" />
               <p className="font-black text-slate-950">Create New Order</p>

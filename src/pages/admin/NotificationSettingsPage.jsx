@@ -11,8 +11,8 @@ import { useAppStore } from '../../store/AppStore';
 import { formatDateTime } from '../../utils/formatters';
 
 const defaultSettings = {
-  emailProvider: 'SMTP Demo Provider',
-  smsProvider: 'SMS Gateway Demo',
+  emailProvider: 'SMTP Provider',
+  smsProvider: 'SMS Gateway',
   retryAttempts: 3,
   emailTemplate: 'Result {{orderId}} is ready. Log in to view the finalized report.',
   smsTemplate: 'A diagnosis center result is ready. Please log in to view it.'
@@ -35,7 +35,7 @@ export function NotificationSettingsPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Section 10 — Admin" title="Notification settings" description="Configure email/SMS provider placeholders, result-release templates and delivery logs." />
+      <PageHeader eyebrow="Administration" title="Notification settings" description="Configure email/SMS providers, result-release templates and delivery logs." />
       <div className="mb-6 grid gap-4 md:grid-cols-4">
         <MetricCard label="Delivery Events" value={notifications.length} icon={Bell} tone="blue" />
         <MetricCard label="Email" value={channels.email} icon={Mail} tone="green" />
@@ -43,7 +43,7 @@ export function NotificationSettingsPage() {
         <MetricCard label="In-Platform" value={channels.inPlatform} icon={Bell} tone="yellow" />
       </div>
       <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-        <Card title="Provider configuration" subtitle="Frontend configuration placeholder for future backend provider integration.">
+        <Card title="Provider configuration" subtitle="Configure delivery providers and message templates.">
           <form onSubmit={save} className="space-y-4">
             <FormField label="Email provider"><input className={inputClass} value={form.emailProvider} onChange={(event) => setForm({ ...form, emailProvider: event.target.value })} /></FormField>
             <FormField label="SMS provider"><input className={inputClass} value={form.smsProvider} onChange={(event) => setForm({ ...form, smsProvider: event.target.value })} /></FormField>
@@ -53,7 +53,7 @@ export function NotificationSettingsPage() {
             <Button type="submit">Save notification settings</Button>
           </form>
         </Card>
-        <Card title="Delivery log" subtitle="Email/SMS delivery failures will later retry and remain visible to Admin.">
+        <Card title="Delivery log" subtitle="Email/SMS delivery attempts and failures remain visible to Admin.">
           <DataTable
             columns={[
               { key: 'id', label: 'ID' },

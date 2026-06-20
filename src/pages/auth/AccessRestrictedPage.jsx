@@ -31,7 +31,7 @@ export function AccessRestrictedPage({ pageId }) {
               <LockKeyhole className="h-6 w-6" />
             </div>
             <h3 className="mt-4 text-xl font-black text-slate-950">Current role: {getRoleLabel(role)}</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">The requested page is blocked by the frontend permission matrix.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">The requested page is blocked by the permission matrix.</p>
             <Button className="mt-5" onClick={() => dispatch({ type: 'NAVIGATE', pageId: getDefaultPageForRole(role) })}>
               Return to my dashboard
             </Button>

@@ -139,7 +139,7 @@ function BillingActions({ order }) {
 
 function Timeline({ timeline = [] }) {
   if (!timeline.length) {
-    return <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">No timeline events yet.</p>;
+    return <p className="rounded-2xl bg-slate-50 p-3 text-sm font-semibold text-slate-500">No timeline events yet.</p>;
   }
   return (
     <div className="space-y-3">
@@ -284,12 +284,12 @@ function OrderDetailsPanel({ order, canSeeFinance }) {
       actions={<StatusBadge status={order.status} />}
     >
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="rounded-2xl bg-slate-50 p-4">
+        <div className="rounded-2xl bg-slate-50 p-3">
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Patient</p>
           <p className="mt-1 text-sm font-black text-slate-900">{order.patient?.fullName || '—'}</p>
           <p className="text-xs font-semibold text-slate-500">{order.patient?.phone || 'No phone'} • {order.patient?.gender || '—'}</p>
         </div>
-        <div className="rounded-2xl bg-slate-50 p-4">
+        <div className="rounded-2xl bg-slate-50 p-3">
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Billing</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <StatusBadge status={order.billingStatus} />
@@ -298,7 +298,7 @@ function OrderDetailsPanel({ order, canSeeFinance }) {
         </div>
       </div>
 
-      <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+      <div className="mt-4 rounded-2xl bg-slate-50 p-3">
         <p className="mb-2 text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Requested tests / scans</p>
         <OrderItems items={order.items} />
       </div>
@@ -386,7 +386,7 @@ export function OrderRegistryPage() {
     .filter((invoice) => allOrders.some((order) => order.id === invoice.orderId) && invoice.status !== 'Paid')
     .reduce((sum, invoice) => sum + Number(invoice.amount || 0), 0);
 
-  function createDemoOrder() {
+  function createQuickOrder() {
     const doctor = role === 'doctor' && state.auth?.linkedDoctorId
       ? data.doctors.find((item) => item.id === state.auth.linkedDoctorId) || data.doctors[0]
       : data.doctors[0];
@@ -399,14 +399,14 @@ export function OrderRegistryPage() {
         hospitalId: doctor.hospitalId,
         itemIds: ['t1', 't17'],
         urgency: 'Urgent',
-        clinicalNotes: 'Demo order: combined lab and imaging request.'
+        clinicalNotes: 'Combined lab and imaging request.'
       }
     });
   }
 
   const title = role === 'doctor' ? 'My Order Registry' : 'Order Registry';
   const description = role === 'doctor'
-    ? 'A cleaner doctor-side registry split into new, active, review, released and cancelled sections. Use the cards below instead of scanning one congested table.'
+    ? 'Doctor-side registry split into new, active, review, released and cancelled sections.'
     : 'A sectioned workflow registry for order tracking, lifecycle movement, billing state, generated results and delivery events.';
 
   return (
@@ -415,10 +415,10 @@ export function OrderRegistryPage() {
         eyebrow="Core Records"
         title={title}
         description={description}
-        actions={<Button onClick={createDemoOrder}><Plus className="h-4 w-4" /> Create demo order</Button>}
+        actions={<Button onClick={createQuickOrder}><Plus className="h-4 w-4" /> Create order</Button>}
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <MetricCard label="Submitted" value={submitted} icon={ClipboardList} tone="yellow" />
         <MetricCard label="In Progress" value={inProgress} icon={RefreshCw} tone="blue" />
         <MetricCard label="Pending Review" value={review} icon={FileCheck2} tone="purple" />
@@ -427,7 +427,7 @@ export function OrderRegistryPage() {
       </div>
 
       <div className="mt-6">
-        <Card title="Order Registry Sections" subtitle="The old congested registry is now split into workflow sections. Select a section, search, then open one order for details.">
+        <Card title="Order Registry Sections" subtitle="Select a section, search, then open one order for details.">
           <SectionTabs activeSection={activeSection} counts={counts} onChange={setActiveSection} />
 
           <div className="mt-5 flex flex-col gap-3 rounded-[1.35rem] border border-slate-200 bg-white p-3 md:flex-row md:items-center">

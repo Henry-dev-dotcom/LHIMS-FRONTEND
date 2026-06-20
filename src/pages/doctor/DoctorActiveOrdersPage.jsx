@@ -26,9 +26,9 @@ function ActiveOrderDetailModal({ order, onClose }) {
     >
       <div className="space-y-5">
         <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Patient</p><p className="mt-1 font-black text-slate-950">{order.patient?.fullName}</p><p className="text-sm text-slate-500">{order.patient?.id}</p></div>
-          <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Status</p><div className="mt-2"><StatusBadge status={order.status} /></div><p className="mt-2 text-sm text-slate-500">Billing: {order.billingStatus}</p></div>
-          <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Expected</p><p className="mt-1 font-black text-slate-950">{formatDateTime(order.expectedCompletionAt)}</p><p className="text-sm text-slate-500">Urgency: {order.urgency}</p></div>
+          <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Patient</p><p className="mt-1 font-black text-slate-950">{order.patient?.fullName}</p><p className="text-sm text-slate-500">{order.patient?.id}</p></div>
+          <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Status</p><div className="mt-2"><StatusBadge status={order.status} /></div><p className="mt-2 text-sm text-slate-500">Billing: {order.billingStatus}</p></div>
+          <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Expected</p><p className="mt-1 font-black text-slate-950">{formatDateTime(order.expectedCompletionAt)}</p><p className="text-sm text-slate-500">Urgency: {order.urgency}</p></div>
         </div>
         <WorkflowTimeline status={order.status} timeline={order.timeline || []} />
         <Card title="Tests / Scans" compact>
@@ -85,9 +85,9 @@ export function DoctorActiveOrdersPage() {
         {[
           ['All Active', summary.all], ['Submitted', summary.submitted], ['In Progress', summary.inProgress], ['Pending Review', summary.review], ['Urgent', summary.urgent]
         ].map(([label, value]) => (
-          <div key={label} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
-            <p className="text-2xl font-black text-slate-950">{value}</p>
-            <p className="text-xs font-black uppercase tracking-wider text-slate-400">{label}</p>
+          <div key={label} className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+            <p className="text-xl font-black text-slate-950">{value}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</p>
           </div>
         ))}
       </div>

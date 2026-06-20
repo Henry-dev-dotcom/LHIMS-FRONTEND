@@ -206,14 +206,14 @@ export function RoleDashboard({ role }) {
   return (
     <div>
       <PageHeader eyebrow={config.eyebrow} title={config.title} description={config.description} />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {getMetrics(role, state.data, state.auth).map(([label, value, Icon, tone]) => (
           <MetricCard key={label} label={label} value={value} icon={Icon} tone={tone} />
         ))}
       </div>
-      <InsightStrip className="mt-5" items={insightItems} />
+      <InsightStrip className="mt-3" items={insightItems} />
       {firstOrder && (
-        <div className="mt-6">
+        <div className="mt-4">
           <WorkflowTimeline status={firstOrder.status} timeline={firstOrder.timeline} />
         </div>
       )}
@@ -236,13 +236,13 @@ export function RoleDashboard({ role }) {
           <DataTable columns={table.columns} rows={rows} />
         </Card>
       </div>
-      <Card className="mt-6" title="PRD components for this role" subtitle="These are the required role-specific PRD features now mapped into the workspace.">
+      <Card className="mt-6" title="Workspace capabilities for this role" subtitle="Role-specific features available in this workspace.">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {requirements.map((item) => (
             <div key={item} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <StatusBadge status="Mapped" />
               <p className="mt-3 font-bold text-slate-900">{item}</p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">Route, permissions and workflow surface active.</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">Route, permissions and workflow are active.</p>
             </div>
           ))}
         </div>

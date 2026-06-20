@@ -38,7 +38,7 @@ export function AuditLogPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Section 10 — Admin"
+        eyebrow="Administration"
         title="Audit log"
         description="Who changed what and when across all modules, including patient records, orders, results, billing, admin settings and notifications."
         actions={<Button onClick={() => downloadJson('diagnosis-center-audit-log.json', filtered)}><Download className="h-4 w-4" /> Export audit</Button>}

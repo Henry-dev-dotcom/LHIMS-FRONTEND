@@ -65,7 +65,7 @@ export function ReportsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Section 12 — Reporting System"
+        eyebrow="Reporting System"
         title="Reporting & analytics center"
         description={canSeeFinance ? 'Turnaround time, order volume, revenue, outstanding balances, abnormal result rates, and productivity reporting across the platform.' : 'Turnaround time, order volume, abnormal result rates, and productivity reporting. Financial values are hidden from this role.'}
         actions={(
@@ -170,7 +170,7 @@ export function ReportsPage() {
           <Card title="Order volume by department" subtitle="Lab vs Imaging routing demand.">
             <DataTable columns={[{ key: 'label', label: 'Department' }, { key: 'count', label: 'Orders' }]} rows={report.orderVolumeByDepartment} />
           </Card>
-          <Card title="Order volume by day" subtitle="Daily intake trend foundation.">
+          <Card title="Order volume by day" subtitle="Daily intake trend.">
             <DataTable columns={[{ key: 'label', label: 'Date' }, { key: 'count', label: 'Orders' }]} rows={report.orderVolumeByDay} />
           </Card>
           <Card className="xl:col-span-2" title="Order volume by status" subtitle="Operational queue distribution by lifecycle state.">
@@ -214,7 +214,7 @@ export function ReportsPage() {
 
       {displayTab === 'quality' && (
         <div className="grid gap-6">
-          <Card title="Abnormal result rate by department" subtitle="Quality oversight foundation for abnormal / high / low / critical flags.">
+          <Card title="Abnormal result rate by department" subtitle="Quality oversight for abnormal, high, low and critical flags.">
             <DataTable
               columns={[
                 { key: 'label', label: 'Department' },
@@ -281,7 +281,7 @@ export function ReportsPage() {
       )}
 
       {displayTab === 'productivity' && (
-        <Card title="Staff productivity foundation" subtitle="Action counts from audit logs, including approvals and result-processing actions.">
+        <Card title="Staff productivity" subtitle="Action counts from audit logs, including approvals and result-processing actions.">
           <DataTable
             columns={[
               { key: 'staff', label: 'Staff' },
@@ -295,7 +295,7 @@ export function ReportsPage() {
           />
           <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
             <BarChart3 className="mr-2 inline h-4 w-4" />
-            This is a v1 productivity foundation based on audit activity. It is not a staff performance judgment tool until backend time tracking and workload rules are added.
+            Productivity metrics are based on audit activity and should be reviewed together with workload context.
           </div>
         </Card>
       )}

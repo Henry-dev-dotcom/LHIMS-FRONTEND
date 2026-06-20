@@ -62,11 +62,11 @@ export function EquipmentBookingPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Section 8 — Scan / Imaging Unit"
+        eyebrow="Scan / Imaging Unit"
         title="Equipment and room booking"
         description="Assign scan orders to imaging equipment, rooms and time slots, and track current machine status."
       />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Equipment" value={equipment.length} icon={MonitorCog} tone="purple" />
         <MetricCard label="Available" value={equipment.filter((item) => item.status === 'Available').length} icon={ScanLine} tone="green" />
         <MetricCard label="Bookings" value={(state.data.scanBookings || []).length} icon={CalendarDays} tone="blue" />
@@ -83,7 +83,7 @@ export function EquipmentBookingPage() {
             <FormField label="Equipment"><select className={inputClass} value={form.equipmentId} onChange={(event) => setForm((prev) => ({ ...prev, equipmentId: event.target.value }))}>
               {equipment.map((item) => <option key={item.id} value={item.id}>{item.modality} — {item.machine} — {item.room}</option>)}
             </select></FormField>
-            <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 sm:grid-cols-2">
+            <div className="grid gap-3 rounded-2xl bg-slate-50 p-3 sm:grid-cols-2">
               <Info label="Modality" value={selectedEquipment?.modality} />
               <Info label="Status" value={selectedEquipment?.status} />
               <Info label="Room" value={selectedEquipment?.room} />
@@ -129,5 +129,5 @@ export function EquipmentBookingPage() {
 }
 
 function Info({ label, value }) {
-  return <div><p className="text-xs font-black uppercase tracking-wider text-slate-400">{label}</p><p className="mt-1 text-sm font-bold text-slate-900">{value || '—'}</p></div>;
+  return <div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</p><p className="mt-1 text-sm font-bold text-slate-900">{value || '—'}</p></div>;
 }

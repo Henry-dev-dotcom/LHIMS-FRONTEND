@@ -45,7 +45,7 @@ function openSampleLabel(sample, order) {
     <html><head><title>Sample Label ${sample.id}</title></head>
     <body style="font-family:Arial,sans-serif;padding:24px;">
       <div style="border:2px solid #111;padding:18px;width:320px;">
-        <h2 style="margin:0 0 8px;">SUNKWA LAB</h2>
+        <h2 style="margin:0 0 8px;">DIAGNOSIS CENTER LAB</h2>
         <div style="font-family:monospace;font-size:22px;font-weight:800;letter-spacing:2px;">${sample.id}</div>
         <p><strong>Patient:</strong> ${order?.patient?.fullName || ''}</p>
         <p><strong>Patient ID:</strong> ${order?.patient?.id || ''}</p>
@@ -110,7 +110,7 @@ function ResultEntryModal({ open, onClose, order, sample, testItem, data, dispat
           <FormField label="Analyzer / Equipment"><select className={inputClass} value={equipment} onChange={(event) => setEquipment(event.target.value)}>{(data.labAnalyzers || []).map((item) => <option key={item}>{item}</option>)}</select></FormField>
           <FormField label="Report Comment"><input className={inputClass} value={reportText} onChange={(event) => setReportText(event.target.value)} placeholder="Optional report comment" /></FormField>
         </div>
-        <FormField label="Internal Technician Notes"><textarea className={`${inputClass} min-h-24`} value={technicianNotes} onChange={(event) => setTechnicianNotes(event.target.value)} placeholder="Internal QA notes, not visible on patient report." /></FormField>
+        <FormField label="Internal Technician Notes"><textarea className={`${inputClass} min-h-24`} value={technicianNotes} onChange={(event) => setTechnicianNotes(event.target.value)} placeholder="Internal review notes, not visible on patient report." /></FormField>
         <div className="flex flex-wrap justify-end gap-2"><Button variant="secondary" onClick={onClose}>Cancel</Button><Button variant="secondary" onClick={() => save('draft')}><Save className="h-4 w-4" /> Save Draft</Button><Button onClick={() => save('review')}><Send className="h-4 w-4" /> Submit for Review</Button></div>
       </div>
     </Modal>
@@ -179,8 +179,8 @@ export function AcceptedSamplesPage() {
           {!activeOrder ? <p className="text-sm text-slate-500">Select an accepted sample to begin.</p> : (
             <div className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Patient</p><p className="font-black text-slate-950">{activeOrder.patient?.fullName}</p><p className="text-sm text-slate-500">{activeOrder.patient?.id} · {activeOrder.patient?.phone}</p></div>
-                <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Order / Sample</p><p className="font-black text-slate-950">{activeOrder.id}</p><p className="text-sm text-slate-500">{activeSample?.id || '—'} · {formatDateTime(activeOrder.createdAt)}</p></div>
+                <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Patient</p><p className="font-black text-slate-950">{activeOrder.patient?.fullName}</p><p className="text-sm text-slate-500">{activeOrder.patient?.id} · {activeOrder.patient?.phone}</p></div>
+                <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Order / Sample</p><p className="font-black text-slate-950">{activeOrder.id}</p><p className="text-sm text-slate-500">{activeSample?.id || '—'} · {formatDateTime(activeOrder.createdAt)}</p></div>
               </div>
               {activeSample && <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => { openSampleLabel(activeSample, activeOrder); dispatch({ type: 'PRINT_SAMPLE_LABEL', sampleId: activeSample.id }); }}><Printer className="h-4 w-4" /> Print Sample Label</Button><Button variant="secondary" onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'lab-review' })}>Open Review Queue</Button></div>}
               <div className="space-y-3">

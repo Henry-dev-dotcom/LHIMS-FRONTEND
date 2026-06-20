@@ -15,7 +15,7 @@ export function ToastHost() {
   if (!toast) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 max-w-sm rounded-3xl border border-white/15 bg-slate-950/95 px-5 py-4 text-sm font-semibold text-white shadow-panel backdrop-blur-xl">
+    <div className="fixed bottom-6 right-6 z-[160] max-w-sm rounded-3xl border border-white/15 bg-slate-950/95 px-5 py-4 text-sm font-semibold text-white shadow-panel backdrop-blur-xl">
       <div className="flex items-start gap-3">
         <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
         <span>{toast.message}</span>

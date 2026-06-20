@@ -20,7 +20,7 @@ export function Modal({ open, title, description, onClose, children, footer }) {
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-slate-950/60 px-2 py-0 backdrop-blur-md sm:items-start sm:px-4 sm:py-8"
+      className="fixed inset-0 z-[150] flex items-end justify-center overflow-y-auto bg-slate-950/60 px-2 py-0 backdrop-blur-md sm:items-start sm:px-4 sm:py-8"
       onMouseDown={(event) => { if (event.target === event.currentTarget) onClose?.(); }}
       role="presentation"
     >

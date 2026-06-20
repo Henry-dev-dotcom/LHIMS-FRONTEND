@@ -1,6 +1,6 @@
 {
   "name": "diagnosis-center-frontend-live-api-ready",
-  "version": "12.1.0",
+  "version": "12.16.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,10 +13,23 @@
     "lint:prd": "node ./scripts/check-prd-coverage.mjs",
     "lint:workflow": "node ./scripts/check-workflow-integrity.mjs",
     "build:standalone": "node ./scripts/make-standalone.mjs",
-    "qa": "npm run lint:routes && npm run lint:auth && npm run lint:ui && npm run lint:prd && npm run lint:workflow && npm run lint:api && npm run lint:live-api && npm run lint:production && npm audit --audit-level=moderate && npm run build && npm run build:standalone",
+    "qa": "npm run lint:routes && npm run lint:auth && npm run lint:ui && npm run lint:prd && npm run lint:workflow && npm run lint:api && npm run lint:live-api && npm run lint:production && npm run lint:stage13 && npm audit --audit-level=moderate && npm run build && npm run build:standalone && npm run lint:stage15 && npm run lint:stage16 && npm run lint:stage17 && npm run lint:stage18 && npm run lint:stage19 && npm run lint:stage20 && npm run lint:stage21 && npm run lint:stage22 && npm run lint:stage23 && npm run lint:stage24 && npm run lint:stage25 && npm run lint:stage26",
     "lint:api": "node ./scripts/check-api-readiness.mjs",
     "lint:live-api": "node ./scripts/check-live-api-integration.mjs",
-    "lint:production": "node ./scripts/check-production-readiness.mjs"
+    "lint:production": "node ./scripts/check-production-readiness.mjs",
+    "lint:stage13": "node ./scripts/check-stage13-ui-lab-results.mjs",
+    "lint:stage15": "node ./scripts/check-stage15-medical-grade-lab-results.mjs",
+    "lint:stage16": "node ./scripts/check-stage16-shell-ui-refinement.mjs",
+    "lint:stage17": "node ./scripts/check-stage17-page-shell-refinement.mjs",
+    "lint:stage18": "node ./scripts/check-stage18-compact-header-card.mjs",
+    "lint:stage19": "node ./scripts/check-stage19-reception-workflow-navigation.mjs",
+    "lint:stage20": "node ./scripts/check-stage20-reception-page-segmentation.mjs",
+    "lint:stage21": "node ./scripts/check-stage21-reception-results-table.mjs",
+    "lint:stage22": "node ./scripts/check-stage22-reception-scroll-filters.mjs",
+    "lint:stage23": "node ./scripts/check-stage23-header-user-menu.mjs",
+    "lint:stage24": "node ./scripts/check-stage24-price-catalog-shell.mjs",
+    "lint:stage25": "node ./scripts/check-stage25-static-header-card.mjs",
+    "lint:stage26": "node ./scripts/check-stage26-header-dropdown-layering.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",

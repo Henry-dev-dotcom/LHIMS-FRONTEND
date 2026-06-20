@@ -5,8 +5,8 @@ import { StatusBadge } from '../components/ui/StatusBadge';
 export function PlaceholderPage({ title, description, section, requirements = [] }) {
   return (
     <div>
-      <PageHeader eyebrow={section || 'Module Placeholder'} title={title} description={description} />
-      <Card title="Section 2 placeholder" subtitle="This page route is intentionally present now so the full PRD navigation structure is stable while core workflow/data model work is now active.">
+      <PageHeader eyebrow={section || 'Module'} title={title} description={description} />
+      <Card title="Module overview" subtitle="This workspace is available in the navigation structure and will display the selected operational requirements.">
         <div className="mb-5"><StatusBadge status="Foundation Ready" /></div>
         {requirements.length > 0 && (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

@@ -99,18 +99,18 @@ function PatientDetail({ patient, data }) {
   return (
     <div className="space-y-5">
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl bg-slate-50 p-4">
-          <p className="text-xs font-black uppercase tracking-wider text-slate-400">Identity</p>
+        <div className="rounded-2xl bg-slate-50 p-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Identity</p>
           <p className="mt-2 text-lg font-black text-slate-950">{patient.fullName}</p>
           <p className="text-sm text-slate-500">{patient.id} · {patient.gender} · {calculateAge(patient.dateOfBirth)} yrs</p>
         </div>
-        <div className="rounded-2xl bg-slate-50 p-4">
-          <p className="text-xs font-black uppercase tracking-wider text-slate-400">Contact</p>
+        <div className="rounded-2xl bg-slate-50 p-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Contact</p>
           <p className="mt-2 font-bold text-slate-800">{patient.phone || '—'}</p>
           <p className="text-sm text-slate-500">{patient.email || 'No email'}</p>
         </div>
-        <div className="rounded-2xl bg-slate-50 p-4">
-          <p className="text-xs font-black uppercase tracking-wider text-slate-400">Referral</p>
+        <div className="rounded-2xl bg-slate-50 p-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Referral</p>
           <p className="mt-2 font-bold text-slate-800">{hospital?.name || '—'}</p>
           <p className="text-sm text-slate-500">{doctor?.name || '—'}</p>
         </div>
@@ -196,7 +196,7 @@ export function PatientRecordsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Section 4 · Patient Record Module"
+        eyebrow="Patient Records"
         title="Patient Records"
         description="Master patient records referenced by doctor orders, reception check-in, lab/scan processing, results, invoices, and full patient history."
         actions={<Button onClick={openCreate}><Plus className="h-4 w-4" /> Add Patient</Button>}
@@ -204,9 +204,9 @@ export function PatientRecordsPage() {
 
       <div className="mb-5 grid gap-4 md:grid-cols-4">
         {metrics.map((metric) => (
-          <div key={metric.label} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
-            <p className="text-2xl font-black text-slate-950">{metric.value}</p>
-            <p className="text-xs font-black uppercase tracking-wider text-slate-400">{metric.label}</p>
+          <div key={metric.label} className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+            <p className="text-xl font-black text-slate-950">{metric.value}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{metric.label}</p>
           </div>
         ))}
       </div>
@@ -253,7 +253,7 @@ export function PatientRecordsPage() {
       <Modal
         open={Boolean(editingPatient) || form !== blankPatient}
         title={editingPatient ? `Edit ${editingPatient.fullName}` : 'Add Patient Record'}
-        description="Capture the complete PRD patient record fields used by orders, billing, lab, scan, and reporting modules."
+        description="Capture complete patient record fields used by orders, billing, lab, scan, and reporting modules."
         onClose={closeForm}
         footer={<><Button variant="secondary" type="button" onClick={closeForm}>Cancel</Button><Button type="submit" form="patient-form"><UserRoundCheck className="h-4 w-4" /> Save Patient</Button></>}
       >

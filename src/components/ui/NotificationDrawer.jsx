@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { BellRing, CheckCheck, Mail, MessageSquareText } from 'lucide-react';
 import { Button } from './Button';
 import { StatusBadge } from './StatusBadge';
@@ -6,6 +7,32 @@ import { formatDateTime } from '../../utils/formatters';
 
 export function NotificationDrawer({ open, notifications = [], onClose, onMarkDelivered, ignoreRef }) {
   const drawerRef = useRef(null);
+  const [drawerPosition, setDrawerPosition] = useState({ top: 72, right: 20 });
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const syncDrawerPosition = () => {
+      const triggerRect = ignoreRef?.current?.getBoundingClientRect();
+      const viewportPadding = 12;
+      if (!triggerRect) {
+        setDrawerPosition({ top: 72, right: 20 });
+        return;
+      }
+      setDrawerPosition({
+        top: Math.min(triggerRect.bottom + 8, window.innerHeight - viewportPadding),
+        right: Math.max(viewportPadding, window.innerWidth - triggerRect.right)
+      });
+    };
+
+    syncDrawerPosition();
+    window.addEventListener('resize', syncDrawerPosition);
+    window.addEventListener('scroll', syncDrawerPosition, true);
+    return () => {
+      window.removeEventListener('resize', syncDrawerPosition);
+      window.removeEventListener('scroll', syncDrawerPosition, true);
+    };
+  }, [open, ignoreRef]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -31,13 +58,20 @@ export function NotificationDrawer({ open, notifications = [], onClose, onMarkDe
     };
   }, [open, onClose, ignoreRef]);
 
-  if (!open) return null;
-  return (
-    <div ref={drawerRef} role="dialog" aria-modal="true" aria-label="Notifications" className="fixed right-3 top-[4.25rem] z-[70] w-[calc(100vw-1.5rem)] max-w-[26rem] overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-panel sm:right-5 lg:absolute lg:right-0 lg:top-14 lg:w-[min(92vw,26rem)]">
+  if (!open || typeof document === 'undefined') return null;
+  return createPortal(
+    <div
+      ref={drawerRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Notifications"
+      className="fixed z-[130] w-[calc(100vw-1.5rem)] max-w-[26rem] overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-panel ring-1 ring-slate-950/5"
+      style={{ top: `${drawerPosition.top}px`, right: `${drawerPosition.right}px` }}
+    >
       <div className="flex items-start justify-between gap-3 border-b border-slate-100 bg-gradient-to-br from-white to-clinical-50 px-5 py-4">
         <div>
           <p className="flex items-center gap-2 text-sm font-black text-slate-950"><BellRing className="h-4 w-4 text-clinical-600" /> Delivery & role notifications</p>
-          <p className="mt-1 text-xs leading-5 text-slate-500">Frontend demo feed for in-platform, email and SMS events.</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">In-platform, email and SMS delivery events for this workspace.</p>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
       </div>
@@ -69,6 +103,7 @@ export function NotificationDrawer({ open, notifications = [], onClose, onMarkDe
           </div>
         ))}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

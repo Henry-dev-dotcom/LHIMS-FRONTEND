@@ -2,6 +2,7 @@ import {
   LayoutDashboard,
   UserRound,
   UsersRound,
+  UserPlus,
   ClipboardList,
   CalendarDays,
   FlaskConical,
@@ -16,6 +17,7 @@ import {
   UserCog,
   Database,
   History,
+  FileText,
   Send,
   ServerCog,
   Clock,
@@ -100,6 +102,7 @@ export const NAV_ITEMS = [
   { id: 'reception-dashboard', label: 'Reception', icon: LayoutDashboard, roles: ['receptionist','admin'], section: 'Reception' },
   { id: 'incoming-orders', label: 'Incoming Orders', icon: ClipboardList, roles: ['receptionist','admin'], section: 'Reception' },
   { id: 'patient-checkin', label: 'Patient Check-In', icon: UsersRound, roles: ['receptionist','admin'], section: 'Reception' },
+  { id: 'reception-walkins', label: 'Walk-Ins', icon: UserPlus, roles: ['receptionist','admin'], section: 'Reception' },
   { id: 'appointments', label: 'Appointments', icon: CalendarDays, roles: ['receptionist','admin'], section: 'Reception' },
   { id: 'daily-visits', label: 'Daily Visit Log', icon: ClipboardList, roles: ['receptionist','admin'], section: 'Reception' },
   { id: 'reception-results', label: 'Results Inbox', icon: Send, roles: ['receptionist','admin'], section: 'Reception' },
@@ -113,6 +116,7 @@ export const NAV_ITEMS = [
   { id: 'lab-accept', label: 'Accept Sample', icon: CheckCircle2, roles: ['lab','admin'], section: 'Laboratory' },
   { id: 'accepted-samples', label: 'Accepted Samples', icon: CheckCircle2, roles: ['lab','admin'], section: 'Laboratory' },
   { id: 'lab-review', label: 'Review & Sign-off', icon: ShieldCheck, roles: ['lab','admin'], section: 'Laboratory' },
+  { id: 'lab-results', label: 'Results', icon: FileText, roles: ['lab','admin'], section: 'Laboratory' },
   { id: 'lab-rejections', label: 'Rejected / Retest', icon: History, roles: ['lab','admin'], section: 'Laboratory' },
 
   { id: 'scan-dashboard', label: 'Scan / Imaging', icon: ScanLine, roles: ['scan','admin'], section: 'Imaging' },
@@ -148,7 +152,7 @@ export const NAV_ITEMS = [
 export const ROLE_DASHBOARD_REQUIREMENTS = {
   doctor: ['Doctor Profile', 'New Order Form', 'My Orders Active', 'My Orders Completed', 'Result Viewer', 'PDF Report Download', 'Notification Preferences', 'Patient Search'],
   receptionist: ['Incoming Orders Queue', 'Patient Check-In', 'Order Confirmation Panel', 'Appointment Scheduler', 'Walk-in Registration', 'Daily Visit Log', 'Duplicate Patient Resolution', 'Reception Results Inbox'],
-  lab: ['Lab Order Queue', 'Sample Collection Log', 'Test Panel Checklist', 'Result Entry Form', 'Equipment/Analyzer Reference', 'Review & Sign-off', 'Retest/Reject Sample Action'],
+  lab: ['Lab Order Queue', 'Sample Collection Log', 'Test Panel Checklist', 'Result Entry Form', 'Results Archive', 'Equipment/Analyzer Reference', 'Review & Sign-off', 'Retest/Reject Sample Action'],
   scan: ['Scan Order Queue', 'Equipment/Room Booking', 'Image Upload', 'Radiologist Report Field', 'Comparison to Prior Scans', 'Review & Sign-off', 'Internal Technician Notes'],
   billing: ['Test/Scan Price Catalog', 'Invoice Generator', 'Payment Status Tracker', 'Payment Method Log', 'Outstanding Balances Report', 'Insurance Claim Reference', 'Cashier Float', 'Expenses', 'Account Ledger', 'Billing Analytics', 'Revenue Summary', 'Refund/Adjustment Tool'],
   admin: ['User Management', 'Hospital/Partner Management', 'Catalog Management', 'Department Management', 'System-Wide Reporting Dashboard', 'Audit Log', 'Notification Settings', 'Data Export']

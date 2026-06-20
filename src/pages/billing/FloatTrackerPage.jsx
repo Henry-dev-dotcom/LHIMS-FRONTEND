@@ -49,7 +49,7 @@ export function FloatTrackerPage() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Finance" title="Cashier Float Tracker" description="Centralised float view showing every sale/payment, cashier, shift, method and manual adjustment." />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         {methodTotals.map(({ id, name, amount, count, Icon }) => <MetricCard key={id} label={`${name} · ${count}`} value={money(amount)} icon={Icon} tone={amount >= 0 ? 'green' : 'red'} />)}
       </div>
       <div className="grid gap-6 xl:grid-cols-[0.72fr_1.28fr]">

@@ -33,10 +33,10 @@ export function LoginPage() {
                   <p className="text-sm text-white/50">Order & Results Management Platform</p>
                 </div>
               </div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Section 14</p>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Clinical Workspace</p>
               <h2 className="mt-3 max-w-md text-4xl font-black leading-tight tracking-tight">Polished role-based platform workspace.</h2>
               <p className="mt-5 max-w-md text-sm leading-6 text-white/60">
-                Choose one of the six PRD roles or use the demo credentials. Each login opens a dedicated landing page with the final visual system, refined navigation and permission-aware workflow pages.
+                Choose one of the six system roles or use the quick credentials. Each login opens a dedicated landing page with refined navigation and permission-aware workflow pages.
               </p>
               <div className="mt-10 grid gap-3 text-sm sm:grid-cols-2">
                 {['Doctor', 'Receptionist', 'Lab Staff', 'Scan / Imaging', 'Billing / Finance', 'Admin'].map((item) => (
@@ -52,9 +52,9 @@ export function LoginPage() {
           <div className="p-8 lg:p-12">
             <div className="grid gap-8 xl:grid-cols-[0.9fr_1.1fr]">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-clinical-600">Demo credentials</p>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-clinical-600">Test credentials</p>
                 <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950">Sign in</h2>
-                <p className="mt-2 text-sm text-slate-500">Use the quick cards or the credential form. This is frontend-only demo auth for Section 14.</p>
+                <p className="mt-2 text-sm text-slate-500">Use the quick cards or enter credentials to open the correct role workspace.</p>
                 <form onSubmit={submitCredentials} className="mt-6 space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-5">
                   <label className="block">
                     <span className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-slate-500"><UserRound className="h-3.5 w-3.5" /> Username</span>
@@ -71,9 +71,6 @@ export function LoginPage() {
                   )}
                   <Button className="w-full" type="submit"><ShieldCheck className="h-4 w-4" /> Sign in</Button>
                 </form>
-                <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-800">
-                  <b>Demo only:</b> authentication is simulated in localStorage. Real password hashing, sessions, server-side authorization and audit-safe identity belong in the backend phase.
-                </div>
               </div>
 
               <div>

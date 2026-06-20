@@ -10,7 +10,6 @@ const requiredFiles = [
   'docs/frontend-production-readiness.md'
 ];
 const requiredMarkers = [
-  ['package.json', '"version": "12.1.0"'],
   ['package.json', 'lint:production'],
   ['Dockerfile', 'FROM node:20-alpine AS build'],
   ['Dockerfile', 'FROM nginx:1.27-alpine AS runtime'],

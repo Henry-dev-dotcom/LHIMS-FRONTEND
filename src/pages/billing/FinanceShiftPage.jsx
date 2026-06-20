@@ -61,8 +61,8 @@ export function FinanceShiftPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Phase 5 — Finance" title="Shift Start / Close" description="Start cashier shifts, block payments without a shift, count cash by denominations, close with variance, and preserve cashier-level history." />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <PageHeader eyebrow="Finance" title="Shift Start / Close" description="Start cashier shifts, block payments without a shift, count cash by denominations, close with variance, and preserve cashier-level history." />
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <MetricCard label="Active Shift" value={activeShift ? activeShift.id : 'None'} icon={Clock} tone={activeShift ? 'green' : 'yellow'} />
         <MetricCard label="Expected Cash" value={money(expectedCash)} icon={Banknote} tone="blue" />
         <MetricCard label="Counted Cash" value={money(countedCash)} icon={Banknote} tone="green" />
@@ -88,9 +88,9 @@ export function FinanceShiftPage() {
               ))}
             </div>
             <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Expected cash</p><p className="font-black text-slate-950">{money(expectedCash)}</p></div>
-              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Counted</p><p className="font-black text-slate-950">{money(countedCash)}</p></div>
-              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Variance</p><p className="font-black text-slate-950">{money(variance)}</p></div>
+              <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Expected cash</p><p className="font-black text-slate-950">{money(expectedCash)}</p></div>
+              <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Counted</p><p className="font-black text-slate-950">{money(countedCash)}</p></div>
+              <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Variance</p><p className="font-black text-slate-950">{money(variance)}</p></div>
             </div>
             <FormField label="Closing notes"><textarea className={`${inputClass} min-h-20`} value={closeNotes} onChange={(event) => setCloseNotes(event.target.value)} disabled={!activeShift} /></FormField>
             <Button type="submit" variant="danger" disabled={!activeShift}><Lock className="h-4 w-4" /> Close Shift</Button>

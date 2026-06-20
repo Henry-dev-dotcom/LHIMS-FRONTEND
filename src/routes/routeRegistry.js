@@ -1,12 +1,12 @@
 export const PAGE_META = {
   'doctor-new-order': {
     title: 'New Order', section: 'Doctor Portal',
-    description: 'Doctor order form foundation for existing/new patient selection, tests/scans, clinical notes, and urgency.',
+    description: 'Doctor order form for existing or new patients, tests/scans, clinical notes and urgency.',
     requirements: ['Select existing patient', 'Create new patient', 'Select test(s)/scan(s)', 'Clinical notes', 'Routine/Urgent flag']
   },
   'doctor-results': {
     title: 'Results Viewer', section: 'Doctor Portal',
-    description: 'Doctor-side result review foundation for structured result view, reference ranges, abnormal flags, and PDF download.',
+    description: 'Doctor-side result review with structured values, reference ranges, abnormal flags and PDF download.',
     requirements: ['Completed orders archive', 'Reference ranges', 'Abnormal flags', 'Download PDF', 'Email/SMS preferences']
   },
 
@@ -32,12 +32,17 @@ export const PAGE_META = {
   },
   'patient-checkin': {
     title: 'Patient Check-In', section: 'Reception',
-    description: 'Front-desk search, identity verification, walk-in registration, and duplicate resolution foundation.',
+    description: 'Front-desk search, identity verification, walk-in registration and duplicate resolution.',
     requirements: ['Search patient', 'Register walk-in', 'Verify identity', 'Duplicate patient warning', 'Daily visit log']
+  },
+  'reception-walkins': {
+    title: 'Walk-In Registration', section: 'Reception',
+    description: 'Dedicated walk-in intake page for new patient registration, visit creation and duplicate review.',
+    requirements: ['Walk-in registration', 'Patient demographics', 'Visit creation', 'Duplicate review', 'Reception intake']
   },
   appointments: {
     title: 'Appointment Scheduler', section: 'Reception',
-    description: 'Calendar/slot foundation for visit scheduling and scan equipment booking coordination.',
+    description: 'Calendar and slot management for visit scheduling and scan equipment booking coordination.',
     requirements: ['Calendar view', 'Slot availability', 'Scan booking integration', 'Reschedule action']
   },
   'daily-visits': {
@@ -52,7 +57,7 @@ export const PAGE_META = {
   },
   patients: {
     title: 'Patient Records', section: 'Core Records',
-    description: 'Master patient record foundation referenced by every order, result, invoice, and history view.',
+    description: 'Master patient records referenced by every order, result, invoice and history view.',
     requirements: ['Patient ID', 'Demographics', 'Referring doctor/hospital', 'Insurance fields', 'Order history', 'Clinical flags']
   },
   orders: {
@@ -75,6 +80,11 @@ export const PAGE_META = {
     description: 'Senior review queue for structured lab results before final release.',
     requirements: ['Pending review queue', 'Result parameter review', 'Reference ranges', 'Sign-off', 'Release results']
   },
+  'lab-results': {
+    title: 'Lab Results', section: 'Laboratory',
+    description: 'Stored laboratory result archive for review, printing, corrections and future reference.',
+    requirements: ['Result archive', 'Print report', 'Edit corrections', 'Amendment history', 'Reference ranges']
+  },
   'lab-rejections': {
     title: 'Rejected / Retest Samples', section: 'Laboratory',
     description: 'Track rejected samples, recollection requests and retest notes.',
@@ -87,17 +97,17 @@ export const PAGE_META = {
   },
   'lab-queue': {
     title: 'Lab Order Queue', section: 'Laboratory',
-    description: 'Laboratory queue foundation filterable by status, urgency, and test type.',
+    description: 'Laboratory queue filterable by status, urgency and test type.',
     requirements: ['Filter by status', 'Sample log', 'Test panel checklist', 'Result entry', 'Review/sign-off']
   },
   'sample-log': {
     title: 'Sample Collection Log', section: 'Laboratory',
-    description: 'Sample ID, collection time, collector, and sample type foundation.',
+    description: 'Sample ID, collection time, collector and sample type tracking.',
     requirements: ['Sample ID', 'Collection time', 'Collected by', 'Sample type', 'Reject/retest action']
   },
   'scan-queue': {
     title: 'Scan Order Queue', section: 'Imaging',
-    description: 'Imaging order queue foundation filterable by modality and urgency.',
+    description: 'Imaging order queue filterable by modality and urgency.',
     requirements: ['Modality filter', 'Equipment booking', 'Image upload', 'Radiologist report', 'Review/sign-off']
   },
 
@@ -123,7 +133,7 @@ export const PAGE_META = {
   },
   'equipment-booking': {
     title: 'Equipment / Room Booking', section: 'Imaging',
-    description: 'Machine/room assignment and time slot foundation for imaging orders.',
+    description: 'Machine, room and time-slot assignment for imaging orders.',
     requirements: ['Room assignment', 'Machine assignment', 'Time slot', 'Technician notes']
   },
 
@@ -149,22 +159,22 @@ export const PAGE_META = {
   },
   invoices: {
     title: 'Invoices', section: 'Billing / Finance',
-    description: 'Invoice generation and payment tracking foundation tied to order line items.',
+    description: 'Invoice generation and payment tracking tied to order line items.',
     requirements: ['Auto invoice from order', 'Tax/discount', 'Payment status', 'Payment method', 'Insurance reference']
   },
   'price-catalog': {
     title: 'Price Catalog', section: 'Billing / Finance',
-    description: 'Billable test and scan catalog foundation with current prices.',
+    description: 'Billable test and scan catalog with current prices.',
     requirements: ['Test prices', 'Scan prices', 'Editable catalog', 'Department grouping']
   },
   users: {
     title: 'User Management', section: 'Admin',
-    description: 'Create, edit, deactivate, and permission assignment foundation.',
+    description: 'Create, edit, deactivate and assign user permissions.',
     requirements: ['Create users', 'Assign roles', 'Deactivate users', 'Permission groups']
   },
   hospitals: {
     title: 'Hospital / Partner Management', section: 'Admin',
-    description: 'Registered hospitals and affiliated doctors foundation.',
+    description: 'Registered hospitals and affiliated doctors.',
     requirements: ['Hospital profile', 'Billing contact', 'Account status', 'Affiliated doctors']
   },
   'audit-log': {
@@ -174,13 +184,13 @@ export const PAGE_META = {
   },
   'notification-settings': {
     title: 'Notification Settings', section: 'Admin',
-    description: 'Email/SMS provider and template configuration foundation.',
+    description: 'Email/SMS provider and template configuration.',
     requirements: ['Email provider', 'SMS provider', 'Templates', 'Delivery log']
   },
 
   security: {
     title: 'Security & Reliability', section: 'Security',
-    description: 'Section 13 control surface for role access, audit coverage, PHI-safe SMS, delivery retries, integrity checks and security exports.',
+    description: 'Control surface for role access, audit coverage, PHI-safe SMS, delivery retries, integrity checks and security exports.',
     requirements: ['Role-based access controls', 'Audit trail coverage', 'PHI-safe SMS scanner', 'Delivery retry visibility', 'Data integrity checks', 'Security dataset export']
   },
   'result-delivery': {
@@ -190,18 +200,18 @@ export const PAGE_META = {
   },
   reports: {
     title: 'Reports', section: 'Reporting',
-    description: 'Section 12 reporting system for turnaround time, volume, revenue, outstanding balances, abnormal rates, productivity, filters, and exports.',
-    requirements: ['TAT reports', 'Order volume by hospital/doctor/department', 'Revenue and outstanding balances', 'Abnormal result rates', 'Staff productivity foundation', 'CSV/JSON export']
+    description: 'Reporting system for turnaround time, volume, revenue, outstanding balances, abnormal rates, productivity, filters, and exports.',
+    requirements: ['TAT reports', 'Order volume by hospital/doctor/department', 'Revenue and outstanding balances', 'Abnormal result rates', 'Staff productivity', 'CSV/JSON export']
   },
 
   'api-readiness': {
     title: 'API Readiness', section: 'System',
-    description: 'Frontend backend-integration boundary with service files, endpoint contracts, mock/live API mode and model mappers.',
+    description: 'API integration boundary with service files, endpoint contracts, API mode and model mappers.',
     requirements: ['apiClient', 'service files', 'endpoint map', 'mock API mode', 'live API mode', 'model mappers']
   },
   settings: {
     title: 'Settings', section: 'System',
-    description: 'System configuration foundation for catalog, departments, notification templates, and exports.',
+    description: 'System configuration for catalog, departments, notification templates and exports.',
     requirements: ['Departments', 'Equipment list', 'Catalog defaults', 'Templates']
   }
 };

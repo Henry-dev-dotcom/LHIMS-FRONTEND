@@ -172,7 +172,7 @@ function PatientProgressChart({ rows }) {
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-wider text-clinical-700">Patient progress line chart</p>
-          <p className="mt-1 text-sm text-slate-500">Values are plotted in visit/release order, matching the original SUNKWA trend workflow.</p>
+          <p className="mt-1 text-sm text-slate-500">Values are plotted in visit/release order using finalized historical results.</p>
         </div>
         <div className="rounded-2xl bg-white px-4 py-3 text-right shadow-sm">
           <p className="text-xs font-black uppercase tracking-wider text-slate-400">Change</p>
@@ -352,7 +352,6 @@ export function PatientTrendsPanel({ data, allowedPatientIds = null, title = 'Pa
                 <p className="mt-1 font-black text-slate-950">
                   {!selectedPatient ? 'Search and select a patient' : !selectedTest ? 'Select a test' : !selectedParameter ? `${selectedTest.name} — Select parameter` : `${selectedTest.name} · ${selectedParameter.name}`}
                 </p>
-                <p className="text-xs text-slate-500">Same flow as SUNKWA HTML: patient → test → parameter → chart.</p>
               </div>
               {(selectedPatient || selectedTest || selectedParameter) && <Button variant="secondary" onClick={backStep}><ArrowLeft className="h-4 w-4" /> Back</Button>}
             </div>

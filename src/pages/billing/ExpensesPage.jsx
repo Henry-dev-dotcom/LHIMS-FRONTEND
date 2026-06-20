@@ -59,7 +59,7 @@ export function ExpensesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Phase 5 — Finance" title="Expenses" description="Centralised outgoing payments for purchase cost, courier fees, subscriptions, rent, equipment, salaries, partial payments and write-offs." />
+      <PageHeader eyebrow="Finance" title="Expenses" description="Centralised outgoing payments for purchase cost, courier fees, subscriptions, rent, equipment, salaries, partial payments and write-offs." />
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard label="Paid Out" value={money(paid)} icon={ArrowDownCircle} tone="red" />
         <MetricCard label="Outstanding" value={money(outstanding)} icon={FileText} tone="yellow" />

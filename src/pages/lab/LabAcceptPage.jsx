@@ -41,17 +41,17 @@ export function LabAcceptPage() {
           {!activeOrder ? <p className="text-sm text-slate-500">No lab order selected.</p> : (
             <div className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Patient</p><p className="font-black text-slate-950">{activeOrder.patient?.fullName}</p><p className="text-sm text-slate-500">{activeOrder.patient?.id} · {activeOrder.patient?.phone}</p></div>
-                <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Doctor / Hospital</p><p className="font-black text-slate-950">{activeOrder.doctor?.name}</p><p className="text-sm text-slate-500">{activeOrder.hospital?.name}</p></div>
+                <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Patient</p><p className="font-black text-slate-950">{activeOrder.patient?.fullName}</p><p className="text-sm text-slate-500">{activeOrder.patient?.id} · {activeOrder.patient?.phone}</p></div>
+                <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Doctor / Hospital</p><p className="font-black text-slate-950">{activeOrder.doctor?.name}</p><p className="text-sm text-slate-500">{activeOrder.hospital?.name}</p></div>
               </div>
-              <div className="rounded-2xl border border-slate-200 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Clinical notes</p><p className="mt-2 text-sm leading-6 text-slate-700">{activeOrder.clinicalNotes || 'No clinical notes provided.'}</p></div>
+              <div className="rounded-2xl border border-slate-200 p-4"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Clinical notes</p><p className="mt-2 text-sm leading-6 text-slate-700">{activeOrder.clinicalNotes || 'No clinical notes provided.'}</p></div>
               <div className="space-y-2">
-                <p className="text-xs font-black uppercase tracking-wider text-slate-400">Requested lab tests</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Requested lab tests</p>
                 {activeOrder.items.map((item) => <div key={item.id} className="flex items-center justify-between rounded-2xl bg-slate-50 p-3"><span className="font-bold text-slate-900"><FlaskConical className="mr-2 inline h-4 w-4 text-clinical-600" />{item.name}</span><StatusBadge status={item.id} /></div>)}
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 <FormField label="Sample Type"><select className={inputClass} value={sampleType} onChange={(event) => setSampleType(event.target.value)}><option>Blood</option><option>Urine</option><option>Stool</option><option>Swab</option><option>Serum</option><option>Plasma</option></select></FormField>
-                <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Requested</p><p className="font-black text-slate-950">{formatDateTime(activeOrder.createdAt)}</p></div>
+                <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Requested</p><p className="font-black text-slate-950">{formatDateTime(activeOrder.createdAt)}</p></div>
               </div>
               {acceptedSample ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="font-black text-emerald-800">Sample accepted: {acceptedSample.id}</p><p className="text-sm text-emerald-700">Accepted by {acceptedSample.acceptedBy || acceptedSample.collectedBy} at {formatDateTime(acceptedSample.acceptedAt || acceptedSample.collectedAt)}</p></div> : <Button onClick={() => dispatch({ type: 'ACCEPT_LAB_SAMPLE', orderId: activeOrder.id, payload: { sampleType } })}><CheckCircle2 className="h-4 w-4" /> Accept Sample</Button>}
               <Button variant="danger" onClick={() => { const reason = window.prompt('Reason for rejection / recollection?'); if (reason) dispatch({ type: 'REJECT_SAMPLE', sampleId: acceptedSample?.id || '', reason }); }} disabled={!acceptedSample}><XCircle className="h-4 w-4" /> Reject Accepted Sample</Button>

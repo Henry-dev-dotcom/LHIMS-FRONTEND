@@ -58,13 +58,13 @@ export function SecurityReliabilityPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Section 13"
+        eyebrow="Security & Reliability"
         title="Security, Audit & Reliability Layer"
-        description="Frontend controls and monitoring for role-based access, PHI-safe messaging, audit coverage, delivery failures, data integrity and backup/export readiness."
+        description="System controls and monitoring for role-based access, PHI-safe messaging, audit coverage, delivery failures, data integrity and backup/export readiness."
         actions={<Button onClick={exportSecurity}><Download className="h-4 w-4" /> Export security dataset</Button>}
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Access denied events" value={summary.deniedAccessCount} icon={LockKeyhole} tone={summary.deniedAccessCount ? 'yellow' : 'green'} helper="Captured from protected route fallback" />
         <MetricCard label="Audit coverage" value={`${summary.auditCoveredModules}/${summary.auditTotalModules}`} icon={Eye} tone="blue" helper="Modules with recorded events" />
         <MetricCard label="SMS privacy review" value={summary.privacyReview} icon={Smartphone} tone={summary.privacyReview ? 'red' : 'green'} helper={`${summary.privacySafe} SMS alerts pass scan`} />
@@ -77,7 +77,7 @@ export function SecurityReliabilityPage() {
 
       {activeTab === 'overview' && (
         <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <Card title="Security posture checklist" subtitle="Section 13 translates PRD non-functional requirements into visible frontend controls.">
+          <Card title="Security posture checklist" subtitle="Review role access, audit coverage, PHI-safe messaging, reliability checks and exports.">
             <div className="grid gap-3">
               {[
                 ['Role-based access control', 'Enabled', 'Each role only sees allowed navigation and blocked routes show a protected fallback.'],
@@ -128,7 +128,7 @@ export function SecurityReliabilityPage() {
       )}
 
       {activeTab === 'audit' && (
-        <Card title="Audit coverage by module" subtitle="The PRD requires full audit trail visibility for viewed/edited/approved actions.">
+        <Card title="Audit coverage by module" subtitle="Audit trail visibility for viewed, edited and approved actions.">
           <DataTable
             columns={[
               { key: 'module', label: 'Module' },
@@ -160,7 +160,7 @@ export function SecurityReliabilityPage() {
 
       {activeTab === 'reliability' && (
         <div className="space-y-6">
-          <Card title="Reliability and data-integrity checks" subtitle="Frontend monitors the workflow links that must remain consistent across orders, billing, results and reports.">
+          <Card title="Reliability and data-integrity checks" subtitle="Monitor workflow links that must remain consistent across orders, billing, results and reports.">
             <DataTable
               columns={[
                 { key: 'name', label: 'Check' },
@@ -192,23 +192,23 @@ export function SecurityReliabilityPage() {
 
       {activeTab === 'backup' && (
         <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-          <Card title="Backup and export readiness" subtitle="The frontend exposes a demo backup/export action until server-side backups are added.">
+          <Card title="Backup and export readiness" subtitle="Export current security and reliability data for review.">
             <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
               <div className="flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-500 text-white"><DatabaseBackup className="h-6 w-6" /></div>
                 <div>
-                  <p className="font-black text-slate-950">Local demo state backup</p>
+                  <p className="font-black text-slate-950">Security dataset export</p>
                   <p className="text-sm text-slate-600">Exports patients, orders, invoices, results, reports, notifications, audit logs and security events.</p>
                 </div>
               </div>
               <Button className="mt-5 w-full" onClick={exportSecurity}><Download className="h-4 w-4" /> Export security dataset</Button>
             </div>
             <div className="mt-4 rounded-3xl border border-amber-100 bg-amber-50 p-5 text-sm leading-6 text-amber-900">
-              <strong>Production note:</strong> server-side encrypted database backups, immutable audit-log storage and provider delivery retries must be implemented in the backend. This page represents the frontend control surface.
+              <strong>Security note:</strong> Store exports according to organizational backup, audit-log retention and delivery-retry policies.
             </div>
           </Card>
 
-          <Card title="Non-functional requirement coverage" subtitle="Mapped to Section 13 frontend controls.">
+          <Card title="Non-functional requirement coverage" subtitle="Security controls mapped to workspace monitoring.">
             <div className="grid gap-3">
               {[
                 ['Role access control', 'Implemented', ShieldCheck],
@@ -216,7 +216,7 @@ export function SecurityReliabilityPage() {
                 ['Email/SMS failure visibility', 'Implemented', AlertTriangle],
                 ['Data integrity warnings', 'Implemented', ShieldQuestion],
                 ['Exportable security dataset', 'Implemented', Download],
-                ['Backend encryption / at-rest controls', 'Backend Required', LockKeyhole]
+                ['Encryption / at-rest controls', 'Server Required', LockKeyhole]
               ].map(([name, status, Icon]) => (
                 <div key={name} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 p-4">
                   <div className="flex items-center gap-3">

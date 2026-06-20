@@ -62,7 +62,7 @@ export function UserManagementPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Section 10 — Admin"
+        eyebrow="Administration"
         title="User management"
         description="Create, edit, deactivate and assign role permissions for all platform accounts."
         actions={<Button onClick={openNew}><Plus className="h-4 w-4" /> Create user</Button>}
@@ -110,7 +110,7 @@ export function UserManagementPage() {
       <Modal
         open={modalOpen}
         title={form.id ? 'Edit user account' : 'Create user account'}
-        description="Assign the user to one of the PRD roles. Doctor users can be linked to a registered doctor and hospital."
+        description="Assign the user to a system role. Doctor users can be linked to a registered doctor and hospital."
         onClose={() => setModalOpen(false)}
         footer={(
           <>

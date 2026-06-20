@@ -77,8 +77,8 @@ export function InvoicesPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Phase 5 — Finance" title="Invoices & Payment Status Tracker" description="Central invoice register for patients who have paid, partly paid, have yet to pay, or are under insurance processing." />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <PageHeader eyebrow="Finance" title="Invoices & Payment Status Tracker" description="Central invoice register for patients who have paid, partly paid, have yet to pay, or are under insurance processing." />
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <MetricCard label="Invoices" value={invoices.length} icon={ReceiptText} tone="blue" />
         <MetricCard label="Collected" value={money(collected)} icon={CreditCard} tone="green" />
         <MetricCard label="Outstanding" value={money(outstanding)} icon={Landmark} tone="red" />
@@ -105,9 +105,9 @@ export function InvoicesPage() {
           </Card>
           <Card title="Payment method log" subtitle="Payments are blocked unless the cashier has started a shift. Every payment goes to the active float.">
             <form onSubmit={recordPayment} className="space-y-4">
-              <div className="rounded-2xl bg-slate-50 p-4 text-sm">
+              <div className="rounded-2xl bg-slate-50 p-3 text-sm">
                 <div className="font-black text-slate-700">Selected invoice balance</div>
-                <div className="mt-1 text-2xl font-black text-slate-950">{money(invoiceBalance(selectedInvoice || {}))}</div>
+                <div className="mt-1 text-xl font-black text-slate-950">{money(invoiceBalance(selectedInvoice || {}))}</div>
               </div>
               <FormField label="Payment amount"><input type="number" step="0.01" className={inputClass} value={payment.amount} placeholder={selectedInvoice ? String(invoiceBalance(selectedInvoice)) : '0'} onChange={(e) => setPayment({ ...payment, amount: e.target.value })} /></FormField>
               <FormField label="Payment method"><select className={inputClass} value={payment.method} onChange={(e) => setPayment({ ...payment, method: e.target.value })}><option>Cash</option><option>Mobile Money</option><option>Card</option><option>Transfer</option><option>Insurance</option></select></FormField>
@@ -143,7 +143,7 @@ export function InvoicesPage() {
       <Modal open={Boolean(receiptInvoice)} onClose={() => setReceiptInvoiceId('')} title="Payment Receipt">
         {receiptInvoice && <div className="space-y-5" id="receipt-print-area">
           <div className="rounded-3xl border border-slate-200 bg-white p-5 text-sm">
-            <div className="text-center"><div className="text-xl font-black text-slate-950">SUNKWA Diagnostic Centre</div><div className="text-slate-500">Official Payment Receipt</div></div>
+            <div className="text-center"><div className="text-xl font-black text-slate-950">Diagnosis Center</div><div className="text-slate-500">Official Payment Receipt</div></div>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               <div><span className="font-black text-slate-500">Receipt / Invoice</span><p className="font-bold">{receiptInvoice.id}</p></div>
               <div><span className="font-black text-slate-500">Order</span><p className="font-bold">{receiptInvoice.orderId}</p></div>

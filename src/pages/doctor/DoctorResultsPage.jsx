@@ -28,9 +28,9 @@ function DetailedResultModal({ order, data, dispatch, onClose }) {
     >
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Patient</p><p className="mt-2 font-black text-slate-950">{order.patient?.fullName}</p><p className="text-sm text-slate-500">{order.patient?.id}</p></div>
-          <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Doctor</p><p className="mt-2 font-black text-slate-950">{order.doctor?.name}</p><p className="text-sm text-slate-500">{order.hospital?.name}</p></div>
-          <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Status</p><div className="mt-2"><StatusBadge status={order.status} /></div><p className="mt-2 text-sm text-slate-500">Released {formatDateTime(order.updatedAt)}</p></div>
+          <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Patient</p><p className="mt-2 font-black text-slate-950">{order.patient?.fullName}</p><p className="text-sm text-slate-500">{order.patient?.id}</p></div>
+          <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Doctor</p><p className="mt-2 font-black text-slate-950">{order.doctor?.name}</p><p className="text-sm text-slate-500">{order.hospital?.name}</p></div>
+          <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Status</p><div className="mt-2"><StatusBadge status={order.status} /></div><p className="mt-2 text-sm text-slate-500">Released {formatDateTime(order.updatedAt)}</p></div>
         </div>
         {order.results.map((result) => (
           <Card key={result.id} title={`${result.department} · ${result.status}`} subtitle={result.reportText}>
@@ -44,7 +44,7 @@ function DetailedResultModal({ order, data, dispatch, onClose }) {
                 ]}
                 rows={result.parameters.map((row, index) => ({ ...row, id: `${result.id}-${index}` }))}
               />
-            ) : <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">{result.reportText}</div>}
+            ) : <div className="rounded-2xl bg-slate-50 p-3 text-sm leading-6 text-slate-700">{result.reportText}</div>}
           </Card>
         ))}
       </div>
