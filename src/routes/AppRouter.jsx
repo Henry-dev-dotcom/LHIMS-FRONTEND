@@ -72,6 +72,7 @@ export function AppRouter() {
     if (main) {
       main.scrollTop = 0;
       main.scrollLeft = 0;
+      main.focus({ preventScroll: true });
     }
   }, [pageId]);
 

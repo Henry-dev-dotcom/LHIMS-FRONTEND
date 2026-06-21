@@ -111,7 +111,7 @@ function ResultEntryModal({ open, onClose, order, sample, testItem, data, dispat
           <FormField label="Report Comment"><input className={inputClass} value={reportText} onChange={(event) => setReportText(event.target.value)} placeholder="Optional report comment" /></FormField>
         </div>
         <FormField label="Internal Technician Notes"><textarea className={`${inputClass} min-h-24`} value={technicianNotes} onChange={(event) => setTechnicianNotes(event.target.value)} placeholder="Internal review notes, not visible on patient report." /></FormField>
-        <div className="flex flex-wrap justify-end gap-2"><Button variant="secondary" onClick={onClose}>Cancel</Button><Button variant="secondary" onClick={() => save('draft')}><Save className="h-4 w-4" /> Save Draft</Button><Button onClick={() => save('review')}><Send className="h-4 w-4" /> Submit for Review</Button></div>
+        <div className="grid gap-2 sm:flex sm:flex-wrap sm:justify-end [&_button]:w-full sm:[&_button]:w-auto"><Button variant="secondary" onClick={onClose}>Cancel</Button><Button variant="secondary" onClick={() => save('draft')}><Save className="h-4 w-4" /> Save Draft</Button><Button onClick={() => save('review')}><Send className="h-4 w-4" /> Submit for Review</Button></div>
       </div>
     </Modal>
   );

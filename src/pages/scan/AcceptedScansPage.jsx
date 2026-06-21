@@ -47,7 +47,7 @@ function ReportModal({ open, onClose, order, data, dispatch }) {
         <FormField label="Radiologist findings"><textarea rows="5" className={inputClass} value={findings} onChange={(event) => setFindings(event.target.value)} placeholder="Structured findings" /></FormField>
         <FormField label="Impression"><textarea rows="4" className={inputClass} value={impression} onChange={(event) => setImpression(event.target.value)} placeholder="Clinical impression" /></FormField>
         <FormField label="Internal technician notes"><textarea rows="3" className={inputClass} value={internalNotes} onChange={(event) => setInternalNotes(event.target.value)} placeholder="Internal review notes not visible to doctor" /></FormField>
-        <div className="flex flex-wrap justify-end gap-2"><Button variant="secondary" onClick={onClose}>Close</Button><Button variant="secondary" onClick={() => save('Draft')}><Save className="h-4 w-4" /> Save Draft</Button><Button onClick={() => save('Pending Review')}><Send className="h-4 w-4" /> Submit for Review</Button></div>
+        <div className="grid gap-2 sm:flex sm:flex-wrap sm:justify-end [&_button]:w-full sm:[&_button]:w-auto"><Button variant="secondary" onClick={onClose}>Close</Button><Button variant="secondary" onClick={() => save('Draft')}><Save className="h-4 w-4" /> Save Draft</Button><Button onClick={() => save('Pending Review')}><Send className="h-4 w-4" /> Submit for Review</Button></div>
       </div>
     </Modal>
   );

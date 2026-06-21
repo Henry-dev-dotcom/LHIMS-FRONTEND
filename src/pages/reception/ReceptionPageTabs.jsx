@@ -19,7 +19,7 @@ export function ReceptionPageTabs({ label = 'Page sections', sections, active, o
   }, [label]);
 
   return (
-    <section className="rounded-2xl border border-white/80 bg-white/90 p-2 shadow-soft backdrop-blur-xl">
+    <section className="rounded-[1.15rem] border border-white/80 bg-white/90 p-2 shadow-soft backdrop-blur-xl sm:rounded-2xl">
       <div className="mb-2 flex flex-col gap-2 px-1 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">{label}</p>
@@ -27,7 +27,7 @@ export function ReceptionPageTabs({ label = 'Page sections', sections, active, o
         </div>
         {actions && <div className="shrink-0">{actions}</div>}
       </div>
-      <div ref={scrollRef} className="flex gap-2 overflow-x-auto pb-1">
+      <div ref={scrollRef} className="no-scrollbar flex snap-x gap-2 overflow-x-auto pb-1">
         {sections.map((section) => {
           const Icon = section.icon;
           const isActive = active === section.id;
@@ -37,7 +37,7 @@ export function ReceptionPageTabs({ label = 'Page sections', sections, active, o
               type="button"
               onClick={() => onChange(section.id)}
               className={clsx(
-                'group flex min-w-[11.5rem] items-center gap-2 rounded-xl border px-3 py-2 text-left transition duration-200',
+                'group flex min-w-[9.75rem] snap-start items-center gap-2 rounded-xl border px-3 py-2 text-left transition duration-200 sm:min-w-[11.5rem]',
                 isActive
                   ? 'border-clinical-200 bg-clinical-50/90 shadow-sm ring-2 ring-clinical-100'
                   : 'border-slate-200/80 bg-white/80 hover:border-clinical-200 hover:bg-slate-50'
@@ -49,7 +49,7 @@ export function ReceptionPageTabs({ label = 'Page sections', sections, active, o
                   <span className="truncate text-sm font-black text-slate-950">{section.label}</span>
                   {section.count !== undefined && <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-black text-white">{section.count}</span>}
                 </span>
-                {section.helper && <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{section.helper}</span>}
+                {section.helper && <span className="mt-0.5 hidden truncate text-[11px] font-semibold text-slate-500 sm:block">{section.helper}</span>}
               </span>
             </button>
           );

@@ -8,6 +8,7 @@ import { MetricCard } from '../../components/ui/MetricCard';
 import { Modal } from '../../components/ui/Modal';
 import { FormField, inputClass } from '../../components/ui/FormField';
 import { StatusBadge } from '../../components/ui/StatusBadge';
+import { ResponsiveTabs } from '../../components/ui/ResponsiveTabs';
 import { useAppStore } from '../../store/AppStore';
 import { money } from '../../utils/formatters';
 
@@ -76,7 +77,47 @@ function ParameterRangeEditor({ parameters, onChange, disabled }) {
         <p className="font-black">Structured result parameters and reference ranges</p>
         <p className="mt-1 leading-6">These values appear inside the Lab result-entry modal, the Accepted Samples result page, reports, and patient trends. Low/High and Critical limits power automatic flagging.</p>
       </div>
-      <div className="overflow-x-auto rounded-2xl border border-slate-200">
+      <div className="grid gap-3 md:hidden">
+        {rows.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-center text-sm font-semibold text-slate-500">
+            No parameters defined yet. Add each result parameter for this lab test.
+          </div>
+        ) : rows.map((parameter, index) => (
+          <div key={`${parameter.name || 'parameter'}-${index}-mobile`} className="rounded-[1.35rem] border border-slate-200 bg-white p-3 shadow-sm">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Parameter {index + 1}</p>
+                <p className="mt-1 truncate text-sm font-black text-slate-950">{parameter.name || 'Unnamed parameter'}</p>
+              </div>
+              <Button type="button" size="sm" variant="danger" onClick={() => removeRow(index)}><Trash2 className="h-4 w-4" /> Remove</Button>
+            </div>
+
+            <div className="grid gap-3">
+              <FormField label="Parameter"><input className={inputClass} value={parameter.name || ''} onChange={(event) => updateRow(index, { name: event.target.value })} placeholder="e.g. Hemoglobin" /></FormField>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <FormField label="Unit"><input className={inputClass} value={parameter.unit || ''} onChange={(event) => updateRow(index, { unit: event.target.value })} placeholder="g/dL" /></FormField>
+                <FormField label="Gender"><select className={inputClass} value={parameter.gender || 'All'} onChange={(event) => updateRow(index, { gender: event.target.value })}><option>All</option><option>Male</option><option>Female</option><option>Other</option></select></FormField>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <FormField label="Low"><input className={inputClass} type="number" step="any" value={parameter.low ?? ''} onChange={(event) => updateRow(index, { low: event.target.value })} /></FormField>
+                <FormField label="High"><input className={inputClass} type="number" step="any" value={parameter.high ?? ''} onChange={(event) => updateRow(index, { high: event.target.value })} /></FormField>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <FormField label="Critical Low"><input className={inputClass} type="number" step="any" value={parameter.criticalLow ?? ''} onChange={(event) => updateRow(index, { criticalLow: event.target.value })} /></FormField>
+                <FormField label="Critical High"><input className={inputClass} type="number" step="any" value={parameter.criticalHigh ?? ''} onChange={(event) => updateRow(index, { criticalHigh: event.target.value })} /></FormField>
+              </div>
+              <FormField label="Displayed Range"><input className={inputClass} value={parameter.referenceRange || ''} onChange={(event) => updateRow(index, { referenceRange: event.target.value })} placeholder="12.0 - 16.0" /></FormField>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <FormField label="Age Min"><input className={inputClass} type="number" min="0" value={parameter.ageMin ?? ''} onChange={(event) => updateRow(index, { ageMin: event.target.value })} placeholder="0" /></FormField>
+                <FormField label="Age Max"><input className={inputClass} type="number" min="0" value={parameter.ageMax ?? ''} onChange={(event) => updateRow(index, { ageMax: event.target.value })} placeholder="200" /></FormField>
+              </div>
+              <FormField label="Method"><input className={inputClass} value={parameter.method || ''} onChange={(event) => updateRow(index, { method: event.target.value })} placeholder="Analyzer/manual" /></FormField>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 md:block">
         <table className="min-w-[1180px] divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
             <tr>
@@ -115,7 +156,7 @@ function ParameterRangeEditor({ parameters, onChange, disabled }) {
           </tbody>
         </table>
       </div>
-      <Button type="button" variant="secondary" onClick={addRow}><Plus className="h-4 w-4" /> Add parameter</Button>
+      <Button type="button" variant="secondary" className="w-full md:w-auto" onClick={addRow}><Plus className="h-4 w-4" /> Add parameter</Button>
     </div>
   );
 }
@@ -216,20 +257,7 @@ export function AdminSettingsPage() {
         <MetricCard compact label="Equipment Alerts" value={unavailableEquipment.length} icon={Settings} tone="yellow" />
       </div>
 
-      <Card compact className="mb-5">
-        <div className="flex flex-wrap gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`rounded-xl px-3 py-1.5 text-xs font-black transition ${activeTab === tab.id ? 'bg-clinical-600 text-white shadow-lift' : 'bg-slate-100 text-slate-600 hover:bg-clinical-50 hover:text-clinical-800'}`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </Card>
+      <ResponsiveTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} className="mb-5" ariaLabel="Admin settings sections" />
 
       {activeTab === 'catalog' && (
         <Card compact className="mb-5" title="Test / scan catalog" subtitle="Search, add and edit investigations. Prices remain for reception/billing/admin only; clinical roles do not see them.">
@@ -285,7 +313,7 @@ export function AdminSettingsPage() {
 
       {activeTab === 'departments' && (
         <Card compact title="Department management" subtitle="Configure lab/scan sub-units, finance and reception teams.">
-          <div className="mb-4 flex justify-end"><Button onClick={() => openDepartment()}><Plus className="h-4 w-4" /> Add department</Button></div>
+          <div className="mb-4 grid justify-stretch md:flex md:justify-end"><Button onClick={() => openDepartment()}><Plus className="h-4 w-4" /> Add department</Button></div>
           <DataTable
             columns={[
               { key: 'id', label: 'ID' },
@@ -302,7 +330,7 @@ export function AdminSettingsPage() {
 
       {activeTab === 'equipment' && (
         <Card compact title="Equipment and analyzers" subtitle="Track imaging rooms/machines and lab analyzer references used by result workflows.">
-          <div className="mb-4 flex justify-end"><Button onClick={() => openEquipment()}><Plus className="h-4 w-4" /> Add equipment</Button></div>
+          <div className="mb-4 grid justify-stretch md:flex md:justify-end"><Button onClick={() => openEquipment()}><Plus className="h-4 w-4" /> Add equipment</Button></div>
           <DataTable
             columns={[
               { key: 'id', label: 'ID' },
@@ -330,7 +358,7 @@ export function AdminSettingsPage() {
               <p>Included: catalog, reference ranges, departments, imaging equipment, hospitals, doctors and user-role mappings.</p>
               <p>The export contains current configuration data for review and setup.</p>
             </div>
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-5 grid gap-2 sm:flex sm:flex-wrap">
               <Button onClick={exportConfig}><Download className="h-4 w-4" /> Export JSON</Button>
               <Button variant="secondary" onClick={() => dispatch({ type: 'ADMIN_CONFIGURATION_EXPORT_RECORDED' })}><UploadCloud className="h-4 w-4" /> Mark export reviewed</Button>
             </div>

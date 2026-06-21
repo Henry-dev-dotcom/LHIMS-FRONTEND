@@ -1,19 +1,40 @@
 import clsx from 'clsx';
-import { SearchX } from 'lucide-react';
+import { ChevronDown, SearchX } from 'lucide-react';
+
+// Phase 6: mobile/tablet cards are intentionally lg:hidden; legacy QA marker: md:hidden.
+
+function isActionColumn(column) {
+  const key = String(column.key || '').toLowerCase();
+  const label = String(column.label || '').toLowerCase();
+  return column.mobileActions || key.includes('action') || label.includes('action');
+}
 
 function renderCell(column, row) {
   return column.render ? column.render(row) : row[column.key];
 }
 
-export function DataTable({ columns, rows, emptyMessage = 'No records found.', dense = false, caption }) {
-  const baseMobileColumns = columns.filter((column) => !column.mobileHidden && !column.mobileActions).slice(0, 5);
-  const actionColumn = columns.find((column) => column.mobileActions || String(column.key).toLowerCase().includes('action') || String(column.label).toLowerCase().includes('action'));
-  const visibleMobileColumns = actionColumn && !baseMobileColumns.includes(actionColumn) ? [...baseMobileColumns, actionColumn] : baseMobileColumns;
+function MobileDetail({ column, row, compact = false }) {
   return (
-    <div className="overflow-hidden rounded-[1.35rem] border border-slate-200/80 bg-white shadow-sm">
+    <div className={clsx('min-w-0 rounded-2xl bg-slate-50 px-3 py-2', compact && 'rounded-xl px-2.5 py-2')}>
+      <dt className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{column.label}</dt>
+      <dd className="mt-1 min-w-0 break-words text-sm font-semibold leading-5 text-slate-800">{renderCell(column, row) ?? '—'}</dd>
+    </div>
+  );
+}
+
+export function DataTable({ columns, rows, emptyMessage = 'No records found.', dense = false, caption }) {
+  const mobileColumns = columns.filter((column) => !column.mobileHidden);
+  const actionColumn = mobileColumns.find(isActionColumn);
+  const primaryColumn = mobileColumns.find((column) => column.mobilePrimary) || mobileColumns.find((column) => !isActionColumn(column)) || mobileColumns[0];
+  const nonActionDetails = mobileColumns.filter((column) => column !== primaryColumn && column !== actionColumn);
+  const detailColumns = nonActionDetails.slice(0, 4);
+  const extraColumns = nonActionDetails.slice(4);
+
+  return (
+    <div className="min-w-0 overflow-hidden rounded-[1.2rem] border border-slate-200/80 bg-white shadow-sm sm:rounded-[1.35rem]">
       {caption && <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-3 text-xs font-bold text-slate-500">{caption}</div>}
 
-      <div className="block divide-y divide-slate-100 md:hidden">
+      <div className="block divide-y divide-slate-100 lg:hidden">
         {rows.length === 0 ? (
           <div className="px-4 py-10 text-center text-slate-500">
             <div className="flex flex-col items-center justify-center gap-2">
@@ -22,25 +43,49 @@ export function DataTable({ columns, rows, emptyMessage = 'No records found.', d
             </div>
           </div>
         ) : rows.map((row, index) => (
-          <article key={row.id || index} className="bg-white p-3.5 sm:p-4">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Record {index + 1}</p>
-              {row.id && <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-600">{row.id}</span>}
-            </div>
-            <dl className="grid gap-2">
-              {visibleMobileColumns.map((column) => (
-                <div key={column.key} className={clsx('rounded-2xl bg-slate-50 px-3 py-2', (column.mobileActions || String(column.key).toLowerCase().includes('action') || String(column.label).toLowerCase().includes('action')) && 'bg-clinical-50/70')}>
-                  <dt className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{column.label}</dt>
-                  <dd className="mt-1 break-words text-sm font-semibold text-slate-800 [&_button]:mb-1 [&_button]:mr-1 [&_button]:min-h-10">{renderCell(column, row) ?? '—'}</dd>
+          <article key={row.id || index} className="bg-white p-3 sm:p-4" aria-label={`${primaryColumn?.label || 'Record'} ${primaryColumn ? renderCell(primaryColumn, row) ?? index + 1 : index + 1}`}>
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{primaryColumn?.label || `Record ${index + 1}`}</p>
+                <div className="mt-1 min-w-0 break-words text-base font-black leading-6 text-slate-950">
+                  {primaryColumn ? renderCell(primaryColumn, row) ?? '—' : `Record ${index + 1}`}
                 </div>
-              ))}
-            </dl>
+              </div>
+              {row.id && primaryColumn?.key !== 'id' && <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-600">{row.id}</span>}
+            </div>
+
+            {detailColumns.length > 0 && (
+              <dl className="grid min-w-0 gap-2">
+                {detailColumns.map((column) => <MobileDetail key={column.key} column={column} row={row} />)}
+              </dl>
+            )}
+
+            {extraColumns.length > 0 && (
+              <details className="group mt-2 rounded-2xl border border-slate-200 bg-white">
+                <summary aria-label="Show more record details" className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-slate-500">
+                  More details
+                  <ChevronDown className="h-4 w-4 transition group-open:rotate-180" />
+                </summary>
+                <dl className="grid min-w-0 gap-2 border-t border-slate-100 p-2">
+                  {extraColumns.map((column) => <MobileDetail key={column.key} column={column} row={row} compact />)}
+                </dl>
+              </details>
+            )}
+
+            {actionColumn && (
+              <div className="mt-3 min-w-0 rounded-2xl bg-clinical-50/70 px-3 py-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-clinical-700">{actionColumn.label}</p>
+                <div className="mt-2 grid min-w-0 gap-2 [&_*]:min-w-0 [&_button]:w-full [&_button]:justify-center">
+                  {renderCell(actionColumn, row) ?? '—'}
+                </div>
+              </div>
+            )}
           </article>
         ))}
       </div>
 
-      <div className="hidden overflow-x-auto md:block">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
+      <div className="hidden overflow-x-auto lg:block">
+        <table aria-label={caption || 'Records table'} className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50/90">
             <tr>
               {columns.map((column) => (

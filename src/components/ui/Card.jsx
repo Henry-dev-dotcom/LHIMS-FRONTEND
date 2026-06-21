@@ -2,17 +2,27 @@ import clsx from 'clsx';
 
 export function Card({ title, subtitle, actions, children, className, compact = false }) {
   return (
-    <section className={clsx('clinical-panel rounded-[1.75rem] p-5 shadow-soft', compact && 'p-4', className)}>
+    <section
+      className={clsx(
+        'clinical-panel min-w-0 rounded-[1.2rem] p-3.5 shadow-soft sm:rounded-[1.75rem] sm:p-5',
+        compact && 'p-3.5 sm:p-4',
+        className
+      )}
+    >
       {(title || subtitle || actions) && (
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            {title && <h2 className="text-lg font-black tracking-tight text-slate-950">{title}</h2>}
-            {subtitle && <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">{subtitle}</p>}
+        <div className={clsx('mb-3 flex min-w-0 flex-col gap-3 sm:mb-5 sm:flex-row sm:items-start sm:justify-between', compact && 'mb-3')}>
+          <div className="min-w-0 flex-1">
+            {title && <h2 className="text-[0.98rem] font-black leading-6 tracking-tight text-slate-950 sm:text-lg">{title}</h2>}
+            {subtitle && <p className="mt-1 max-w-3xl text-[13px] leading-5 text-slate-500 sm:text-sm sm:leading-6">{subtitle}</p>}
           </div>
-          {actions && <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>}
+          {actions && (
+            <div className="grid w-full min-w-0 shrink-0 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end [&_.clinical-input]:w-full [&_button]:w-full [&_button]:justify-center sm:[&_button]:w-auto [&_select]:w-full sm:[&_select]:w-auto">
+              {actions}
+            </div>
+          )}
         </div>
       )}
-      {children}
+      <div className="min-w-0">{children}</div>
     </section>
   );
 }

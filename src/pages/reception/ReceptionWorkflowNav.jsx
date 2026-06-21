@@ -38,14 +38,14 @@ export function ReceptionWorkflowNav() {
   const data = state.data || {};
 
   return (
-    <section className="rounded-[1.4rem] border border-white/80 bg-white/92 p-2.5 shadow-soft backdrop-blur-xl">
+    <section className="rounded-[1.15rem] border border-white/80 bg-white/92 p-2.5 shadow-soft backdrop-blur-xl sm:rounded-[1.4rem]">
       <div className="mb-2 flex flex-col gap-1 px-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Reception workflow</p>
           <p className="text-xs font-semibold text-slate-500">Move between focused reception pages without crowding one screen.</p>
         </div>
       </div>
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-7">
+      <div className="no-scrollbar flex snap-x gap-2 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 xl:grid-cols-7">
         {receptionTabs.map((tab) => {
           const Icon = tab.icon;
           const active = current === tab.id;
@@ -55,7 +55,7 @@ export function ReceptionWorkflowNav() {
               type="button"
               onClick={() => dispatch({ type: 'NAVIGATE', pageId: tab.id })}
               className={clsx(
-                'group flex min-h-[4rem] items-center gap-2.5 rounded-2xl border px-3 py-2 text-left transition duration-200',
+                'group flex min-h-[4rem] min-w-[10.25rem] snap-start items-center gap-2.5 rounded-2xl border px-3 py-2 text-left transition duration-200 sm:min-w-0',
                 active
                   ? 'border-clinical-200 bg-clinical-50/90 shadow-sm ring-2 ring-clinical-100'
                   : 'border-slate-200/80 bg-white/80 hover:border-clinical-200 hover:bg-slate-50'
@@ -69,7 +69,7 @@ export function ReceptionWorkflowNav() {
                   <span className="truncate text-sm font-black text-slate-950">{tab.label}</span>
                   <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-black text-white">{tabCount(tab.id, data)}</span>
                 </span>
-                <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{tab.helper}</span>
+                <span className="mt-0.5 hidden truncate text-[11px] font-semibold text-slate-500 sm:block">{tab.helper}</span>
               </span>
             </button>
           );

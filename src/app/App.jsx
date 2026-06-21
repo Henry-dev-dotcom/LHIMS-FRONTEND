@@ -3,6 +3,8 @@ import { LoginPage } from '../pages/auth/LoginPage';
 import { AppShell } from '../layouts/AppShell';
 import { ReportVerificationPage } from '../pages/public/ReportVerificationPage';
 import { PatientPortalAccessPage } from '../pages/public/PatientPortalAccessPage';
+import { ErrorBoundary } from '../components/ui/ErrorBoundary';
+import { useMobileViewportMetrics } from '../hooks/useMobileViewportMetrics';
 
 function AppContent() {
   const { state } = useAppStore();
@@ -14,9 +16,13 @@ function AppContent() {
 }
 
 export default function App() {
+  useMobileViewportMetrics();
+
   return (
-    <AppStoreProvider>
-      <AppContent />
-    </AppStoreProvider>
+    <ErrorBoundary>
+      <AppStoreProvider>
+        <AppContent />
+      </AppStoreProvider>
+    </ErrorBoundary>
   );
 }

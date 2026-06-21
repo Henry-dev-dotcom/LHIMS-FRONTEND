@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import clsx from 'clsx';
-import { Activity, ChevronRight, Menu, X } from 'lucide-react';
+import { Activity, ChevronRight, X } from 'lucide-react';
 import { useAppStore } from '../store/AppStore';
 import { getNavForRole, groupNavItems } from '../utils/permissions';
 import { ROLES } from '../data/roles';
@@ -9,6 +9,7 @@ export function Sidebar() {
   const { state, dispatch } = useAppStore();
   const role = state.auth?.role || 'admin';
   const roleInfo = ROLES.find((item) => item.id === role);
+  const closeButtonRef = useRef(null);
   const allItems = getNavForRole(role);
   const groups = groupNavItems(allItems);
 
@@ -24,6 +25,7 @@ export function Sidebar() {
     };
     document.body.style.overflow = 'hidden';
     document.addEventListener('keydown', handleKeyDown);
+    window.setTimeout(() => closeButtonRef.current?.focus({ preventScroll: true }), 0);
     mediaQuery.addEventListener?.('change', handleViewportChange);
     return () => {
       document.body.style.overflow = previousOverflow;
@@ -34,25 +36,25 @@ export function Sidebar() {
 
   const content = (
     <>
-      <div className="relative overflow-hidden border-b border-white/10 p-5">
+      <div className="relative overflow-hidden border-b border-white/10 p-5 pr-14">
         <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-clinical-500/20 blur-3xl" />
         <div className="relative flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-clinical-400 to-emerald-400 text-white shadow-lift ring-1 ring-white/15">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-clinical-400 to-emerald-400 text-white shadow-lift ring-1 ring-white/15">
             <Activity className="h-6 w-6" />
           </div>
-          <div>
-            <div className="text-lg font-black tracking-tight text-white">Diagnosis Center</div>
-            <div className="text-xs font-semibold text-slate-200">Orders · Billing · Results</div>
+          <div className="min-w-0">
+            <div className="truncate text-lg font-black tracking-tight text-white">Diagnosis Center</div>
+            <div className="truncate text-xs font-semibold text-slate-200">Orders · Billing · Results</div>
           </div>
         </div>
       </div>
 
       <div className="border-b border-white/10 px-5 py-3">
         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-300">Active workspace</p>
-        <p className="mt-1 font-black text-white">{roleInfo?.label}</p>
+        <p className="mt-1 truncate font-black text-white">{roleInfo?.label}</p>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
+      <nav className="flex-1 overflow-y-auto overscroll-contain px-3 py-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
         {Object.entries(groups).length === 0 && <div className="rounded-2xl bg-white/5 px-4 py-3 text-sm font-semibold text-slate-200">No matching menu items.</div>}
         {Object.entries(groups).map(([section, items]) => (
           <div key={section} className="mb-5">
@@ -64,12 +66,13 @@ export function Sidebar() {
                 return (
                   <button
                     key={item.id}
+                    aria-current={active ? 'page' : undefined}
                     onClick={() => {
                       dispatch({ type: 'NAVIGATE', pageId: item.id });
                       dispatch({ type: 'CLOSE_SIDEBAR' });
                     }}
                     className={clsx(
-                      'group flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-bold transition duration-200',
+                      'group flex min-h-11 w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-bold transition duration-200',
                       active ? 'bg-white text-clinical-800 shadow-lift' : 'text-slate-100 hover:bg-white/15 hover:text-white'
                     )}
                   >
@@ -77,7 +80,7 @@ export function Sidebar() {
                       <Icon className="h-4 w-4" />
                     </span>
                     <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                    <ChevronRight className={clsx('h-4 w-4 transition', active ? 'text-clinical-500' : 'text-slate-300 group-hover:text-white')} />
+                    <ChevronRight className={clsx('h-4 w-4 shrink-0 transition', active ? 'text-clinical-500' : 'text-slate-300 group-hover:text-white')} />
                   </button>
                 );
               })}
@@ -91,22 +94,30 @@ export function Sidebar() {
   return (
     <>
       <aside className="fixed inset-y-0 left-0 z-40 hidden h-screen w-[19rem] flex-col bg-slate-950 print:hidden lg:flex">{content}</aside>
-      <button
-        className="fixed left-4 top-4 z-40 grid h-11 w-11 place-items-center rounded-2xl bg-slate-950 text-white shadow-lg print:hidden lg:hidden"
-        onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
-        aria-label="Open menu"
-        aria-expanded={state.ui.sidebarOpen}
-      >
-        <Menu className="h-5 w-5" />
-      </button>
       <div
-        className={clsx('fixed inset-0 z-50 bg-slate-950/55 backdrop-blur-sm print:hidden lg:hidden', state.ui.sidebarOpen ? 'block' : 'hidden')}
+        className={clsx('fixed inset-0 z-[120] bg-slate-950/55 backdrop-blur-sm transition-opacity print:hidden lg:hidden', state.ui.sidebarOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0')}
         role="presentation"
+        aria-hidden={!state.ui.sidebarOpen}
         onClick={() => dispatch({ type: 'CLOSE_SIDEBAR' })}
       >
-        <aside className="flex h-full w-80 max-w-[86vw] flex-col bg-slate-950" onClick={(event) => event.stopPropagation()} aria-label="Mobile navigation">
-          <button className="absolute right-4 top-4 text-white" onClick={() => dispatch({ type: 'CLOSE_SIDEBAR' })} aria-label="Close menu">
-            <X className="h-6 w-6" />
+        <aside
+          className={clsx(
+            'flex h-full w-[19rem] max-w-[88vw] transform flex-col bg-slate-950 shadow-2xl transition-transform duration-200 ease-out',
+            state.ui.sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          )}
+          onClick={(event) => event.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile navigation"
+        >
+          <button
+            ref={closeButtonRef}
+            className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-2xl bg-white/10 text-white transition hover:bg-white/15 focus:outline-none focus-visible:ring-4 focus-visible:ring-white/25"
+            type="button"
+            onClick={() => dispatch({ type: 'CLOSE_SIDEBAR' })}
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
           </button>
           {content}
         </aside>

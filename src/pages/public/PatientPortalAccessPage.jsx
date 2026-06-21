@@ -40,7 +40,7 @@ export function PatientPortalAccessPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-950">
+    <main className="min-h-screen bg-slate-100 px-3 py-4 text-slate-950 sm:px-4 sm:py-8">
       <div className="mx-auto max-w-4xl space-y-5">
         <Card title="Secure Patient Result Portal" subtitle="Time-limited OTP-style access for patient report viewing." actions={<LockKeyhole className="h-6 w-6 text-clinical-600" />}>
           {!result && <div className="rounded-2xl bg-amber-50 p-5 text-sm font-semibold text-amber-800">No report found for secure ID <span className="font-mono">{secureId || 'missing'}</span>.</div>}
@@ -49,9 +49,9 @@ export function PatientPortalAccessPage() {
               <div className="rounded-2xl border border-clinical-100 bg-clinical-50 p-4 text-sm font-semibold text-clinical-800">A privacy-safe OTP will be sent to the registered contact ending in {maskedContact}. Demo OTP accepts <span className="font-mono">123456</span>.</div>
               <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
                 <FormField label="Phone or email"><input className={inputClass} value={contact} onChange={(event) => setContact(event.target.value)} placeholder="Enter registered phone or email" /></FormField>
-                <Button onClick={sendOtp}>Send OTP</Button>
+                <Button className="w-full md:w-auto" onClick={sendOtp}>Send OTP</Button>
               </div>
-              {otpSent && <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end"><FormField label="OTP code"><input className={inputClass} value={otp} onChange={(event) => setOtp(event.target.value)} placeholder="123456" /></FormField><Button onClick={verifyOtp}><ShieldCheck className="h-4 w-4" /> Verify</Button></div>}
+              {otpSent && <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end"><FormField label="OTP code"><input className={inputClass} value={otp} onChange={(event) => setOtp(event.target.value)} placeholder="123456" /></FormField><Button className="w-full md:w-auto" onClick={verifyOtp}><ShieldCheck className="h-4 w-4" /> Verify</Button></div>}
             </div>
           )}
           {result && verified && (
@@ -74,7 +74,7 @@ export function PatientPortalAccessPage() {
                 rows={result.parameters || []}
                 emptyMessage="No structured values are available for this report."
               />
-              <Button onClick={() => openLabResultPdfWindow({ data: state.data, result })}>Download / Save PDF</Button>
+              <Button className="w-full sm:w-auto" onClick={() => openLabResultPdfWindow({ data: state.data, result })}>Download / Save PDF</Button>
             </div>
           )}
         </Card>

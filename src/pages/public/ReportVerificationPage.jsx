@@ -25,14 +25,14 @@ export function ReportVerificationPage() {
   const verificationUrl = getReportVerificationUrl(result || { secureId });
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-950">
+    <main className="min-h-screen bg-slate-100 px-3 py-4 text-slate-950 sm:px-4 sm:py-8">
       <div className="mx-auto max-w-3xl space-y-5">
         <Card title="Report Verification" subtitle="Public read-only integrity check for Diagnosis Center laboratory reports." actions={valid ? <ShieldCheck className="h-6 w-6 text-emerald-600" /> : <AlertTriangle className="h-6 w-6 text-amber-600" />}>
           {result ? (
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-[180px_1fr]">
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center">
-                  <img className="mx-auto h-36 w-36 rounded-xl" src={getQrCodeUrl(verificationUrl)} alt="Verification QR" />
+                  <img className="mx-auto h-28 w-28 rounded-xl sm:h-36 sm:w-36" src={getQrCodeUrl(verificationUrl)} alt="Verification QR" />
                   <p className="mt-2 text-xs font-black uppercase tracking-[0.16em] text-slate-400"><QrCode className="mr-1 inline h-3 w-3" /> Secure QR</p>
                 </div>
                 <div className="space-y-3">
@@ -49,13 +49,13 @@ export function ReportVerificationPage() {
               <div className="rounded-2xl bg-clinical-50 p-4 text-sm font-semibold text-clinical-800">
                 Clinical values are hidden on this public verification page. Use the secure patient portal or contact the referring doctor/reception to view the full report.
               </div>
-              <Button onClick={() => { const target = getPatientPortalUrl(result).split('#')[1]; window.location.hash = target ? `#${target}` : '#/'; window.location.reload(); }}>Open Secure Patient Portal</Button>
+              <Button className="w-full sm:w-auto" onClick={() => { const target = getPatientPortalUrl(result).split('#')[1]; window.location.hash = target ? `#${target}` : '#/'; window.location.reload(); }}>Open Secure Patient Portal</Button>
             </div>
           ) : (
             <div className="rounded-2xl bg-amber-50 p-5 text-sm font-semibold text-amber-800">No report was found for secure ID <span className="font-mono">{secureId || 'missing'}</span>. Confirm the QR code or secure link and try again.</div>
           )}
         </Card>
-        <div className="text-center"><Button variant="secondary" onClick={() => { window.location.hash = '#/'; window.location.reload(); }}>Return to system login</Button></div>
+        <div className="text-center"><Button className="w-full sm:w-auto" variant="secondary" onClick={() => { window.location.hash = '#/'; window.location.reload(); }}>Return to system login</Button></div>
       </div>
     </main>
   );

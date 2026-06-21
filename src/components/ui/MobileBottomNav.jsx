@@ -56,7 +56,7 @@ export function MobileBottomNav() {
   ];
 
   return (
-    <nav className="fixed inset-x-3 bottom-3 z-40 rounded-[1.65rem] border border-white/70 bg-white/95 p-1.5 shadow-panel backdrop-blur-xl lg:hidden print:hidden" aria-label="Mobile quick navigation">
+    <nav className="mobile-bottom-nav fixed inset-x-2 bottom-[calc(0.5rem+env(safe-area-inset-bottom))] z-40 rounded-[1.5rem] border border-white/70 bg-white/95 p-1.5 shadow-panel backdrop-blur-xl sm:inset-x-3 lg:hidden print:hidden" aria-label="Mobile quick navigation">
       <div className="grid grid-cols-5 gap-1">
         {links.map((item) => {
           const Icon = item.icon || Search;
@@ -70,13 +70,15 @@ export function MobileBottomNav() {
               key={item.id}
               type="button"
               onClick={handleClick}
+              aria-current={active ? 'page' : undefined}
+              aria-label={item.id === '__menu__' ? 'Open full navigation menu' : `Go to ${item.label}`}
               className={clsx(
-                'flex min-h-[3.35rem] flex-col items-center justify-center rounded-2xl px-1 text-[10px] font-black transition active:scale-95',
+                'flex min-h-[3.25rem] min-w-0 flex-col items-center justify-center rounded-2xl px-1 text-[10px] font-black transition active:scale-95',
                 active ? 'bg-clinical-600 text-white shadow-sm' : 'text-slate-500 hover:bg-clinical-50 hover:text-clinical-700'
               )}
             >
-              <Icon className="mb-0.5 h-4 w-4" />
-              <span className="max-w-full truncate">{item.label}</span>
+              <Icon className="mb-0.5 h-4 w-4 shrink-0" />
+              <span className="max-w-full truncate leading-tight">{item.label}</span>
             </button>
           );
         })}

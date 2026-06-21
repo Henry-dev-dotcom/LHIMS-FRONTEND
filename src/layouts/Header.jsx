@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, ChevronDown, Home, LogOut, RotateCcw, Sparkles, UserRound } from 'lucide-react';
+import { Bell, ChevronDown, Home, LogOut, Menu, RotateCcw, Sparkles, UserRound } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { NotificationDrawer } from '../components/ui/NotificationDrawer';
+import { MobileActionBar } from '../components/ui/MobileActionBar';
 import { PAGE_HEADER_EVENT } from '../components/ui/PageHeader';
 import { useAppStore } from '../store/AppStore';
 import { PAGE_META } from '../routes/routeRegistry';
@@ -60,9 +61,10 @@ export function Header() {
   const notificationTriggerRef = useRef(null);
   const userMenuRef = useRef(null);
   const userDropdownRef = useRef(null);
-  const [userMenuPosition, setUserMenuPosition] = useState({ top: 0, right: 24 });
+  const [userMenuPosition, setUserMenuPosition] = useState({ top: 0, right: 16 });
   const role = state.auth?.role;
   const roleInfo = ROLES.find((item) => item.id === role);
+  const userInitial = (state.auth?.userName || roleInfo?.label || 'U').charAt(0);
 
   useEffect(() => {
     setPageHeader(fallbackPageHeader(state.currentPage, role));
@@ -70,6 +72,8 @@ export function Header() {
 
   useEffect(() => {
     if (!userMenuOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     const handlePointerDown = (event) => {
       if (userMenuRef.current?.contains(event.target) || userDropdownRef.current?.contains(event.target)) return;
       setUserMenuOpen(false);
@@ -78,9 +82,12 @@ export function Header() {
       if (event.key === 'Escape') setUserMenuOpen(false);
     };
     document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
     return () => {
+      document.body.style.overflow = previousOverflow;
       document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [userMenuOpen]);
@@ -91,7 +98,7 @@ export function Header() {
     const syncUserMenuPosition = () => {
       const triggerRect = userMenuRef.current?.getBoundingClientRect();
       if (!triggerRect) return;
-      const viewportPadding = 16;
+      const viewportPadding = 12;
       setUserMenuPosition({
         top: Math.min(triggerRect.bottom + 8, window.innerHeight - viewportPadding),
         right: Math.max(viewportPadding, window.innerWidth - triggerRect.right)
@@ -127,10 +134,81 @@ export function Header() {
   const unread = roleNotifications.filter((item) => !item.read && item.status !== 'Delivered').length;
 
   return (
-    <header className="relative z-[90] border-b border-white/60 bg-slate-50/80 px-3 py-2 shadow-sm backdrop-blur-2xl sm:px-5 lg:px-8 print:hidden">
-      <div className="ml-14 max-w-full overflow-visible lg:ml-0">
-        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-2xl focus:bg-clinical-700 focus:px-4 focus:py-2 focus:text-sm focus:font-black focus:text-white">Skip to content</a>
-        <div className="relative flex min-h-[4.6rem] max-w-full items-center justify-between gap-3 overflow-visible rounded-[1.35rem] border border-white/85 bg-white/94 px-4 py-2.5 shadow-card backdrop-blur-xl sm:px-5 lg:px-6">
+    <header className="relative z-[90] border-b border-white/60 bg-slate-50/88 px-3 py-2 shadow-sm backdrop-blur-2xl sm:px-5 lg:px-8 print:hidden">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-2xl focus:bg-clinical-700 focus:px-4 focus:py-2 focus:text-sm focus:font-black focus:text-white">Skip to content</a>
+
+      <div className="lg:hidden">
+        <div className="flex min-h-[3.75rem] items-center justify-between gap-2 rounded-[1.25rem] border border-white/85 bg-white/95 px-2.5 py-2 shadow-card backdrop-blur-xl">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <button
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-slate-950 text-white shadow-sm transition active:scale-95"
+              type="button"
+              onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
+              aria-label="Open menu"
+              aria-expanded={state.ui.sidebarOpen}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-[0.95rem] font-black tracking-tight text-slate-950">{pageHeader?.title || 'Diagnosis Center'}</h1>
+              <p className="mt-0.5 truncate text-[11px] font-bold text-slate-500">{pageHeader?.eyebrow || roleInfo?.label || 'Workspace'}</p>
+            </div>
+          </div>
+
+          <div className="relative z-[95] flex shrink-0 items-center gap-1.5">
+            <div ref={notificationTriggerRef} className="relative">
+              <button
+                className="relative grid h-10 w-10 place-items-center rounded-2xl border border-slate-200/80 bg-white/90 text-slate-600 shadow-sm transition hover:border-clinical-200 hover:bg-clinical-50 hover:text-clinical-700"
+                title="Role notifications"
+                type="button"
+                aria-label={unread > 0 ? `${unread} unread notifications` : 'Open notifications'}
+                aria-expanded={notificationsOpen}
+                onClick={() => setNotificationsOpen((value) => !value)}
+              >
+                <Bell className="h-4 w-4" />
+                {unread > 0 && <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-danger px-1 text-[10px] font-black text-white ring-2 ring-white">{unread}</span>}
+              </button>
+              <NotificationDrawer
+                open={notificationsOpen}
+                notifications={roleNotifications}
+                onClose={() => setNotificationsOpen(false)}
+                onMarkDelivered={(notificationId) => dispatch({ type: 'MARK_NOTIFICATION_DELIVERED', notificationId })}
+                ignoreRef={notificationTriggerRef}
+              />
+            </div>
+
+            <div ref={userMenuRef} className="relative">
+              <button
+                className="grid h-10 w-10 place-items-center rounded-2xl border border-slate-200/80 bg-white/95 text-slate-700 shadow-sm transition hover:border-clinical-200 hover:bg-clinical-50 hover:text-clinical-800"
+                title="User menu"
+                type="button"
+                aria-label="Open user menu"
+                aria-expanded={userMenuOpen}
+                onClick={() => setUserMenuOpen((value) => !value)}
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-xl bg-clinical-600 text-xs font-black text-white shadow-sm">{userInitial}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        {(pageHeader?.description || pageHeader?.actions) && (
+          <div className="mt-2 grid gap-2">
+            {pageHeader?.description && (
+              <details className="group rounded-[1.15rem] border border-white/75 bg-white/72 px-3 py-2 text-xs font-semibold leading-5 text-slate-500 shadow-sm backdrop-blur-xl">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-600 marker:hidden [&::-webkit-details-marker]:hidden">
+                  Screen guide
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500 group-open:bg-clinical-50 group-open:text-clinical-700">Tap</span>
+                </summary>
+                <p className="mt-2 break-words">{pageHeader.description}</p>
+              </details>
+            )}
+            {pageHeader?.actions && <MobileActionBar>{pageHeader.actions}</MobileActionBar>}
+          </div>
+        )}
+      </div>
+
+      <div className="hidden overflow-visible lg:block">
+        <div className="relative flex min-h-[4.6rem] max-w-full items-center justify-between gap-3 overflow-visible rounded-[1.35rem] border border-white/85 bg-white/94 px-6 py-2.5 shadow-card backdrop-blur-xl">
           <div className="min-w-0 flex-1 pr-2">
             {pageHeader?.eyebrow && (
               <p className="inline-flex items-center gap-1.5 rounded-full border border-clinical-100 bg-clinical-50/80 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-clinical-800 shadow-sm">
@@ -139,17 +217,20 @@ export function Header() {
             )}
             <div className="mt-1.5 flex min-w-0 flex-col gap-2 xl:flex-row xl:items-end xl:justify-between">
               <div className="min-w-0">
-                <h1 className="truncate text-xl font-black tracking-tight text-slate-950 sm:text-2xl lg:text-[1.65rem]">{pageHeader?.title || 'Diagnosis Center'}</h1>
-                {pageHeader?.description && <p className="mt-0.5 line-clamp-1 max-w-5xl text-xs leading-5 text-slate-600 sm:text-sm">{pageHeader.description}</p>}
+                <h1 className="truncate text-[1.65rem] font-black tracking-tight text-slate-950">{pageHeader?.title || 'Diagnosis Center'}</h1>
+                {pageHeader?.description && <p className="mt-0.5 line-clamp-1 max-w-5xl text-sm leading-5 text-slate-600">{pageHeader.description}</p>}
               </div>
               {pageHeader?.actions && <div className="flex shrink-0 flex-wrap gap-2">{pageHeader.actions}</div>}
             </div>
           </div>
-          <div className="relative z-[95] flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <div className="relative z-[95] flex shrink-0 items-center gap-2">
             <div ref={notificationTriggerRef} className="relative">
               <button
-                className="relative grid h-9 w-9 place-items-center rounded-2xl border border-slate-200/80 bg-white/90 text-slate-600 shadow-sm transition hover:border-clinical-200 hover:bg-clinical-50 hover:text-clinical-700 sm:h-10 sm:w-10"
+                className="relative grid h-10 w-10 place-items-center rounded-2xl border border-slate-200/80 bg-white/90 text-slate-600 shadow-sm transition hover:border-clinical-200 hover:bg-clinical-50 hover:text-clinical-700"
                 title="Role notifications"
+                type="button"
+                aria-label={unread > 0 ? `${unread} unread notifications` : 'Open notifications'}
+                aria-expanded={notificationsOpen}
                 onClick={() => setNotificationsOpen((value) => !value)}
               >
                 <Bell className="h-4 w-4" />
@@ -164,67 +245,85 @@ export function Header() {
               />
             </div>
             <Button variant="secondary" onClick={() => dispatch({ type: 'GO_HOME' })}>
-              <Home className="h-4 w-4" /> <span className="hidden sm:inline">Home</span>
+              <Home className="h-4 w-4" /> <span>Home</span>
             </Button>
             <Button variant="secondary" onClick={() => dispatch({ type: 'RESET_DEMO_DATA' })}>
-              <RotateCcw className="h-4 w-4" /> <span className="hidden sm:inline">Reset</span>
+              <RotateCcw className="h-4 w-4" /> <span>Reset</span>
             </Button>
             <div ref={userMenuRef} className="relative">
               <button
-                className="flex h-10 items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/95 px-2.5 text-slate-700 shadow-sm transition hover:border-clinical-200 hover:bg-clinical-50 hover:text-clinical-800 sm:h-11 sm:px-3"
+                className="flex h-11 items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/95 px-3 text-slate-700 shadow-sm transition hover:border-clinical-200 hover:bg-clinical-50 hover:text-clinical-800"
                 title="User menu"
+                type="button"
                 aria-label="Open user menu"
                 aria-expanded={userMenuOpen}
                 onClick={() => setUserMenuOpen((value) => !value)}
               >
-                <span className="grid h-7 w-7 place-items-center rounded-xl bg-clinical-600 text-xs font-black text-white shadow-sm">{(state.auth?.userName || roleInfo?.label || 'U').charAt(0)}</span>
+                <span className="grid h-7 w-7 place-items-center rounded-xl bg-clinical-600 text-xs font-black text-white shadow-sm">{userInitial}</span>
                 <span className="hidden min-w-0 text-left lg:block">
                   <span className="block max-w-[8rem] truncate text-xs font-black text-slate-900">{state.auth?.userName || 'User'}</span>
                   <span className="block max-w-[8rem] truncate text-[10px] font-bold capitalize text-slate-500">{roleInfo?.demoUsername || role || 'workspace'}</span>
                 </span>
-                <ChevronDown className="hidden h-4 w-4 text-slate-400 sm:block" />
+                <ChevronDown className="h-4 w-4 text-slate-400" />
               </button>
-              {userMenuOpen && typeof document !== 'undefined' && createPortal(
-                <div
-                  ref={userDropdownRef}
-                  className="fixed z-[130] w-72 overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-lift ring-1 ring-slate-950/5"
-                  style={{ top: `${userMenuPosition.top}px`, right: `${userMenuPosition.right}px` }}
-                  role="menu"
-                  aria-label="User session menu"
-                >
-                  <div className="border-b border-slate-100 bg-slate-50/80 p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-clinical-600 to-emerald-500 text-lg font-black text-white shadow-sm">{(state.auth?.userName || roleInfo?.label || 'U').charAt(0)}</div>
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Signed in as</p>
-                        <p className="truncate text-base font-black text-slate-950">{state.auth?.userName || 'User'}</p>
-                        <p className="text-xs font-semibold capitalize text-slate-500">{roleInfo?.demoUsername || role || 'workspace'}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-3">
-                    <div className="mb-3 rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                      <div className="flex items-center gap-2 font-black text-slate-800"><UserRound className="h-3.5 w-3.5" /> {roleInfo?.label || 'Workspace'}</div>
-                      <p className="mt-1 leading-5">Use this menu to view your session details or sign out securely.</p>
-                    </div>
-                    <Button
-                      variant="danger"
-                      className="w-full"
-                      onClick={() => {
-                        setUserMenuOpen(false);
-                        dispatch({ type: 'LOGOUT' });
-                      }}
-                    >
-                      <LogOut className="h-4 w-4" /> Sign Out
-                    </Button>
-                  </div>
-                </div>,
-                document.body
-              )}
             </div>
           </div>
         </div>
       </div>
+
+      {userMenuOpen && typeof document !== 'undefined' && createPortal(
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-[129] bg-slate-950/40 backdrop-blur-sm md:hidden"
+            aria-label="Close user menu"
+            onClick={() => setUserMenuOpen(false)}
+          />
+          <div
+          ref={userDropdownRef}
+          className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-[130] max-h-[calc(86dvh-env(safe-area-inset-bottom))] overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-lift ring-1 ring-slate-950/5 md:inset-x-auto md:bottom-auto md:right-[var(--user-menu-right)] md:top-[var(--user-menu-top)] md:w-[calc(100vw-1.5rem)] md:max-w-72 md:rounded-3xl"
+          style={{ '--user-menu-top': `${userMenuPosition.top}px`, '--user-menu-right': `${userMenuPosition.right}px` }}
+          role="menu"
+          aria-label="User session menu"
+        >
+          <div className="border-b border-slate-100 bg-slate-50/80 p-4">
+            <div className="flex items-center gap-3">
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-clinical-600 to-emerald-500 text-lg font-black text-white shadow-sm">{userInitial}</div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Signed in as</p>
+                <p className="truncate text-base font-black text-slate-950">{state.auth?.userName || 'User'}</p>
+                <p className="text-xs font-semibold capitalize text-slate-500">{roleInfo?.demoUsername || role || 'workspace'}</p>
+              </div>
+            </div>
+          </div>
+          <div className="max-h-[calc(86dvh-7rem-env(safe-area-inset-bottom))] space-y-2 overflow-y-auto overscroll-contain p-3">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+              <div className="flex items-center gap-2 font-black text-slate-800"><UserRound className="h-3.5 w-3.5" /> {roleInfo?.label || 'Workspace'}</div>
+              <p className="mt-1 leading-5">Use this menu to view your session details or sign out securely.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 md:hidden">
+              <Button variant="secondary" size="sm" onClick={() => { setUserMenuOpen(false); dispatch({ type: 'GO_HOME' }); }}>
+                <Home className="h-4 w-4" /> Home
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => { setUserMenuOpen(false); dispatch({ type: 'RESET_DEMO_DATA' }); }}>
+                <RotateCcw className="h-4 w-4" /> Reset
+              </Button>
+            </div>
+            <Button
+              variant="danger"
+              className="w-full"
+              onClick={() => {
+                setUserMenuOpen(false);
+                dispatch({ type: 'LOGOUT' });
+              }}
+            >
+              <LogOut className="h-4 w-4" /> Sign Out
+            </Button>
+          </div>
+        </div>
+        </>,
+        document.body
+      )}
     </header>
   );
 }

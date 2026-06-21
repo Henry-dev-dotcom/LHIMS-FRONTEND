@@ -13,12 +13,16 @@
 }
 
 html {
+  width: 100%;
+  overflow-x: hidden;
   scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
+  width: 100%;
   min-width: 320px;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at 0% 0%, rgba(26, 115, 232, 0.11), transparent 34%),
     radial-gradient(circle at 88% 10%, rgba(52, 168, 83, 0.10), transparent 30%),
@@ -42,7 +46,24 @@ body::before {
 }
 
 button, input, textarea, select {
+  max-width: 100%;
   font: inherit;
+}
+
+img, svg, video, canvas {
+  max-width: 100%;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+@supports (height: 100dvh) {
+  #root {
+    min-height: 100dvh;
+  }
 }
 
 button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
@@ -119,6 +140,31 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   background: rgba(26, 115, 232, 0.55);
 }
 
+
+@media (max-width: 767px) {
+  body {
+    font-size: 14px;
+  }
+
+  .clinical-page-section {
+    border-radius: 1.25rem;
+  }
+
+  .clinical-action-bar {
+    bottom: calc(5rem + env(safe-area-inset-bottom));
+    width: calc(100% - 1rem);
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @media print {
   body {
     background: #fff !important;
@@ -151,5 +197,356 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   tr {
     page-break-inside: avoid;
     page-break-after: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .mobile-action-bar {
+    margin-top: -0.125rem;
+  }
+
+  .mobile-action-bar + .clinical-panel,
+  .mobile-action-bar + .clinical-page-section {
+    margin-top: 0.25rem;
+  }
+
+  .clinical-panel {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 767px) {
+  .clinical-input {
+    min-height: 2.85rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+  }
+
+  textarea.clinical-input {
+    line-height: 1.45rem;
+  }
+
+  .clinical-panel form .clinical-input,
+  .clinical-panel form button,
+  .clinical-page-section form .clinical-input,
+  .clinical-page-section form button {
+    width: 100%;
+  }
+
+  .clinical-panel .rounded-3xl,
+  .clinical-page-section .rounded-3xl {
+    border-radius: 1.25rem;
+  }
+
+  .mobile-scroll-fade {
+    mask-image: linear-gradient(to right, transparent, black 1rem, black calc(100% - 1rem), transparent);
+  }
+}
+
+@media (max-width: 767px) {
+  .mobile-sticky-actions {
+    position: sticky;
+    bottom: calc(5.75rem + env(safe-area-inset-bottom));
+    z-index: 25;
+    margin-inline: auto;
+    width: 100%;
+    border-radius: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.96);
+    padding: 0.65rem;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
+    backdrop-filter: blur(18px);
+  }
+
+  .mobile-scroll-fade {
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 1.5rem), transparent 100%);
+    mask-image: linear-gradient(to right, black calc(100% - 1.5rem), transparent 100%);
+  }
+
+  .clinical-panel dl,
+  .clinical-page-section dl {
+    min-width: 0;
+  }
+
+  .clinical-panel dt,
+  .clinical-panel dd,
+  .clinical-page-section dt,
+  .clinical-page-section dd {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Phase 6 mobile hardening: final overflow, wrapping and tap-behavior guardrails. */
+@media (max-width: 1023px) {
+  #main-content,
+  #main-content * {
+    min-width: 0;
+  }
+
+  #main-content p,
+  #main-content span,
+  #main-content dd,
+  #main-content dt,
+  #main-content li,
+  #main-content h1,
+  #main-content h2,
+  #main-content h3,
+  #main-content h4,
+  #main-content label,
+  #main-content button {
+    overflow-wrap: anywhere;
+  }
+
+  #main-content img,
+  #main-content video,
+  #main-content canvas,
+  #main-content table {
+    max-width: 100%;
+  }
+
+  button,
+  [role='button'],
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  .clinical-panel,
+  .clinical-page-section {
+    max-width: 100%;
+  }
+
+  .clinical-panel .flex,
+  .clinical-page-section .flex {
+    min-width: 0;
+  }
+}
+
+
+/* Phase 6 continuation: final phone viewport, toast, menu and embedded-content guardrails. */
+@media (max-width: 767px) {
+  #main-content {
+    scroll-padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+  }
+
+  .clinical-panel,
+  .clinical-page-section,
+  [role='dialog'] {
+    contain: inline-size;
+  }
+
+  #main-content iframe,
+  #main-content object,
+  #main-content embed,
+  #main-content svg {
+    max-width: 100%;
+  }
+
+  #main-content .recharts-wrapper,
+  #main-content .chart-container {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  [aria-label='Mobile quick navigation'] {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+}
+
+/* Phase 7 deployment-grade mobile accessibility and interaction guardrails. */
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 9999;
+  transform: translateY(-150%);
+  border-radius: 1rem;
+  background: #075985;
+  color: #fff;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 900;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.24);
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 3px solid rgba(14, 165, 233, 0.35);
+  outline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(14, 165, 233, 0.45);
+  outline-offset: 3px;
+}
+
+button:focus-visible,
+a:focus-visible,
+[role='tab']:focus-visible,
+summary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.22);
+}
+
+[aria-current='page'] {
+  scroll-margin: 1rem;
+}
+
+@media (max-width: 767px) {
+  button,
+  [role='button'],
+  a,
+  summary {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  summary {
+    min-height: 2.75rem;
+    align-items: center;
+  }
+
+  [role='dialog'] input,
+  [role='dialog'] select,
+  [role='dialog'] textarea {
+    font-size: 16px;
+  }
+
+  [role='status'] {
+    max-width: calc(100vw - 1.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Phase 8 real-device mobile and deployment hardening */
+:root {
+  --app-vh: 1vh;
+  --app-visual-height: 100vh;
+  --mobile-bottom-nav-space: 6.75rem;
+  accent-color: #1a73e8;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-vh: 1dvh;
+  }
+}
+
+@media (max-width: 1023px) {
+  html,
+  body,
+  #root {
+    min-height: calc(var(--app-vh, 1vh) * 100);
+    min-height: 100dvh;
+    overscroll-behavior-x: none;
+  }
+
+  .mobile-bottom-nav {
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    transition: transform 160ms ease, opacity 160ms ease;
+  }
+
+  .mobile-toast {
+    max-width: calc(100vw - 1.5rem);
+  }
+
+  .mobile-keyboard-open .mobile-bottom-nav {
+    transform: translate3d(0, calc(115% + env(safe-area-inset-bottom)), 0);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .mobile-keyboard-open body {
+    overscroll-behavior: contain;
+  }
+
+  .mobile-compact-landscape .mobile-bottom-nav {
+    inset-inline: 0.75rem;
+    bottom: calc(0.35rem + env(safe-area-inset-bottom));
+  }
+
+  .mobile-compact-landscape .mobile-bottom-nav button {
+    min-height: 2.65rem;
+  }
+
+  .mobile-compact-landscape .mobile-bottom-nav span {
+    display: none;
+  }
+
+  .mobile-compact-landscape main {
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (display-mode: standalone) {
+  body {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  input,
+  textarea,
+  select,
+  [contenteditable="true"] {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
+
+@media (max-width: 767px) and (orientation: landscape) {
+  .clinical-page-section,
+  .clinical-panel {
+    border-radius: 1rem;
+  }
+
+  .clinical-input {
+    min-height: 2.65rem;
+  }
+}
+
+/* Phase 9 hosted-mobile reliability: network/update banners and cache-safe fixed UI. */
+.mobile-system-banner {
+  max-width: calc(100vw - 1.5rem);
+  overflow-wrap: anywhere;
+  contain: inline-size;
+}
+
+@media (max-width: 767px) {
+  .mobile-system-banner {
+    border-radius: 1rem;
+  }
+
+  .mobile-system-banner button {
+    min-height: 2.75rem;
+  }
+
+  .mobile-keyboard-open .mobile-system-banner {
+    display: none;
+  }
+}
+
+@media (display-mode: standalone) and (max-width: 767px) {
+  .mobile-system-banner {
+    margin-inline: 0.75rem;
   }
 }

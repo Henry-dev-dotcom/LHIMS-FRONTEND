@@ -2,21 +2,31 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { ToastHost } from '../components/ui/ToastHost';
 import { MobileBottomNav } from '../components/ui/MobileBottomNav';
+import { NetworkStatusBanner } from '../components/ui/NetworkStatusBanner';
+import { ServiceWorkerUpdateBanner } from '../components/ui/ServiceWorkerUpdateBanner';
 import { AppRouter } from '../routes/AppRouter';
+import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 
 export function AppShell() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-app-radial text-slate-900 print:bg-white">
-      <div className="min-h-screen lg:flex">
-        <Sidebar />
-        <div className="min-w-0 flex-1 overflow-x-hidden lg:ml-[19rem]">
-          <Header />
-          <main id="main-content" className="relative z-0 px-3 pb-28 pt-3 sm:px-5 lg:px-8 lg:pb-5 lg:pt-4 print:px-0 print:py-0">
-            <div className="mx-auto max-w-[1540px] print:max-w-none">
+    <div className="min-h-screen w-full overflow-x-hidden bg-app-radial text-slate-900 print:bg-white">
+      <a className="skip-link" href="#main-content">Skip to content</a>
+      <Sidebar />
+      <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden lg:ml-[19rem]">
+        <Header />
+        <NetworkStatusBanner />
+        <ServiceWorkerUpdateBanner />
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="relative z-0 min-w-0 flex-1 overflow-x-hidden px-3 pb-[calc(var(--mobile-bottom-nav-space,6.75rem)+env(safe-area-inset-bottom))] pt-3 outline-none sm:px-5 lg:px-8 lg:pb-6 lg:pt-4 print:px-0 print:py-0"
+        >
+          <div className="mx-auto w-full min-w-0 max-w-[1540px] overflow-x-hidden print:max-w-none">
+            <ErrorBoundary>
               <AppRouter />
-            </div>
-          </main>
-        </div>
+            </ErrorBoundary>
+          </div>
+        </main>
         <MobileBottomNav />
         <ToastHost />
       </div>

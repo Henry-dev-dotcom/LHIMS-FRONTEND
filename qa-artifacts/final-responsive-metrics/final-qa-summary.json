@@ -1,0 +1,14 @@
+{
+  "testedAt": "2026-06-20",
+  "viewports": [
+    "phone 390x844",
+    "desktop 1440x900"
+  ],
+  "totalChecks": 104,
+  "rawStatusCounts": {
+    "passed": 90,
+    "review": 14
+  },
+  "finalDecision": "passed after manual review of informational phone header-height notes",
+  "blockingIssues": 0
+}

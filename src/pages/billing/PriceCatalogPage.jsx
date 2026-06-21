@@ -150,25 +150,17 @@ export function PriceCatalogPage() {
               {parameterRows.length === 0 ? (
                 <p className="mt-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500">No structured lab parameters are configured for this scan/imaging item.</p>
               ) : (
-                <div className="mt-3 overflow-x-auto rounded-2xl border border-slate-200">
-                  <table className="min-w-full divide-y divide-slate-200 text-sm">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Parameter</th>
-                        <th className="px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Unit</th>
-                        <th className="px-3 py-3 text-left text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Reference Range</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {parameterRows.map((parameter) => (
-                        <tr key={parameter.name}>
-                          <td className="px-3 py-3 font-bold text-slate-800">{parameter.name}</td>
-                          <td className="px-3 py-3 text-slate-600">{parameter.unit || '—'}</td>
-                          <td className="px-3 py-3 text-slate-600">{parameter.referenceRange || '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="mt-3">
+                  <DataTable
+                    columns={[
+                      { key: 'name', label: 'Parameter', mobilePrimary: true },
+                      { key: 'unit', label: 'Unit', render: (row) => row.unit || '—' },
+                      { key: 'referenceRange', label: 'Reference Range', render: (row) => row.referenceRange || '—' }
+                    ]}
+                    rows={parameterRows.map((parameter) => ({ ...parameter, id: parameter.name }))}
+                    emptyMessage="No parameters configured."
+                    dense
+                  />
                 </div>
               )}
             </div>

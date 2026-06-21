@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import clsx from 'clsx';
 
 const variants = {
@@ -15,12 +16,13 @@ const sizes = {
   lg: 'min-h-12 rounded-2xl px-5 py-3 text-sm sm:min-h-0'
 };
 
-export function Button({ children, variant = 'primary', size = 'md', className, type = 'button', ...props }) {
+export const Button = forwardRef(function Button({ children, variant = 'primary', size = 'md', className, type = 'button', ...props }, ref) {
   return (
     <button
+      ref={ref}
       type={type}
       className={clsx(
-        'inline-flex items-center justify-center gap-2 font-bold transition duration-200 hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-clinical-100 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0',
+        'inline-flex min-w-0 items-center justify-center gap-2 overflow-hidden text-center font-bold leading-5 transition duration-200 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-clinical-200 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 [&_svg]:shrink-0',
         variants[variant] || variants.primary,
         sizes[size] || sizes.md,
         className
@@ -30,4 +32,4 @@ export function Button({ children, variant = 'primary', size = 'md', className, 
       {children}
     </button>
   );
-}
+});

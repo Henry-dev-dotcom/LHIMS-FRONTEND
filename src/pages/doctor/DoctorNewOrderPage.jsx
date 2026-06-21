@@ -87,12 +87,12 @@ function CatalogSearchModal({ open, onClose, catalog, selectedItems, toggleItem,
           {matches.map((item) => {
             const selected = selectedItems.includes(item.id);
             return (
-              <button key={item.id} type="button" onClick={() => toggleItem(item.id)} className={`flex w-full items-center justify-between gap-3 rounded-2xl border p-4 text-left transition ${selected ? 'border-clinical-300 bg-clinical-50 ring-4 ring-clinical-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
+              <button key={item.id} type="button" onClick={() => toggleItem(item.id)} className={`flex w-full flex-col gap-3 rounded-2xl border p-3 text-left transition sm:flex-row sm:items-center sm:justify-between sm:p-4 ${selected ? 'border-clinical-300 bg-clinical-50 ring-4 ring-clinical-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
                 <div>
                   <div className="flex flex-wrap items-center gap-2"><p className="font-black text-slate-950">{item.name}</p><StatusBadge status={item.type} /></div>
                   <p className="mt-1 text-sm text-slate-500">ID: {item.id} · {item.department === 'Imaging' ? 'Radiology / Scan' : item.department}{item.modality ? ` · ${item.modality}` : ''} · ETA {item.expectedHours}h</p>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-black ${selected ? 'bg-clinical-600 text-white' : 'bg-slate-100 text-slate-600'}`}>{selected ? 'Added' : 'Add'}</span>
+                <span className={`w-full rounded-full px-3 py-1 text-center text-xs font-black sm:w-auto ${selected ? 'bg-clinical-600 text-white' : 'bg-slate-100 text-slate-600'}`}>{selected ? 'Added' : 'Add'}</span>
               </button>
             );
           })}
@@ -231,7 +231,7 @@ export function DoctorNewOrderPage() {
         description="A guided ordering flow: choose a patient, add multiple investigations, review the request, then submit it to reception."
       />
 
-      <form onSubmit={openReview} className="grid gap-5 xl:grid-cols-3">
+      <form onSubmit={openReview} className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,0.9fr)]">
         <div className="space-y-5 xl:col-span-2">
           {attemptedSubmit && validationIssues.length > 0 && (
             <div className="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
@@ -317,12 +317,12 @@ export function DoctorNewOrderPage() {
 
             <div className="mt-4 space-y-2">
               {chosenCatalogItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+                <div key={item.id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
                   <div>
                     <div className="flex flex-wrap items-center gap-2"><p className="font-black text-slate-950">{item.name}</p><StatusBadge status={item.type} /></div>
                     <p className="text-sm text-slate-500">{item.id} · {item.department === 'Imaging' ? 'Radiology / Scan' : item.department} · ETA {item.expectedHours}h</p>
                   </div>
-                  <button type="button" onClick={() => removeItem(item.id)} className="rounded-full p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => removeItem(item.id)} className="self-end rounded-full p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 sm:self-auto"><Trash2 className="h-4 w-4" /></button>
                 </div>
               ))}
               {chosenCatalogItems.length === 0 && <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm font-semibold text-slate-500">No tests or scans selected yet.</div>}
@@ -338,7 +338,7 @@ export function DoctorNewOrderPage() {
           </Card>
         </div>
 
-        <aside className="space-y-5">
+        <aside className="space-y-5 xl:sticky xl:top-28 xl:self-start">
           <Card title="Order Summary" subtitle="Review before submitting." compact>
             <div className="space-y-4 text-sm">
               <div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Patient</p><p className="font-black text-slate-950">{patientMode === 'existing' ? selectedPatient?.fullName || 'None selected' : newPatient.fullName || 'New patient'}</p></div>
