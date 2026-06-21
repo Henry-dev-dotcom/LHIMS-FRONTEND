@@ -206,7 +206,7 @@ export function RoleDashboard({ role }) {
   return (
     <div>
       <PageHeader eyebrow={config.eyebrow} title={config.title} description={config.description} />
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="dashboard-metric-row grid grid-cols-4 gap-2 md:grid-cols-2 md:gap-3 xl:grid-cols-4">
         {getMetrics(role, state.data, state.auth).map(([label, value, Icon, tone]) => (
           <MetricCard key={label} label={label} value={value} icon={Icon} tone={tone} />
         ))}

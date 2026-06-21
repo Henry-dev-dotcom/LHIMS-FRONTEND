@@ -43,8 +43,8 @@ export function PatientCheckInPage() {
     { id: 'duplicates', label: 'Duplicates', helper: 'Review matches', icon: FileSearch, tone: 'amber', count: duplicateCandidates.length }
   ];
 
-  function checkIn() {
-    dispatch({ type: 'CHECK_IN_PATIENT', payload: { patientId: selectedPatientId, orderId: selectedOrderId, identityVerified, notes } });
+  function checkIn({ requestTests = false } = {}) {
+    dispatch({ type: 'CHECK_IN_PATIENT', payload: { patientId: selectedPatientId, orderId: selectedOrderId, identityVerified, notes, nextAction: requestTests ? 'request-tests' : '' } });
     setSection('visits');
   }
 
@@ -66,7 +66,10 @@ export function PatientCheckInPage() {
         <FormField label="Check-in notes">
           <textarea className={inputClass} rows="3" value={notes} onChange={(event) => setNotes(event.target.value)} />
         </FormField>
-        <Button onClick={checkIn} disabled={!selectedPatientId}>Check In Patient</Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button onClick={() => checkIn()} disabled={!selectedPatientId}>Check In Patient</Button>
+          <Button variant="secondary" onClick={() => checkIn({ requestTests: true })} disabled={!selectedPatientId}>Check In & Request Tests</Button>
+        </div>
       </div>
     </Card>
   );
@@ -95,7 +98,10 @@ export function PatientCheckInPage() {
               {patientOrders.map((order) => <option key={order.id} value={order.id}>{order.id} — {order.status}</option>)}
             </select>
           </FormField>
-          <Button onClick={checkIn} disabled={!selectedPatientId}>Check In With Selected Order</Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button onClick={() => checkIn()} disabled={!selectedPatientId}>Check In With Selected Order</Button>
+            <Button variant="secondary" onClick={() => checkIn({ requestTests: true })} disabled={!selectedPatientId || Boolean(selectedOrderId)}>Standalone Check-In & Request Tests</Button>
+          </div>
         </div>
       </Card>}
 
@@ -107,7 +113,8 @@ export function PatientCheckInPage() {
             { key: 'orderId', label: 'Order', render: (row) => row.orderId || 'Standalone' },
             { key: 'identityVerified', label: 'Identity', render: (row) => <StatusBadge status={row.identityVerified ? 'Verified' : 'Not verified'} /> },
             { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
-            { key: 'checkedInAt', label: 'Checked In', render: (row) => formatDateTime(row.checkedInAt) }
+            { key: 'checkedInAt', label: 'Checked In', render: (row) => formatDateTime(row.checkedInAt) },
+            { key: 'actions', label: 'Action', render: (row) => !row.orderId ? <Button variant="secondary" onClick={() => dispatch({ type: 'START_WALK_IN_TEST_REQUEST', payload: { patientId: row.patientId, visitId: row.id } })}>Request Tests</Button> : <span className="text-xs font-bold text-slate-400">Linked</span> }
           ]}
           rows={todaysVisits.slice(0, 12)}
           emptyMessage="No checked-in patients yet."

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import clsx from 'clsx';
 import { Bell, ChevronDown, Home, LogOut, Menu, RotateCcw, Sparkles, UserRound } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { NotificationDrawer } from '../components/ui/NotificationDrawer';
@@ -61,14 +62,36 @@ export function Header() {
   const notificationTriggerRef = useRef(null);
   const userMenuRef = useRef(null);
   const userDropdownRef = useRef(null);
+  const screenGuideRef = useRef(null);
   const [userMenuPosition, setUserMenuPosition] = useState({ top: 0, right: 16 });
+  const [screenGuideOpen, setScreenGuideOpen] = useState(false);
   const role = state.auth?.role;
   const roleInfo = ROLES.find((item) => item.id === role);
   const userInitial = (state.auth?.userName || roleInfo?.label || 'U').charAt(0);
 
   useEffect(() => {
     setPageHeader(fallbackPageHeader(state.currentPage, role));
+    setScreenGuideOpen(false);
   }, [state.currentPage, role]);
+
+  useEffect(() => {
+    if (!screenGuideOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (screenGuideRef.current?.contains(event.target)) return;
+      setScreenGuideOpen(false);
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setScreenGuideOpen(false);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [screenGuideOpen]);
 
   useEffect(() => {
     if (!userMenuOpen) return undefined;
@@ -138,73 +161,100 @@ export function Header() {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-2xl focus:bg-clinical-700 focus:px-4 focus:py-2 focus:text-sm focus:font-black focus:text-white">Skip to content</a>
 
       <div className="lg:hidden">
-        <div className="flex min-h-[3.75rem] items-center justify-between gap-2 rounded-[1.25rem] border border-white/85 bg-white/95 px-2.5 py-2 shadow-card backdrop-blur-xl">
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <button
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-slate-950 text-white shadow-sm transition active:scale-95"
-              type="button"
-              onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
-              aria-label="Open menu"
-              aria-expanded={state.ui.sidebarOpen}
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-[0.95rem] font-black tracking-tight text-slate-950">{pageHeader?.title || 'Diagnosis Center'}</h1>
-              <p className="mt-0.5 truncate text-[11px] font-bold text-slate-500">{pageHeader?.eyebrow || roleInfo?.label || 'Workspace'}</p>
+        <div className="rounded-[1.35rem] border border-white/85 bg-white/96 px-3 py-2.5 shadow-card backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-2">
+            <div className="inline-flex min-w-0 flex-1 items-center gap-1.5 rounded-full border border-clinical-100 bg-clinical-50/90 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-clinical-800 shadow-sm">
+              <Sparkles className="h-3 w-3 shrink-0" />
+              <span className="truncate">{pageHeader?.eyebrow || roleInfo?.label || 'Workspace'}</span>
+            </div>
+
+            <div className="relative z-[95] flex shrink-0 items-center gap-1.5">
+              <div ref={notificationTriggerRef} className="relative">
+                <button
+                  className="relative grid h-9 w-9 place-items-center rounded-2xl border border-slate-200/80 bg-white/95 text-slate-600 shadow-sm transition hover:border-clinical-200 hover:bg-clinical-50 hover:text-clinical-700 active:scale-95"
+                  title="Role notifications"
+                  type="button"
+                  aria-label={unread > 0 ? `${unread} unread notifications` : 'Open notifications'}
+                  aria-expanded={notificationsOpen}
+                  onClick={() => setNotificationsOpen((value) => !value)}
+                >
+                  <Bell className="h-4 w-4" />
+                  {unread > 0 && <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-danger px-1 text-[10px] font-black text-white ring-2 ring-white">{unread}</span>}
+                </button>
+                <NotificationDrawer
+                  open={notificationsOpen}
+                  notifications={roleNotifications}
+                  onClose={() => setNotificationsOpen(false)}
+                  onMarkDelivered={(notificationId) => dispatch({ type: 'MARK_NOTIFICATION_DELIVERED', notificationId })}
+                  ignoreRef={notificationTriggerRef}
+                />
+              </div>
+
+              <button
+                className="grid h-9 w-9 place-items-center rounded-2xl border border-slate-200/80 bg-white/95 text-slate-600 shadow-sm transition hover:border-clinical-200 hover:bg-clinical-50 hover:text-clinical-700 active:scale-95"
+                type="button"
+                title="Home"
+                aria-label="Go home"
+                onClick={() => dispatch({ type: 'GO_HOME' })}
+              >
+                <Home className="h-4 w-4" />
+              </button>
+
+              <button
+                className="grid h-9 w-9 place-items-center rounded-2xl border border-slate-200/80 bg-white/95 text-slate-600 shadow-sm transition hover:border-clinical-200 hover:bg-clinical-50 hover:text-clinical-700 active:scale-95"
+                type="button"
+                title="Reset demo data"
+                aria-label="Reset demo data"
+                onClick={() => dispatch({ type: 'RESET_DEMO_DATA' })}
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
+
+              <div ref={userMenuRef} className="relative">
+                <button
+                  className="grid h-9 w-9 place-items-center rounded-2xl border border-slate-200/80 bg-white/95 text-slate-700 shadow-sm transition hover:border-clinical-200 hover:bg-clinical-50 hover:text-clinical-800 active:scale-95"
+                  title="User menu"
+                  type="button"
+                  aria-label="Open user menu"
+                  aria-expanded={userMenuOpen}
+                  onClick={() => setUserMenuOpen((value) => !value)}
+                >
+                  <span className="grid h-7 w-7 place-items-center rounded-xl bg-clinical-600 text-xs font-black text-white shadow-sm">{userInitial}</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="relative z-[95] flex shrink-0 items-center gap-1.5">
-            <div ref={notificationTriggerRef} className="relative">
-              <button
-                className="relative grid h-10 w-10 place-items-center rounded-2xl border border-slate-200/80 bg-white/90 text-slate-600 shadow-sm transition hover:border-clinical-200 hover:bg-clinical-50 hover:text-clinical-700"
-                title="Role notifications"
-                type="button"
-                aria-label={unread > 0 ? `${unread} unread notifications` : 'Open notifications'}
-                aria-expanded={notificationsOpen}
-                onClick={() => setNotificationsOpen((value) => !value)}
-              >
-                <Bell className="h-4 w-4" />
-                {unread > 0 && <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-danger px-1 text-[10px] font-black text-white ring-2 ring-white">{unread}</span>}
-              </button>
-              <NotificationDrawer
-                open={notificationsOpen}
-                notifications={roleNotifications}
-                onClose={() => setNotificationsOpen(false)}
-                onMarkDelivered={(notificationId) => dispatch({ type: 'MARK_NOTIFICATION_DELIVERED', notificationId })}
-                ignoreRef={notificationTriggerRef}
-              />
-            </div>
-
-            <div ref={userMenuRef} className="relative">
-              <button
-                className="grid h-10 w-10 place-items-center rounded-2xl border border-slate-200/80 bg-white/95 text-slate-700 shadow-sm transition hover:border-clinical-200 hover:bg-clinical-50 hover:text-clinical-800"
-                title="User menu"
-                type="button"
-                aria-label="Open user menu"
-                aria-expanded={userMenuOpen}
-                onClick={() => setUserMenuOpen((value) => !value)}
-              >
-                <span className="grid h-7 w-7 place-items-center rounded-xl bg-clinical-600 text-xs font-black text-white shadow-sm">{userInitial}</span>
-              </button>
-            </div>
+          <div className="mt-2.5 border-t border-slate-100 pt-2.5">
+            <h1 className="line-clamp-1 text-[1.05rem] font-black leading-tight tracking-tight text-slate-950">{pageHeader?.title || 'Diagnosis Center'}</h1>
+            {pageHeader?.description && (
+              <div ref={screenGuideRef} className="relative mt-1.5 inline-block text-xs font-semibold leading-5 text-slate-500">
+                <button
+                  type="button"
+                  className="inline-flex min-h-0 cursor-pointer items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500 shadow-sm transition duration-200 hover:bg-clinical-50 hover:text-clinical-700 active:scale-[0.98]"
+                  aria-label="Open screen guide"
+                  aria-expanded={screenGuideOpen}
+                  aria-controls="mobile-screen-guide-panel"
+                  onClick={() => setScreenGuideOpen((value) => !value)}
+                >
+                  Screen guide
+                  <ChevronDown className={clsx('h-3 w-3 transition-transform duration-200', screenGuideOpen && 'rotate-180')} />
+                </button>
+                <div
+                  id="mobile-screen-guide-panel"
+                  role="status"
+                  className={clsx(
+                    'pointer-events-none absolute left-0 top-[calc(100%+0.45rem)] z-[140] w-[min(20rem,calc(100vw-2rem))] origin-top-left rounded-2xl border border-clinical-100 bg-white/98 p-3 text-xs font-semibold leading-5 text-slate-600 opacity-0 shadow-lift ring-1 ring-slate-950/5 backdrop-blur-xl transition duration-200 ease-out',
+                    screenGuideOpen ? 'pointer-events-auto translate-y-0 scale-100 opacity-100' : '-translate-y-1 scale-[0.98] opacity-0'
+                  )}
+                >
+                  <p className="break-words">{pageHeader.description}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-        {(pageHeader?.description || pageHeader?.actions) && (
-          <div className="mt-2 grid gap-2">
-            {pageHeader?.description && (
-              <details className="group rounded-[1.15rem] border border-white/75 bg-white/72 px-3 py-2 text-xs font-semibold leading-5 text-slate-500 shadow-sm backdrop-blur-xl">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[11px] font-black uppercase tracking-[0.14em] text-slate-600 marker:hidden [&::-webkit-details-marker]:hidden">
-                  Screen guide
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500 group-open:bg-clinical-50 group-open:text-clinical-700">Tap</span>
-                </summary>
-                <p className="mt-2 break-words">{pageHeader.description}</p>
-              </details>
-            )}
-            {pageHeader?.actions && <MobileActionBar>{pageHeader.actions}</MobileActionBar>}
-          </div>
-        )}
+        {pageHeader?.actions && <div className="mt-2"><MobileActionBar>{pageHeader.actions}</MobileActionBar></div>}
       </div>
 
       <div className="hidden overflow-visible lg:block">

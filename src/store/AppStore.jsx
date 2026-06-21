@@ -29,7 +29,9 @@ const initialState = {
     activeLabAcceptOrderId: '',
     activeAcceptedSampleOrderId: '',
     activeScanAcceptOrderId: '',
-    activeAcceptedScanOrderId: ''
+    activeAcceptedScanOrderId: '',
+    activeWalkInPatientId: '',
+    activeWalkInVisitId: ''
   }
 };
 
@@ -769,7 +771,7 @@ function reducer(state, action) {
       return { ...state, data: result.data, ui: { ...state.ui, toast: toast('success', `${action.orderId} confirmed and routed`) } };
     }
     case 'CHECK_IN_PATIENT': {
-      const { patientId, orderId, identityVerified, notes } = action.payload || {};
+      const { patientId, orderId, identityVerified, notes, nextAction } = action.payload || {};
       if (!patientId) return { ...state, ui: { ...state.ui, toast: toast('error', 'Select a patient before check-in.') } };
       const timestamp = nowIso();
       let nextData = state.data;
@@ -785,6 +787,8 @@ function reducer(state, action) {
         checkedInBy: state.auth?.userName || 'Reception',
         identityVerified: Boolean(identityVerified),
         status: 'Checked In',
+        visitType: nextAction === 'request-tests' ? 'Walk-in' : (orderId ? 'Order' : 'Walk-in'),
+        walkIn: nextAction === 'request-tests' || !orderId,
         notes: notes || ''
       };
       nextData = {
@@ -799,7 +803,17 @@ function reducer(state, action) {
           details: orderId ? `Linked to ${orderId}` : 'Walk-in / standalone check-in'
         })
       };
-      return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', 'Patient checked in and added to daily visit log') } };
+      return {
+        ...state,
+        data: nextData,
+        currentPage: nextAction === 'request-tests' ? 'reception-walkins' : state.currentPage,
+        ui: {
+          ...state.ui,
+          activeWalkInPatientId: nextAction === 'request-tests' ? patientId : state.ui.activeWalkInPatientId,
+          activeWalkInVisitId: nextAction === 'request-tests' ? visit.id : state.ui.activeWalkInVisitId,
+          toast: toast('success', nextAction === 'request-tests' ? 'Patient checked in. Continue by requesting tests.' : 'Patient checked in and added to daily visit log')
+        }
+      };
     }
     case 'CREATE_WALK_IN_PATIENT': {
       const result = createPatientRecord(state.data, action.payload, state.auth);
@@ -813,6 +827,8 @@ function reducer(state, action) {
         checkedInBy: state.auth?.userName || 'Reception',
         identityVerified: false,
         status: 'Walk-in Registered',
+        visitType: 'Walk-in',
+        walkIn: true,
         notes: 'Walk-in patient registered by reception.'
       };
       const nextData = {
@@ -827,7 +843,113 @@ function reducer(state, action) {
           details: result.patient.fullName
         })
       };
-      return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', `${result.patient.fullName} registered and checked in`) } };
+      return {
+        ...state,
+        data: nextData,
+        ui: {
+          ...state.ui,
+          activeWalkInPatientId: result.patient.id,
+          activeWalkInVisitId: visit.id,
+          toast: toast('success', `${result.patient.fullName} registered. Continue by requesting tests.`)
+        }
+      };
+    }
+    case 'START_WALK_IN_TEST_REQUEST': {
+      const patientId = action.payload?.patientId || '';
+      const visitId = action.payload?.visitId || '';
+      if (!patientId) return { ...state, ui: { ...state.ui, toast: toast('error', 'Select a walk-in patient before requesting tests.') } };
+      return {
+        ...state,
+        currentPage: 'reception-walkins',
+        ui: {
+          ...state.ui,
+          activeWalkInPatientId: patientId,
+          activeWalkInVisitId: visitId,
+          toast: toast('success', 'Walk-in patient loaded for test request')
+        }
+      };
+    }
+    case 'CREATE_RECEPTION_WALK_IN_ORDER': {
+      const { patientId, visitId, itemIds = [], urgency = 'Routine', clinicalNotes = '', hospitalId = '' } = action.payload || {};
+      const patient = (state.data.patients || []).find((item) => item.id === patientId);
+      if (!patient) return { ...state, ui: { ...state.ui, toast: toast('error', 'Select a checked-in walk-in patient before creating a request.') } };
+      if (!itemIds.length) return { ...state, ui: { ...state.ui, toast: toast('error', 'Select at least one laboratory test or scan for this walk-in patient.') } };
+      const validItems = itemIds.filter((itemId) => (state.data.catalog || []).some((item) => item.id === itemId));
+      if (validItems.length !== itemIds.length) return { ...state, ui: { ...state.ui, toast: toast('error', 'One or more selected tests are no longer available in the catalog.') } };
+
+      const actor = state.auth?.userName || 'Reception';
+      const beforeOrderIds = new Set((state.data.orders || []).map((order) => order.id));
+      let nextData = createOrder(state.data, {
+        patientId,
+        doctorId: '',
+        hospitalId: hospitalId || patient.referringHospitalId || '',
+        itemIds: validItems,
+        urgency,
+        clinicalNotes: clinicalNotes || 'Walk-in request created directly by reception.',
+        requestSource: 'Walk-in',
+        walkInRequest: true,
+        visitId,
+        skipIntakeNotification: true
+      }, actor, state.auth?.role || 'receptionist');
+
+      const createdOrder = (nextData.orders || []).find((order) => !beforeOrderIds.has(order.id)) || nextData.orders?.[0];
+      if (!createdOrder) return { ...state, ui: { ...state.ui, toast: toast('error', 'Walk-in request could not be created.') } };
+      const confirmed = confirmReceptionOrder(nextData, createdOrder.id, state.auth, { receptionNotes: 'Walk-in request created and routed directly by reception.' });
+      if (confirmed.error) return { ...state, ui: { ...state.ui, toast: toast('error', confirmed.error) } };
+      nextData = confirmed.data;
+      const timestamp = nowIso();
+      nextData = {
+        ...nextData,
+        orders: (nextData.orders || []).map((order) => order.id === createdOrder.id ? {
+          ...order,
+          doctorId: '',
+          hospitalId: hospitalId || patient.referringHospitalId || order.hospitalId || '',
+          requestSource: 'Walk-in',
+          walkInRequest: true,
+          visitId: visitId || order.visitId || '',
+          requestedByReception: actor,
+          receptionNotes: 'Walk-in request created and routed directly by reception.',
+          updatedAt: timestamp
+        } : order),
+        dailyVisits: (nextData.dailyVisits || []).map((visit) => visit.id === visitId ? {
+          ...visit,
+          orderId: visit.orderId || createdOrder.id,
+          orderIds: [...new Set([...(visit.orderIds || []), visit.orderId, createdOrder.id].filter(Boolean))],
+          status: 'Checked In',
+          notes: [visit.notes, `Walk-in test request ${createdOrder.id} created.`].filter(Boolean).join(' '),
+          updatedAt: timestamp,
+          updatedBy: actor
+        } : visit),
+        notifications: [{
+          id: idWithPrefix('NOT-', nextData.notifications || []),
+          title: 'Walk-in request routed',
+          body: `${createdOrder.id} was created at reception and routed to the requested department queue(s).`,
+          audience: 'receptionist',
+          channel: 'In-platform',
+          status: 'Delivered',
+          read: false,
+          createdAt: timestamp,
+          entityId: createdOrder.id
+        }, ...(nextData.notifications || [])],
+        auditLogs: addAudit(nextData.auditLogs || [], {
+          actor,
+          role: state.auth?.role || 'receptionist',
+          action: 'Walk-in test request created',
+          module: 'Reception Walk-ins',
+          entityId: createdOrder.id,
+          details: `${patient.fullName} · ${validItems.length} item(s) requested`
+        })
+      };
+      return {
+        ...state,
+        data: nextData,
+        ui: {
+          ...state.ui,
+          activeWalkInPatientId: patientId,
+          activeWalkInVisitId: visitId || state.ui.activeWalkInVisitId,
+          toast: toast('success', `${createdOrder.id} created, invoiced and routed to department queue(s)`)
+        }
+      };
     }
     case 'CREATE_APPOINTMENT': {
       const { patientId, orderId, scheduledAt, purpose, room, notes } = action.payload || {};
@@ -1517,7 +1639,7 @@ function reducer(state, action) {
       return { ...state, currentPage: 'accepted-samples', ui: { ...state.ui, sidebarOpen: false, activeAcceptedSampleOrderId: action.orderId } };
     }
     case 'ENTER_TEST_RESULT': {
-      const { orderId, testId, values = {}, equipment = '', technicianNotes = '', reportText = '', mode = 'review' } = action.payload || {};
+      const { orderId, testId, values = {}, equipment = '', technicianNotes = '', reportText = '', files = [], mode = 'review' } = action.payload || {};
       const order = (state.data.orders || []).find((item) => item.id === orderId);
       const testItem = (state.data.catalog || []).find((item) => item.id === testId);
       if (!order || !testItem || testItem.department !== 'Laboratory') return { ...state, ui: { ...state.ui, toast: toast('error', 'Valid lab order and test are required.') } };
@@ -1527,13 +1649,32 @@ function reducer(state, action) {
       const isDraft = mode === 'draft';
       if (!isDraft && parameters.some((parameter) => parameter.value === '')) return { ...state, ui: { ...state.ui, toast: toast('error', 'Enter all parameter values before sending this test for review.') } };
       const existing = (state.data.results || []).find((result) => result.orderId === orderId && result.department === 'Laboratory');
+      const timestamp = nowIso();
       const previousTestParameters = (existing?.parameters || []).filter((parameter) => parameter.testId === testId && parameter.value !== '');
+      const existingFilesForOtherTests = (existing?.files || []).filter((file) => !file.testId || file.testId !== testId);
+      const normalizedFiles = (files || []).map((file, index) => ({
+        id: file.id || `LAB-FILE-${Date.now()}-${index}`,
+        name: file.name || file.fileName || 'Imported result document',
+        fileName: file.fileName || file.name || 'Imported result document',
+        type: file.type || file.fileType || 'application/octet-stream',
+        fileType: file.fileType || file.type || 'application/octet-stream',
+        size: Number(file.size ?? file.fileSize ?? 0),
+        fileSize: Number(file.fileSize ?? file.size ?? 0),
+        uploadedAt: file.uploadedAt || timestamp,
+        uploadedBy: file.uploadedBy || state.auth?.userName || 'Lab Staff',
+        source: file.source || 'Imported lab result document',
+        testId,
+        testName: testItem.name,
+        dataUrl: file.dataUrl || '',
+        url: file.url || '',
+        note: file.note || ''
+      }));
+      const mergedFiles = [...existingFilesForOtherTests, ...normalizedFiles];
       const mergedParameters = [...resultParametersWithoutTest(existing?.parameters || [], testId), ...parameters];
       const labItemIds = getLabItemIdsForOrder(state.data, orderId);
       const completedTestIds = new Set(mergedParameters.filter((parameter) => parameter.value !== '').map((parameter) => parameter.testId));
       const allLabDone = labItemIds.every((id) => completedTestIds.has(id));
       const nextStatus = isDraft ? 'Draft' : (allLabDone ? 'Pending Review' : 'In Progress');
-      const timestamp = nowIso();
       const amendment = previousTestParameters.length ? {
         testId,
         testName: testItem.name,
@@ -1551,7 +1692,7 @@ function reducer(state, action) {
         equipment: equipment || existing?.equipment || '',
         internalNotes: technicianNotes || existing?.internalNotes || '',
         abnormal: mergedParameters.some((parameter) => ['High', 'Low', 'Critical'].includes(parameter.flag)),
-        files: existing?.files || []
+        files: mergedFiles
       }, { ...state.auth, userName: state.auth?.userName || 'Lab Staff' });
       const updatedResult = (nextData.results || []).find((result) => result.orderId === orderId && result.department === 'Laboratory');
       if (amendment && updatedResult) {
@@ -1579,10 +1720,10 @@ function reducer(state, action) {
           action: isDraft ? 'Per-test lab result draft saved' : 'Per-test lab result submitted for review',
           module: 'Laboratory',
           entityId: orderId,
-          details: `${testItem.name} saved as ${nextStatus}${amendment ? ' with amendment history' : ''}`
+          details: `${testItem.name} saved as ${nextStatus}${amendment ? ' with amendment history' : ''}${normalizedFiles.length ? ` with ${normalizedFiles.length} imported file(s)` : ''}`
         })
       };
-      return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', isDraft ? `${testItem.name} draft saved` : `${testItem.name} sent for review`) } };
+      return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', isDraft ? `${testItem.name} draft saved${normalizedFiles.length ? ' with imported file(s)' : ''}` : `${testItem.name} sent for review${normalizedFiles.length ? ' with imported file(s)' : ''}`) } };
     }
 
     case 'UPDATE_LAB_RESULT_ARCHIVE': {

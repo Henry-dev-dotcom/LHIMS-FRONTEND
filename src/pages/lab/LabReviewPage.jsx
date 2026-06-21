@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ShieldCheck, Search, Eye, Printer } from 'lucide-react';
+import { FileText, ShieldCheck, Search, Eye, Printer } from 'lucide-react';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -10,6 +10,48 @@ import { inputClass } from '../../components/ui/FormField';
 import { useAppStore } from '../../store/AppStore';
 import { getLabOrders } from '../../utils/orderViews';
 import { formatDateTime } from '../../utils/formatters';
+
+
+function formatFileSize(size = 0) {
+  const value = Number(size || 0);
+  if (!value) return '0 KB';
+  if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024))} KB`;
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function openResultAttachment(file) {
+  if (!file?.dataUrl && !file?.url) return;
+  const win = window.open(file.dataUrl || file.url, '_blank', 'noopener,noreferrer');
+  if (!win) {
+    const link = document.createElement('a');
+    link.href = file.dataUrl || file.url;
+    link.download = file.name || file.fileName || 'lab-result-document';
+    link.click();
+  }
+}
+
+function AttachmentReviewBlock({ files = [] }) {
+  if (!files.length) return null;
+  return (
+    <div className="rounded-2xl border border-clinical-100 bg-clinical-50/50 p-4">
+      <p className="text-xs font-black uppercase tracking-wider text-clinical-700">Imported result documents</p>
+      <div className="mt-3 grid gap-2 md:grid-cols-2">
+        {files.map((file) => (
+          <div key={file.id || file.name} className="rounded-2xl bg-white p-3">
+            <div className="flex items-start gap-3">
+              <FileText className="mt-1 h-5 w-5 shrink-0 text-clinical-700" />
+              <div className="min-w-0 flex-1">
+                <p className="break-words text-sm font-black text-slate-950">{file.name || file.fileName || 'Imported result document'}</p>
+                <p className="text-xs font-semibold text-slate-500">{file.testName || 'Lab result'} · {formatFileSize(file.size || file.fileSize)}</p>
+              </div>
+              {(file.dataUrl || file.url) && <Button size="sm" variant="secondary" onClick={() => openResultAttachment(file)}>Open</Button>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function getPatientSummary(data, result) {
   const order = (data.orders || []).find((item) => item.id === result.orderId);
@@ -53,6 +95,7 @@ function ResultPreviewModal({ result, data, onClose, dispatch }) {
           rows={result.parameters || []}
           emptyMessage="No parameters entered."
         />
+        <AttachmentReviewBlock files={result.files || []} />
         {result.amendments?.length > 0 && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-800">Amendment history exists for this result. Review previous values before sign-off.</div>}
         <label className="block text-xs font-black uppercase tracking-wider text-slate-500">Approver note</label>
         <textarea className={`${inputClass} min-h-24`} value={approverNote} onChange={(event) => setApproverNote(event.target.value)} placeholder="Optional senior reviewer/pathologist note." />
@@ -103,6 +146,7 @@ export function LabReviewPage() {
             { key: 'patient', label: 'Patient', render: (row) => <div><p className="font-black text-slate-950">{row.patient?.fullName}</p><p className="text-xs text-slate-500">{row.patient?.id}</p></div> },
             { key: 'tests', label: 'Tests', render: (row) => [...new Set((row.parameters || []).map((p) => p.testName))].join(', ') || '—' },
             { key: 'flags', label: 'Flags', render: (row) => <div className="flex flex-wrap gap-1">{[...new Set((row.parameters || []).map((p) => p.flag))].map((flag) => <StatusBadge key={flag} status={flag} />)}</div> },
+            { key: 'files', label: 'Files', render: (row) => row.files?.length ? <span className="font-black text-clinical-700">{row.files.length} file(s)</span> : '—' },
             { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
             { key: 'updatedAt', label: 'Updated', render: (row) => formatDateTime(row.updatedAt) },
             { key: 'action', label: 'Action', render: (row) => <Button onClick={() => setActiveResultId(row.id)}><Eye className="h-4 w-4" /> Review</Button> }

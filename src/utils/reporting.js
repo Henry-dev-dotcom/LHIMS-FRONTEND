@@ -4,6 +4,13 @@ function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[char]));
 }
 
+function formatFileSize(size = 0) {
+  const value = Number(size || 0);
+  if (!value) return '0 KB';
+  if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024))} KB`;
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export function openReportPrintWindow(input) {
   const order = input.order || input;
   const patient = input.patient || order.patient;
@@ -91,6 +98,14 @@ export function openLabResultPdfWindow({ data, result }) {
       <td>${escapeHtml(parameter.referenceRange)}</td>
       <td class="${['High','Low','Critical'].includes(parameter.flag) ? 'abnormal' : 'normal'}">${escapeHtml(parameter.flag || '—')}</td>
     </tr>`).join('');
+  const attachmentRows = (result?.files || []).map((file) => `
+    <tr>
+      <td>${escapeHtml(file.testName || 'Laboratory')}</td>
+      <td>${escapeHtml(file.name || file.fileName || 'Imported document')}</td>
+      <td>${escapeHtml(file.type || file.fileType || 'Document')}</td>
+      <td>${escapeHtml(formatFileSize(file.size || file.fileSize))}</td>
+      <td>${escapeHtml(formatDateTime(file.uploadedAt))}</td>
+    </tr>`).join('');
 
   const html = `<!doctype html>
   <html><head><title>${escapeHtml(result?.id || 'Lab Report')} PDF</title><style>
@@ -106,6 +121,7 @@ export function openLabResultPdfWindow({ data, result }) {
     </div>
     <h2>Laboratory Results</h2>
     <table><thead><tr><th>Test</th><th>Parameter</th><th>Value</th><th>Reference Range</th><th>Flag</th></tr></thead><tbody>${rows || '<tr><td colspan="5">No structured result values available.</td></tr>'}</tbody></table>
+    ${attachmentRows ? `<h2>Imported Result Documents</h2><table><thead><tr><th>Test</th><th>File</th><th>Type</th><th>Size</th><th>Imported</th></tr></thead><tbody>${attachmentRows}</tbody></table>` : ''}
     ${result?.reportText ? `<div class="box"><strong>Report Comment</strong><br>${escapeHtml(result.reportText).replace(/\n/g, '<br>')}</div>` : ''}
     <div class="signature">
       <div class="sigbox"><strong>Digital Signature</strong><br>${result?.digitalSignature ? `<img src="${escapeHtml(result.digitalSignature)}" alt="Digital signature">` : '<span class="muted">No signature captured.</span>'}<br><span class="muted">${escapeHtml(result?.signedBy || result?.approvedBy || 'Unsigned')} · ${escapeHtml(formatDateTime(result?.signedAt || result?.approvedAt))}</span></div>

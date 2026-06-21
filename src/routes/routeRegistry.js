@@ -32,13 +32,13 @@ export const PAGE_META = {
   },
   'patient-checkin': {
     title: 'Patient Check-In', section: 'Reception',
-    description: 'Front-desk search, identity verification, walk-in registration and duplicate resolution.',
-    requirements: ['Search patient', 'Register walk-in', 'Verify identity', 'Duplicate patient warning', 'Daily visit log']
+    description: 'Front-desk search, identity verification, standalone check-in, direct walk-in test request handoff and duplicate resolution.',
+    requirements: ['Search patient', 'Register walk-in', 'Verify identity', 'Check In & Request Tests', 'Duplicate patient warning', 'Daily visit log']
   },
   'reception-walkins': {
     title: 'Walk-In Registration', section: 'Reception',
-    description: 'Dedicated walk-in intake page for new patient registration, visit creation and duplicate review.',
-    requirements: ['Walk-in registration', 'Patient demographics', 'Visit creation', 'Duplicate review', 'Reception intake']
+    description: 'Dedicated walk-in intake page for new patient registration, direct test requests, invoice creation, visit tracking and duplicate review.',
+    requirements: ['Walk-in registration', 'Patient demographics', 'Request Tests', 'Direct walk-in order creation', 'Invoice creation', 'Visit creation', 'Duplicate review', 'Reception intake']
   },
   appointments: {
     title: 'Appointment Scheduler', section: 'Reception',

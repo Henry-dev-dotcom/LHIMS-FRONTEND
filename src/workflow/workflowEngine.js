@@ -305,6 +305,7 @@ export function updateBillingStatus(data, { orderId, billingStatus, method = '',
 export function createOrder(data, payload, actor = 'System', role = 'doctor') {
   const createdAt = nowIso();
   const orderId = idWithPrefix('ORD-2026-', data.orders || []);
+  const isWalkInRequest = payload.requestSource === 'Walk-in' || payload.walkInRequest === true;
   const order = {
     id: orderId,
     patientId: payload.patientId,
@@ -317,6 +318,10 @@ export function createOrder(data, payload, actor = 'System', role = 'doctor') {
     billingStatus: 'Payment Pending',
     createdAt,
     updatedAt: createdAt,
+    requestSource: payload.requestSource || (isWalkInRequest ? 'Walk-in' : 'Clinician'),
+    walkInRequest: isWalkInRequest,
+    visitId: payload.visitId || '',
+    requestedByReception: isWalkInRequest ? actor : '',
     expectedCompletionAt: computeExpectedCompletion(createdAt, payload.itemIds, data.catalog, payload.urgency),
     routedDepartments: getOrderDepartments({ itemIds: payload.itemIds }, data.catalog),
     timeline: [{ status: 'Submitted', actor, role, timestamp: createdAt }]
@@ -341,11 +346,11 @@ export function createOrder(data, payload, actor = 'System', role = 'doctor') {
     ...data,
     orders: [order, ...(data.orders || [])],
     invoices: [invoice, ...(data.invoices || [])],
-    notifications: [{
+    notifications: payload.skipIntakeNotification ? (data.notifications || []) : [{
       id: idWithPrefix('NOT-', data.notifications || []),
-      title: 'Incoming doctor order',
-      body: `${orderId} is awaiting reception confirmation.`,
-      audience: 'receptionist',
+      title: isWalkInRequest ? 'Walk-in test request' : 'Incoming doctor order',
+      body: isWalkInRequest ? `${orderId} was created directly by reception for a walk-in patient.` : `${orderId} is awaiting reception confirmation.`,
+      audience: isWalkInRequest ? 'billing' : 'receptionist',
       channel: 'In-platform',
       status: 'Delivered',
       read: false,
@@ -355,8 +360,8 @@ export function createOrder(data, payload, actor = 'System', role = 'doctor') {
     auditLogs: addAudit(data.auditLogs || [], {
       actor,
       role,
-      action: 'Doctor submitted order',
-      module: 'Order Intake',
+      action: isWalkInRequest ? 'Reception created walk-in test request' : 'Doctor submitted order',
+      module: isWalkInRequest ? 'Reception Walk-ins' : 'Order Intake',
       entityId: orderId,
       details: `${payload.itemIds.length} item(s) requested`
     })

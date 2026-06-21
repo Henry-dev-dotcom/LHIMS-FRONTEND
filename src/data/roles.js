@@ -151,7 +151,7 @@ export const NAV_ITEMS = [
 
 export const ROLE_DASHBOARD_REQUIREMENTS = {
   doctor: ['Doctor Profile', 'New Order Form', 'My Orders Active', 'My Orders Completed', 'Result Viewer', 'PDF Report Download', 'Notification Preferences', 'Patient Search'],
-  receptionist: ['Incoming Orders Queue', 'Patient Check-In', 'Order Confirmation Panel', 'Appointment Scheduler', 'Walk-in Registration', 'Daily Visit Log', 'Duplicate Patient Resolution', 'Reception Results Inbox'],
+  receptionist: ['Incoming Orders Queue', 'Patient Check-In', 'Order Confirmation Panel', 'Appointment Scheduler', 'Walk-in Registration', 'Walk-in Test Requests', 'Direct Walk-in Invoice Creation', 'Daily Visit Log', 'Duplicate Patient Resolution', 'Reception Results Inbox'],
   lab: ['Lab Order Queue', 'Sample Collection Log', 'Test Panel Checklist', 'Result Entry Form', 'Results Archive', 'Equipment/Analyzer Reference', 'Review & Sign-off', 'Retest/Reject Sample Action'],
   scan: ['Scan Order Queue', 'Equipment/Room Booking', 'Image Upload', 'Radiologist Report Field', 'Comparison to Prior Scans', 'Review & Sign-off', 'Internal Technician Notes'],
   billing: ['Test/Scan Price Catalog', 'Invoice Generator', 'Payment Status Tracker', 'Payment Method Log', 'Outstanding Balances Report', 'Insurance Claim Reference', 'Cashier Float', 'Expenses', 'Account Ledger', 'Billing Analytics', 'Revenue Summary', 'Refund/Adjustment Tool'],

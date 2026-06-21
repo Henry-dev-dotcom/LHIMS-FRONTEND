@@ -1,10 +1,14 @@
 import clsx from 'clsx';
 
 export function Card({ title, subtitle, actions, children, className, compact = false }) {
+  const hasVisibleChildren = Array.isArray(children) ? children.length > 0 : Boolean(children);
+  const isSimpleStatCard = Boolean(title && subtitle !== undefined && !actions && !hasVisibleChildren);
+
   return (
     <section
       className={clsx(
         'clinical-panel min-w-0 rounded-[1.2rem] p-3.5 shadow-soft sm:rounded-[1.75rem] sm:p-5',
+        isSimpleStatCard && 'clinical-stat-card',
         compact && 'p-3.5 sm:p-4',
         className
       )}

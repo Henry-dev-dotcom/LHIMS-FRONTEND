@@ -19,7 +19,7 @@ export function DoctorPatientTrendsPage() {
         data={data}
         allowedPatientIds={doctorPatients.map((patient) => patient.id)}
         title="Repeated Test Progress Chart"
-        subtitle="Select a patient, repeated test and parameter to view the progress line."
+        subtitle="Select a patient and repeated test to view all parameter charts at once, then open any chart in a large popup."
       />
     </div>
   );

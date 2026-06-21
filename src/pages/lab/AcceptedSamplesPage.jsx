@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { ClipboardCheck, Edit3, Printer, Search, Send, Save } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ClipboardCheck, Download, Edit3, FileCheck2, FileText, Paperclip, Printer, Search, Send, Save, UploadCloud, X } from 'lucide-react';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -11,6 +11,83 @@ import { useAppStore } from '../../store/AppStore';
 import { getLabCatalogItems, getLabOrders } from '../../utils/orderViews';
 import { formatDateTime } from '../../utils/formatters';
 import { computeResultFlag } from '../../utils/labFlags';
+
+
+const RESULT_FILE_ACCEPT = '.pdf,.doc,.docx,.txt,.rtf,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf';
+const RESULT_FILE_MAX_BYTES = 8 * 1024 * 1024;
+const RESULT_FILE_INLINE_BYTES = 1.5 * 1024 * 1024;
+
+function formatFileSize(size = 0) {
+  const value = Number(size || 0);
+  if (!value) return '0 KB';
+  if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024))} KB`;
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function isAllowedResultFile(file) {
+  const name = String(file?.name || '').toLowerCase();
+  const type = String(file?.type || '').toLowerCase();
+  return (
+    name.endsWith('.pdf') ||
+    name.endsWith('.doc') ||
+    name.endsWith('.docx') ||
+    name.endsWith('.txt') ||
+    name.endsWith('.rtf') ||
+    type === 'application/pdf' ||
+    type === 'application/msword' ||
+    type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    type === 'text/plain' ||
+    type === 'application/rtf'
+  );
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error('Could not read file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function openImportedResultFile(file) {
+  if (!file?.dataUrl && !file?.url) return;
+  const win = window.open(file.dataUrl || file.url, '_blank', 'noopener,noreferrer');
+  if (!win) {
+    const link = document.createElement('a');
+    link.href = file.dataUrl || file.url;
+    link.download = file.name || file.fileName || 'lab-result-document';
+    link.click();
+  }
+}
+
+function ResultFileList({ files = [], onRemove, compact = false }) {
+  if (!files.length) return null;
+  return (
+    <div className="space-y-2">
+      {files.map((file) => (
+        <div key={file.id || file.name} className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-clinical-50 text-clinical-700">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="break-words text-sm font-black text-slate-950">{file.name || file.fileName || 'Imported result document'}</p>
+              <p className="text-xs font-semibold text-slate-500">
+                {file.type || file.fileType || 'Document'} · {formatFileSize(file.size || file.fileSize)}{file.dataUrl ? ' · preview stored' : ' · metadata stored'}
+              </p>
+              {!compact && file.note && <p className="mt-1 text-[11px] font-semibold text-amber-700">{file.note}</p>}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(file.dataUrl || file.url) && <Button size="sm" variant="secondary" onClick={() => openImportedResultFile(file)}><Download className="h-4 w-4" /> Open</Button>}
+            {onRemove && <Button size="sm" variant="ghost" onClick={() => onRemove(file.id)}><X className="h-4 w-4" /> Remove</Button>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function getResultForTest(data, orderId, testId) {
   const result = (data.results || []).find((item) => item.orderId === orderId && item.department === 'Laboratory');
@@ -61,14 +138,87 @@ function openSampleLabel(sample, order) {
 }
 
 function ResultEntryModal({ open, onClose, order, sample, testItem, data, dispatch }) {
-  const existing = testItem ? getResultForTest(data, order?.id, testItem.id).parameters : [];
-  const [values, setValues] = useState(() => Object.fromEntries((testItem?.parameters || []).map((parameter) => [`${testItem.id}::${parameter.name}`, existing.find((entry) => entry.name === parameter.name)?.value || ''])));
+  const fileInputRef = useRef(null);
+  const resultInfo = testItem ? getResultForTest(data, order?.id, testItem.id) : { result: null, parameters: [] };
+  const existing = resultInfo.parameters || [];
+  const existingFilesForTest = (resultInfo.result?.files || []).filter((file) => !file.testId || file.testId === testItem?.id);
+  const [values, setValues] = useState({});
   const [equipment, setEquipment] = useState('Sysmex XN-550');
   const [technicianNotes, setTechnicianNotes] = useState('');
   const [reportText, setReportText] = useState('');
+  const [importedFiles, setImportedFiles] = useState([]);
+  const [fileMessage, setFileMessage] = useState('');
+
+  useEffect(() => {
+    if (!testItem) return;
+    setValues(Object.fromEntries((testItem.parameters || []).map((parameter) => [`${testItem.id}::${parameter.name}`, existing.find((entry) => entry.name === parameter.name)?.value || ''])));
+    setEquipment(resultInfo.result?.equipment || 'Sysmex XN-550');
+    setTechnicianNotes(resultInfo.result?.internalNotes || '');
+    setReportText(resultInfo.result?.reportText || '');
+    setImportedFiles(existingFilesForTest);
+    setFileMessage('');
+  }, [order?.id, testItem?.id, open]);
+
   if (!testItem || !order) return null;
+
+  async function handleFileImport(event) {
+    const selectedFiles = Array.from(event.target.files || []);
+    if (!selectedFiles.length) return;
+    const nextFiles = [];
+    const rejected = [];
+    for (const file of selectedFiles) {
+      if (!isAllowedResultFile(file)) {
+        rejected.push(`${file.name} is not a supported PDF/Word/document file.`);
+        continue;
+      }
+      if (file.size > RESULT_FILE_MAX_BYTES) {
+        rejected.push(`${file.name} is larger than ${formatFileSize(RESULT_FILE_MAX_BYTES)}.`);
+        continue;
+      }
+      let dataUrl = '';
+      let note = '';
+      if (file.size <= RESULT_FILE_INLINE_BYTES) {
+        try {
+          dataUrl = await fileToDataUrl(file);
+        } catch {
+          note = 'Preview could not be stored, but file metadata is attached.';
+        }
+      } else {
+        note = 'Large file registered as metadata in demo storage. Backend upload endpoint can store file bytes in production.';
+      }
+      nextFiles.push({
+        id: `LAB-FILE-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: file.name,
+        fileName: file.name,
+        type: file.type || 'application/octet-stream',
+        fileType: file.type || 'application/octet-stream',
+        size: file.size,
+        fileSize: file.size,
+        uploadedAt: new Date().toISOString(),
+        uploadedBy: 'Lab Staff',
+        source: 'Imported lab result document',
+        testId: testItem.id,
+        testName: testItem.name,
+        dataUrl,
+        note
+      });
+    }
+    if (nextFiles.length) {
+      setImportedFiles((files) => [...files, ...nextFiles]);
+      setFileMessage(`${nextFiles.length} result document(s) attached to ${testItem.name}.`);
+    } else {
+      setFileMessage('No supported result documents were attached.');
+    }
+    if (rejected.length) setFileMessage(`${nextFiles.length} attached. ${rejected.join(' ')}`);
+    event.target.value = '';
+  }
+
+  function removeImportedFile(fileId) {
+    setImportedFiles((files) => files.filter((file) => file.id !== fileId));
+  }
+
   const save = (mode) => {
-    dispatch({ type: 'ENTER_TEST_RESULT', payload: { orderId: order.id, testId: testItem.id, values, equipment, technicianNotes, reportText, mode } });
+    dispatch({ type: 'ENTER_TEST_RESULT', payload: { orderId: order.id, testId: testItem.id, values, equipment, technicianNotes, reportText, files: importedFiles, mode } });
     onClose();
   };
   return (
@@ -109,6 +259,22 @@ function ResultEntryModal({ open, onClose, order, sample, testItem, data, dispat
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Analyzer / Equipment"><select className={inputClass} value={equipment} onChange={(event) => setEquipment(event.target.value)}>{(data.labAnalyzers || []).map((item) => <option key={item}>{item}</option>)}</select></FormField>
           <FormField label="Report Comment"><input className={inputClass} value={reportText} onChange={(event) => setReportText(event.target.value)} placeholder="Optional report comment" /></FormField>
+        </div>
+        <div className="rounded-3xl border border-dashed border-clinical-200 bg-clinical-50/40 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2"><Paperclip className="h-4 w-4 text-clinical-700" /><p className="text-sm font-black text-slate-950">Import result PDF or document</p></div>
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">Attach external analyzer reports, referral lab PDFs, Word documents, text reports, or scanned result documents to this patient result entry.</p>
+              <p className="mt-1 text-[11px] font-semibold text-slate-500">Supported: PDF, DOC, DOCX, TXT, RTF · max {formatFileSize(RESULT_FILE_MAX_BYTES)} per file.</p>
+            </div>
+            <Button variant="secondary" onClick={() => fileInputRef.current?.click()}><UploadCloud className="h-4 w-4" /> Import File</Button>
+          </div>
+          <input ref={fileInputRef} className="hidden" type="file" multiple accept={RESULT_FILE_ACCEPT} onChange={handleFileImport} />
+          {fileMessage && <div className="mt-3 rounded-2xl bg-white/80 p-3 text-xs font-semibold text-slate-600">{fileMessage}</div>}
+          <div className="mt-3">
+            <ResultFileList files={importedFiles} onRemove={removeImportedFile} />
+            {!importedFiles.length && <div className="rounded-2xl bg-white/70 p-3 text-xs font-semibold text-slate-500"><FileCheck2 className="mb-1 h-4 w-4 text-slate-400" /> No imported result document attached yet.</div>}
+          </div>
         </div>
         <FormField label="Internal Technician Notes"><textarea className={`${inputClass} min-h-24`} value={technicianNotes} onChange={(event) => setTechnicianNotes(event.target.value)} placeholder="Internal review notes, not visible on patient report." /></FormField>
         <div className="grid gap-2 sm:flex sm:flex-wrap sm:justify-end [&_button]:w-full sm:[&_button]:w-auto"><Button variant="secondary" onClick={onClose}>Cancel</Button><Button variant="secondary" onClick={() => save('draft')}><Save className="h-4 w-4" /> Save Draft</Button><Button onClick={() => save('review')}><Send className="h-4 w-4" /> Submit for Review</Button></div>
@@ -187,15 +353,17 @@ export function AcceptedSamplesPage() {
                 {activeTests.map((test) => {
                   const resultInfo = getResultForTest(data, activeOrder.id, test.id);
                   const status = getTestStatus(data, activeOrder.id, test.id);
+                  const attachmentCount = (resultInfo.result?.files || []).filter((file) => !file.testId || file.testId === test.id).length;
                   return (
                     <div key={test.id} className="rounded-2xl border border-slate-200 p-4">
                       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                        <div><p className="font-black text-slate-950">{test.name}</p><p className="text-sm text-slate-500">{test.id} · {test.parameters?.length || 0} parameter(s)</p></div>
+                        <div><p className="font-black text-slate-950">{test.name}</p><p className="text-sm text-slate-500">{test.id} · {test.parameters?.length || 0} parameter(s){attachmentCount ? ` · ${attachmentCount} imported file(s)` : ''}</p></div>
                         <div className="flex flex-wrap items-center gap-2"><StatusBadge status={status} /><Button disabled={status === 'Final / Released'} onClick={() => setEntryTestId(test.id)}><Edit3 className="h-4 w-4" /> {resultInfo.parameters.length ? 'Edit / View Entry' : 'Enter Results'}</Button></div>
                       </div>
                       <div className="mt-3 grid gap-2 md:grid-cols-2">
                         {(test.parameters || []).slice(0, 4).map((parameter) => <div key={parameter.name} className="rounded-xl bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600"><span className="font-black text-slate-800">{parameter.name}</span> · {parameter.referenceRange || 'No range'} {parameter.unit ? `· ${parameter.unit}` : ''}</div>)}
                       </div>
+                      {attachmentCount > 0 && <div className="mt-3 flex items-center gap-2 rounded-2xl bg-clinical-50 px-3 py-2 text-xs font-black text-clinical-800"><Paperclip className="h-4 w-4" /> {attachmentCount} imported result document(s) attached</div>}
                     </div>
                   );
                 })}

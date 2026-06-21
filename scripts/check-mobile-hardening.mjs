@@ -21,8 +21,8 @@ const checks = [
     message: 'DataTable must keep card rendering active through tablet widths and guard mobile action overflow.'
   },
   {
-    pass: header.includes('Screen guide') && header.includes('<details') && header.includes('group-open:bg-clinical-50'),
-    message: 'Mobile header descriptions must be collapsed into a compact screen guide.'
+    pass: header.includes('Screen guide') && header.includes('screenGuideOpen') && header.includes('mobile-screen-guide-panel') && header.includes('absolute left-0 top-[calc(100%+0.45rem)]'),
+    message: 'Mobile header descriptions must use a no-shift animated screen guide dropdown.'
   },
   {
     pass: mobileActionBar.includes('max-h-[42dvh]') && mobileActionBar.includes('overflow-y-auto') && mobileActionBar.includes('[&>*]:min-w-0'),

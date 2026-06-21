@@ -12,6 +12,55 @@ import { formatDateTime } from '../../utils/formatters';
 import { computeResultFlag } from '../../utils/labFlags';
 import { getPatientPortalUrl, getQrCodeUrl, getReportVerificationUrl, openLabResultPdfWindow, openReportPrintWindow } from '../../utils/reporting';
 
+
+function formatFileSize(size = 0) {
+  const value = Number(size || 0);
+  if (!value) return '0 KB';
+  if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024))} KB`;
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function openResultAttachment(file) {
+  if (!file?.dataUrl && !file?.url) return;
+  const win = window.open(file.dataUrl || file.url, '_blank', 'noopener,noreferrer');
+  if (!win) {
+    const link = document.createElement('a');
+    link.href = file.dataUrl || file.url;
+    link.download = file.name || file.fileName || 'lab-result-document';
+    link.click();
+  }
+}
+
+function ResultAttachments({ files = [] }) {
+  if (!files.length) return null;
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Imported Result Documents</p>
+          <p className="text-sm font-semibold text-slate-600">PDF, Word, text, or scanned result files attached during lab result entry.</p>
+        </div>
+        <span className="rounded-full bg-clinical-50 px-3 py-1 text-xs font-black text-clinical-700">{files.length}</span>
+      </div>
+      <div className="grid gap-2 md:grid-cols-2">
+        {files.map((file) => (
+          <div key={file.id || file.name} className="rounded-2xl bg-slate-50 p-3">
+            <div className="flex min-w-0 items-start gap-3">
+              <FileText className="mt-1 h-5 w-5 shrink-0 text-clinical-700" />
+              <div className="min-w-0 flex-1">
+                <p className="break-words text-sm font-black text-slate-950">{file.name || file.fileName || 'Imported result document'}</p>
+                <p className="text-xs font-semibold text-slate-500">{file.testName || 'Lab result'} · {formatFileSize(file.size || file.fileSize)} · {file.dataUrl || file.url ? 'openable' : 'metadata only'}</p>
+                {file.uploadedAt && <p className="mt-1 text-[11px] font-semibold text-slate-400">Imported {formatDateTime(file.uploadedAt)}</p>}
+              </div>
+              {(file.dataUrl || file.url) && <Button size="sm" variant="secondary" onClick={() => openResultAttachment(file)}>Open</Button>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function getResultContext(data, result) {
   const order = (data.orders || []).find((item) => item.id === result?.orderId);
   const patient = (data.patients || []).find((item) => item.id === order?.patientId);
@@ -353,6 +402,7 @@ function ResultViewModal({ result, data, onClose, onEdit, onCompare, onHistory, 
         />
 
         {result.reportText && <div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Report Comment</p><p className="mt-2 text-sm font-semibold leading-6 text-slate-700 whitespace-pre-line">{result.reportText}</p></div>}
+        <ResultAttachments files={result.files || []} />
         {result.internalNotes && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4"><p className="text-xs font-black uppercase tracking-wider text-amber-700">Internal Notes</p><p className="mt-2 text-sm font-semibold leading-6 text-amber-800 whitespace-pre-line">{result.internalNotes}</p></div>}
 
         <div className="flex flex-wrap justify-end gap-2">

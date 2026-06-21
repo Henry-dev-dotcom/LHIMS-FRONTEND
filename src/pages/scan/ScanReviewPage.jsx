@@ -89,7 +89,7 @@ export function ScanReviewPage() {
 }
 
 function Summary({ label, value }) {
-  return <Card className="p-4"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</p><p className="mt-1 text-xl font-black text-slate-950">{value}</p></Card>;
+  return <Card className="clinical-stat-card p-4"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</p><p className="mt-1 text-xl font-black text-slate-950">{value}</p></Card>;
 }
 function Info({ label, value }) {
   return <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</p><p className="mt-1 text-sm font-black text-slate-950">{value || '—'}</p></div>;

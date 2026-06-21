@@ -89,6 +89,87 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   }
 }
 
+
+
+/* Mobile one-line summary strip: keeps all page information cards horizontal and compact. */
+@media (max-width: 767px) {
+  .grid:has(> .metric-card),
+  .grid:has(> .clinical-stat-card) {
+    display: grid !important;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(5.2rem, 1fr);
+    grid-template-columns: none !important;
+    gap: 0.45rem !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 0.15rem;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .grid:has(> .metric-card) > .metric-card,
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card {
+    scroll-snap-align: start;
+  }
+
+  .grid:has(> .metric-card) > .metric-card {
+    min-height: 3.85rem;
+    padding: 0.55rem 0.45rem;
+  }
+
+  .grid:has(> .metric-card) > .metric-card .metric-card-icon {
+    display: none;
+  }
+
+  .grid:has(> .metric-card) > .metric-card .metric-card-label {
+    max-width: 100%;
+    letter-spacing: 0.075em;
+    line-height: 1.05;
+    text-align: left;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .grid:has(> .metric-card) > .metric-card .metric-card-value {
+    margin-top: 0.35rem;
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card {
+    min-height: 3.85rem;
+    border-radius: 1rem;
+    padding: 0.6rem 0.55rem !important;
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card > div:first-child {
+    margin-bottom: 0.15rem;
+    display: block;
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card h2,
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card p:first-child {
+    font-size: 0.73rem;
+    line-height: 1.05rem;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card h2 + p,
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card p + p {
+    margin-top: 0.3rem;
+    font-size: 1rem;
+    line-height: 1;
+    font-weight: 900;
+    color: rgb(15 23 42);
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card .min-w-0 + .min-w-0:empty,
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card > .min-w-0:empty {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -426,6 +507,87 @@ summary:focus-visible {
   }
 }
 
+
+
+/* Mobile one-line summary strip: keeps all page information cards horizontal and compact. */
+@media (max-width: 767px) {
+  .grid:has(> .metric-card),
+  .grid:has(> .clinical-stat-card) {
+    display: grid !important;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(5.2rem, 1fr);
+    grid-template-columns: none !important;
+    gap: 0.45rem !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 0.15rem;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .grid:has(> .metric-card) > .metric-card,
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card {
+    scroll-snap-align: start;
+  }
+
+  .grid:has(> .metric-card) > .metric-card {
+    min-height: 3.85rem;
+    padding: 0.55rem 0.45rem;
+  }
+
+  .grid:has(> .metric-card) > .metric-card .metric-card-icon {
+    display: none;
+  }
+
+  .grid:has(> .metric-card) > .metric-card .metric-card-label {
+    max-width: 100%;
+    letter-spacing: 0.075em;
+    line-height: 1.05;
+    text-align: left;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .grid:has(> .metric-card) > .metric-card .metric-card-value {
+    margin-top: 0.35rem;
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card {
+    min-height: 3.85rem;
+    border-radius: 1rem;
+    padding: 0.6rem 0.55rem !important;
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card > div:first-child {
+    margin-bottom: 0.15rem;
+    display: block;
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card h2,
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card p:first-child {
+    font-size: 0.73rem;
+    line-height: 1.05rem;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card h2 + p,
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card p + p {
+    margin-top: 0.3rem;
+    font-size: 1rem;
+    line-height: 1;
+    font-weight: 900;
+    color: rgb(15 23 42);
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card .min-w-0 + .min-w-0:empty,
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card > .min-w-0:empty {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -461,9 +623,18 @@ summary:focus-visible {
   }
 
   .mobile-bottom-nav {
-    will-change: transform;
+    will-change: transform, opacity;
     transform: translate3d(0, 0, 0);
-    transition: transform 160ms ease, opacity 160ms ease;
+    transition: transform 180ms ease, opacity 180ms ease, box-shadow 180ms ease;
+  }
+
+  .mobile-bottom-nav-pill {
+    will-change: transform;
+    transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 260ms ease;
+  }
+
+  .mobile-bottom-nav button {
+    -webkit-tap-highlight-color: transparent;
   }
 
   .mobile-toast {
@@ -548,5 +719,126 @@ summary:focus-visible {
 @media (display-mode: standalone) and (max-width: 767px) {
   .mobile-system-banner {
     margin-inline: 0.75rem;
+  }
+}
+
+
+/* Mobile dashboard header/metric refinement: compact aligned app header, one-line metric strip and animated bottom navigation. */
+@media (max-width: 767px) {
+  .dashboard-metric-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .dashboard-metric-row .metric-card {
+    min-height: 3.85rem;
+    padding: 0.55rem 0.45rem;
+  }
+
+  .dashboard-metric-row .metric-card-icon {
+    display: none;
+  }
+
+  .dashboard-metric-row .metric-card-label {
+    max-width: 100%;
+    letter-spacing: 0.075em;
+    line-height: 1.05;
+    text-align: left;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-metric-row .metric-card-value {
+    margin-top: 0.35rem;
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+}
+
+
+
+/* Mobile one-line summary strip: keeps all page information cards horizontal and compact. */
+@media (max-width: 767px) {
+  .grid:has(> .metric-card),
+  .grid:has(> .clinical-stat-card) {
+    display: grid !important;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(5.2rem, 1fr);
+    grid-template-columns: none !important;
+    gap: 0.45rem !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 0.15rem;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .grid:has(> .metric-card) > .metric-card,
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card {
+    scroll-snap-align: start;
+  }
+
+  .grid:has(> .metric-card) > .metric-card {
+    min-height: 3.85rem;
+    padding: 0.55rem 0.45rem;
+  }
+
+  .grid:has(> .metric-card) > .metric-card .metric-card-icon {
+    display: none;
+  }
+
+  .grid:has(> .metric-card) > .metric-card .metric-card-label {
+    max-width: 100%;
+    letter-spacing: 0.075em;
+    line-height: 1.05;
+    text-align: left;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .grid:has(> .metric-card) > .metric-card .metric-card-value {
+    margin-top: 0.35rem;
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card {
+    min-height: 3.85rem;
+    border-radius: 1rem;
+    padding: 0.6rem 0.55rem !important;
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card > div:first-child {
+    margin-bottom: 0.15rem;
+    display: block;
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card h2,
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card p:first-child {
+    font-size: 0.73rem;
+    line-height: 1.05rem;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card h2 + p,
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card p + p {
+    margin-top: 0.3rem;
+    font-size: 1rem;
+    line-height: 1;
+    font-weight: 900;
+    color: rgb(15 23 42);
+  }
+
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card .min-w-0 + .min-w-0:empty,
+  .grid:has(> .clinical-stat-card) > .clinical-stat-card > .min-w-0:empty {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-bottom-nav-pill {
+    transition-duration: 0.01ms !important;
   }
 }

@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Activity, ArrowLeft, Download, Search } from 'lucide-react';
+import { Activity, ArrowLeft, Download, Eye, Search } from 'lucide-react';
 import { Card } from './Card';
 import { DataTable } from './DataTable';
 import { StatusBadge } from './StatusBadge';
 import { Button } from './Button';
+import { Modal } from './Modal';
 import { inputClass } from './FormField';
 import { formatDateTime } from '../../utils/formatters';
 import { patientMatchesSearch } from '../../utils/patientUtils';
@@ -130,22 +131,53 @@ function getTrendRows(data, patientId, testId, parameterName) {
     .sort((a, b) => new Date(a.approvedAt || a.createdAt) - new Date(b.approvedAt || b.createdAt));
 }
 
-function PatientProgressChart({ rows }) {
+function filterRowsByDate(rows, fromDate, toDate) {
+  return rows.filter((row) => {
+    const date = new Date(row.approvedAt || row.createdAt);
+    if (fromDate && date < new Date(`${fromDate}T00:00:00`)) return false;
+    if (toDate && date > new Date(`${toDate}T23:59:59`)) return false;
+    return true;
+  });
+}
+
+function getTrendSummary(rows) {
   const numericRows = rows
     .filter((row) => Number.isFinite(Number(row.value)))
     .sort((a, b) => new Date(a.approvedAt || a.createdAt) - new Date(b.approvedAt || b.createdAt));
 
+  if (!numericRows.length) {
+    return { numericRows, latest: null, first: null, change: null, unit: '', low: null, high: null };
+  }
+
+  const latest = numericRows[numericRows.length - 1];
+  const first = numericRows[0];
+  const change = Number(latest.value) - Number(first.value);
+  const low = numericRows.map((row) => parseRangeValue(row, 'low')).find((value) => Number.isFinite(value));
+  const high = numericRows.map((row) => parseRangeValue(row, 'high')).find((value) => Number.isFinite(value));
+
+  return {
+    numericRows,
+    latest,
+    first,
+    change,
+    unit: latest.unit || '',
+    low,
+    high
+  };
+}
+
+function PatientProgressChart({ rows, parameterName, compact = false }) {
+  const { numericRows, latest, first, change, unit, low, high } = getTrendSummary(rows);
+
   if (numericRows.length < 2) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm font-semibold text-slate-500">
+      <div className="flex min-h-[11rem] items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm font-semibold text-slate-500">
         This parameter needs at least two finalized numeric results before a progress line can be generated.
       </div>
     );
   }
 
   const values = numericRows.map((row) => Number(row.value));
-  const low = numericRows.map((row) => parseRangeValue(row, 'low')).find((value) => Number.isFinite(value));
-  const high = numericRows.map((row) => parseRangeValue(row, 'high')).find((value) => Number.isFinite(value));
   const yValues = [...values, ...(Number.isFinite(low) ? [low] : []), ...(Number.isFinite(high) ? [high] : [])];
   const rawMin = Math.min(...yValues);
   const rawMax = Math.max(...yValues);
@@ -162,25 +194,21 @@ function PatientProgressChart({ rows }) {
   const yFor = (value) => bottom - ((value - min) / span) * height;
   const xFor = (index) => left + (index / Math.max(numericRows.length - 1, 1)) * width;
   const points = numericRows.map((row, index) => `${xFor(index)},${yFor(Number(row.value))}`).join(' ');
-  const latest = numericRows[numericRows.length - 1];
-  const first = numericRows[0];
-  const change = Number(latest.value) - Number(first.value);
-  const unit = latest.unit || '';
 
   return (
-    <div className="rounded-3xl border border-clinical-100 bg-gradient-to-br from-clinical-50 to-white p-5">
+    <div className={`rounded-3xl border border-clinical-100 bg-gradient-to-br from-clinical-50 to-white ${compact ? 'p-4' : 'p-5'}`}>
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-wider text-clinical-700">Patient progress line chart</p>
-          <p className="mt-1 text-sm text-slate-500">Values are plotted in visit/release order using finalized historical results.</p>
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase tracking-wider text-clinical-700">{parameterName || 'Patient progress line chart'}</p>
+          <p className="mt-1 text-sm text-slate-500">Finalized values plotted in visit/release order.</p>
         </div>
-        <div className="rounded-2xl bg-white px-4 py-3 text-right shadow-sm">
+        <div className="rounded-2xl bg-white px-4 py-3 text-left shadow-sm md:text-right">
           <p className="text-xs font-black uppercase tracking-wider text-slate-400">Change</p>
           <p className={`font-black ${change > 0 ? 'text-amber-700' : change < 0 ? 'text-clinical-700' : 'text-slate-900'}`}>{change > 0 ? '+' : ''}{change.toFixed(2)} {unit}</p>
         </div>
       </div>
 
-      <svg viewBox="0 0 108 100" className="h-72 w-full overflow-visible" role="img" aria-label="Patient test progress line chart">
+      <svg viewBox="0 0 108 100" className={`${compact ? 'h-52 sm:h-56' : 'h-80'} w-full overflow-visible`} role="img" aria-label={`${parameterName || 'Patient test'} progress line chart`}>
         {[0, 1, 2, 3].map((tick) => {
           const y = top + (tick / 3) * height;
           const value = max - (tick / 3) * span;
@@ -208,7 +236,7 @@ function PatientProgressChart({ rows }) {
           const value = Number(row.value);
           const x = xFor(index);
           const y = yFor(value);
-          const abnormal = ['High', 'Low', 'Critical'].includes(row.flag);
+          const abnormal = ['High', 'Low', 'Critical', 'Critical High', 'Critical Low'].includes(row.flag);
           return (
             <g key={row.id || `${row.orderId}-${index}`}>
               <circle cx={x} cy={y} r="2.5" className={abnormal ? 'fill-rose-600' : 'fill-clinical-700'} />
@@ -221,22 +249,52 @@ function PatientProgressChart({ rows }) {
         <line x1={left} x2={left} y1={top} y2={bottom} className="stroke-slate-300" strokeWidth="0.8" />
       </svg>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
-        <div className="rounded-2xl bg-white p-3"><p className="text-xs font-black uppercase tracking-wider text-slate-400">First Value</p><p className="mt-1 font-black text-slate-950">{first.value} {unit}</p><p className="text-xs text-slate-500">{formatDateTime(first.approvedAt || first.createdAt)}</p></div>
-        <div className="rounded-2xl bg-white p-3"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Latest Value</p><p className="mt-1 font-black text-slate-950">{latest.value} {unit}</p><p className="text-xs text-slate-500">{formatDateTime(latest.approvedAt || latest.createdAt)}</p></div>
-        <div className="rounded-2xl bg-white p-3"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Reference Range</p><p className="mt-1 font-black text-slate-950">{latest.referenceRange || '—'}</p><p className="text-xs text-slate-500">Dashed guide lines show low/high range when available.</p></div>
+      <div className={`mt-4 grid gap-3 ${compact ? 'sm:grid-cols-3' : 'md:grid-cols-3'}`}>
+        <div className="rounded-2xl bg-white p-3"><p className="text-xs font-black uppercase tracking-wider text-slate-400">First value</p><p className="mt-1 font-black text-slate-950">{first.value} {unit}</p><p className="text-xs text-slate-500">{formatDateTime(first.approvedAt || first.createdAt)}</p></div>
+        <div className="rounded-2xl bg-white p-3"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Latest value</p><p className="mt-1 font-black text-slate-950">{latest.value} {unit}</p><p className="text-xs text-slate-500">{formatDateTime(latest.approvedAt || latest.createdAt)}</p></div>
+        <div className="rounded-2xl bg-white p-3"><p className="text-xs font-black uppercase tracking-wider text-slate-400">Reference range</p><p className="mt-1 font-black text-slate-950">{latest.referenceRange || '—'}</p><p className="text-xs text-slate-500">Dashed lines show low/high range when available.</p></div>
       </div>
     </div>
   );
 }
 
-export function PatientTrendsPanel({ data, allowedPatientIds = null, title = 'Patient Trends', subtitle = 'Search a patient, select a test, then select a parameter to view the trend.' }) {
+function ParameterTrendCard({ chart, onView }) {
+  const { latest } = getTrendSummary(chart.rows);
+  return (
+    <div className="flex min-w-0 flex-col rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="break-words font-black text-slate-950">{chart.parameter.name}</p>
+          <p className="text-xs font-semibold text-slate-500">{chart.parameter.unit || 'No unit'} · Ref: {chart.parameter.referenceRange || '—'}</p>
+        </div>
+        <div className="rounded-2xl bg-slate-50 px-3 py-2 text-xs font-black uppercase tracking-wider text-slate-500">
+          {chart.rows.length} result{chart.rows.length === 1 ? '' : 's'}
+        </div>
+      </div>
+
+      <div className="flex-1">
+        <PatientProgressChart rows={chart.rows} parameterName={chart.parameter.name} compact />
+      </div>
+
+      <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+        <div className="text-xs font-semibold text-slate-500">
+          Latest: <span className="font-black text-slate-900">{latest ? `${latest.value} ${latest.unit || ''}` : 'No numeric value'}</span>
+        </div>
+        <Button variant="secondary" onClick={() => onView(chart)} aria-label={`Open large chart for ${chart.parameter.name}`}>
+          <Eye className="h-4 w-4" /> View
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export function PatientTrendsPanel({ data, allowedPatientIds = null, title = 'Patient Trends', subtitle = 'Search a patient and select a repeated lab test to view all parameter charts at once.' }) {
   const [query, setQuery] = useState('');
   const [selectedPatientId, setSelectedPatientId] = useState('');
   const [selectedTestId, setSelectedTestId] = useState('');
-  const [selectedParameterName, setSelectedParameterName] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [focusedChart, setFocusedChart] = useState(null);
 
   const allowedSet = allowedPatientIds ? new Set(allowedPatientIds) : null;
   const patients = useMemo(() => (data.patients || []).filter((patient) => !allowedSet || allowedSet.has(patient.id)), [data.patients, allowedSet]);
@@ -244,20 +302,25 @@ export function PatientTrendsPanel({ data, allowedPatientIds = null, title = 'Pa
   const selectedPatient = patients.find((patient) => patient.id === selectedPatientId) || null;
   const completedTests = selectedPatient ? getCompletedTrendTests(data, selectedPatient.id) : [];
   const selectedTest = completedTests.find((test) => test.id === selectedTestId) || null;
-  const selectedParameter = selectedTest?.parameters?.find((parameter) => parameter.name === selectedParameterName) || null;
-  const rawTrendRows = selectedPatient && selectedTest && selectedParameter ? getTrendRows(data, selectedPatient.id, selectedTest.id, selectedParameter.name) : [];
-  const trendRows = rawTrendRows.filter((row) => {
-    const date = new Date(row.approvedAt || row.createdAt);
-    if (fromDate && date < new Date(`${fromDate}T00:00:00`)) return false;
-    if (toDate && date > new Date(`${toDate}T23:59:59`)) return false;
-    return true;
-  });
+
+  const parameterCharts = useMemo(() => {
+    if (!selectedPatient || !selectedTest) return [];
+    return (selectedTest.parameters || []).map((parameter) => ({
+      parameter,
+      rows: filterRowsByDate(getTrendRows(data, selectedPatient.id, selectedTest.id, parameter.name), fromDate, toDate)
+    }));
+  }, [data, selectedPatient, selectedTest, fromDate, toDate]);
+
+  const allTrendRows = parameterCharts.flatMap((chart) => chart.rows);
+  const focusedRows = focusedChart ? filterRowsByDate(getTrendRows(data, selectedPatient?.id, selectedTest?.id, focusedChart.parameter.name), fromDate, toDate) : [];
+  const chartCount = parameterCharts.length;
+  const trendReadyCount = parameterCharts.filter((chart) => getTrendSummary(chart.rows).numericRows.length >= 2).length;
 
   function selectPatient(patientId) {
     const patient = patients.find((item) => item.id === patientId);
     setSelectedPatientId(patientId);
     setSelectedTestId('');
-    setSelectedParameterName('');
+    setFocusedChart(null);
     setFromDate('');
     setToDate('');
     if (patient) setQuery(patient.fullName || patient.id);
@@ -266,26 +329,29 @@ export function PatientTrendsPanel({ data, allowedPatientIds = null, title = 'Pa
   function resetPatientSearch() {
     setSelectedPatientId('');
     setSelectedTestId('');
-    setSelectedParameterName('');
+    setFocusedChart(null);
     setFromDate('');
     setToDate('');
     setQuery('');
   }
 
   function backStep() {
-    if (selectedParameterName) return setSelectedParameterName('');
-    if (selectedTestId) return setSelectedTestId('');
-    return resetPatientSearch();
+    if (selectedTestId) {
+      setSelectedTestId('');
+      setFocusedChart(null);
+      return;
+    }
+    resetPatientSearch();
   }
 
   function exportTrendCsv() {
-    if (!trendRows.length) return;
+    if (!allTrendRows.length) return;
     const headers = ['Date', 'Patient', 'Test', 'Parameter', 'Value', 'Unit', 'Reference Range', 'Flag', 'Order ID'];
-    const lines = trendRows.map((row) => [
+    const lines = allTrendRows.map((row) => [
       formatDateTime(row.approvedAt || row.createdAt),
       selectedPatient?.fullName || '',
       row.testName || selectedTest?.name || '',
-      row.parameter || selectedParameter?.name || '',
+      row.parameter || '',
       row.value,
       row.unit || '',
       row.referenceRange || '',
@@ -296,7 +362,7 @@ export function PatientTrendsPanel({ data, allowedPatientIds = null, title = 'Pa
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${selectedPatient?.id || 'patient'}-${selectedTest?.id || 'test'}-${selectedParameter?.name || 'parameter'}-trend.csv`;
+    link.download = `${selectedPatient?.id || 'patient'}-${selectedTest?.id || 'test'}-all-parameter-trends.csv`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -315,7 +381,7 @@ export function PatientTrendsPanel({ data, allowedPatientIds = null, title = 'Pa
                   setQuery(event.target.value);
                   setSelectedPatientId('');
                   setSelectedTestId('');
-                  setSelectedParameterName('');
+                  setFocusedChart(null);
                 }}
                 placeholder="Search patient name or ID..."
               />
@@ -350,10 +416,11 @@ export function PatientTrendsPanel({ data, allowedPatientIds = null, title = 'Pa
               <div>
                 <p className="text-xs font-black uppercase tracking-wider text-slate-400">Trend navigation</p>
                 <p className="mt-1 font-black text-slate-950">
-                  {!selectedPatient ? 'Search and select a patient' : !selectedTest ? 'Select a test' : !selectedParameter ? `${selectedTest.name} — Select parameter` : `${selectedTest.name} · ${selectedParameter.name}`}
+                  {!selectedPatient ? 'Search and select a patient' : !selectedTest ? 'Select a repeated lab test' : `${selectedTest.name} · ${chartCount} parameter chart${chartCount === 1 ? '' : 's'}`}
                 </p>
+                {selectedTest && <p className="mt-1 text-sm font-semibold text-slate-500">All parameters for this test are displayed together. Use View below any chart to open it in a large popup.</p>}
               </div>
-              {(selectedPatient || selectedTest || selectedParameter) && <Button variant="secondary" onClick={backStep}><ArrowLeft className="h-4 w-4" /> Back</Button>}
+              {(selectedPatient || selectedTest) && <Button variant="secondary" onClick={backStep}><ArrowLeft className="h-4 w-4" /> Back</Button>}
             </div>
 
             {selectedPatient && !selectedTest && (
@@ -361,9 +428,9 @@ export function PatientTrendsPanel({ data, allowedPatientIds = null, title = 'Pa
                 <p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-400">Select a completed lab test</p>
                 <div className="grid gap-3 md:grid-cols-2">
                   {completedTests.map((test) => (
-                    <button key={test.id} onClick={() => { setSelectedTestId(test.id); setSelectedParameterName(''); }} className="rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-clinical-300 hover:bg-clinical-50">
+                    <button key={test.id} onClick={() => { setSelectedTestId(test.id); setFocusedChart(null); }} className="rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-clinical-300 hover:bg-clinical-50">
                       <p className="font-black text-slate-950">{test.name}</p>
-                      <p className="text-xs text-slate-500">{test.department} · {test.visitCount} completed visit(s)</p>
+                      <p className="text-xs text-slate-500">{test.department} · {test.visitCount} completed visit(s) · {(test.parameters || []).length} parameter(s)</p>
                     </button>
                   ))}
                   {completedTests.length === 0 && <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500 md:col-span-2">No completed lab tests with numerical/reference-range data found for this patient.</p>}
@@ -371,41 +438,35 @@ export function PatientTrendsPanel({ data, allowedPatientIds = null, title = 'Pa
               </div>
             )}
 
-            {selectedPatient && selectedTest && !selectedParameter && (
-              <div>
-                <p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-400">Select a parameter</p>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {(selectedTest.parameters || []).map((parameter) => (
-                    <button key={parameter.name} onClick={() => setSelectedParameterName(parameter.name)} className="rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-clinical-300 hover:bg-clinical-50">
-                      <p className="font-black text-slate-950">{parameter.name}</p>
-                      <p className="text-xs text-slate-500">{parameter.unit || 'No Unit'} · Ref: {parameter.referenceRange || '—'}</p>
-                    </button>
-                  ))}
+            {selectedPatient && selectedTest && (
+              <div className="rounded-2xl border border-clinical-100 bg-clinical-50 p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wider text-clinical-700">Viewing all test parameters</p>
+                    <p className="font-black text-slate-950">{selectedTest.name}</p>
+                    <p className="mt-1 text-sm text-slate-600">{trendReadyCount} of {chartCount} parameter chart{chartCount === 1 ? '' : 's'} have enough numeric history for a line trend.</p>
+                  </div>
+                  <Button variant="secondary" onClick={exportTrendCsv} disabled={!allTrendRows.length}><Download className="h-4 w-4" /> Export CSV</Button>
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">From date<input className={`${inputClass} mt-1`} type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} /></label>
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">To date<input className={`${inputClass} mt-1`} type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} /></label>
                 </div>
               </div>
             )}
-
-            {selectedPatient && selectedTest && selectedParameter && (
-              <>
-                <div className="rounded-2xl border border-clinical-100 bg-clinical-50 p-4">
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-wider text-clinical-700">Viewing progress</p>
-                      <p className="font-black text-slate-950">{selectedTest.name} · {selectedParameter.name}</p>
-                      <p className="mt-1 text-sm text-slate-600">Line chart uses finalized values from previous visits for this exact test parameter.</p>
-                    </div>
-                    <Button variant="secondary" onClick={exportTrendCsv} disabled={!trendRows.length}><Download className="h-4 w-4" /> Export CSV</Button>
-                  </div>
-                  <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    <label className="text-xs font-black uppercase tracking-wider text-slate-500">From date<input className={`${inputClass} mt-1`} type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} /></label>
-                    <label className="text-xs font-black uppercase tracking-wider text-slate-500">To date<input className={`${inputClass} mt-1`} type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} /></label>
-                  </div>
-                </div>
-                <PatientProgressChart rows={trendRows} />
-              </>
-            )}
           </div>
         </div>
+
+        {selectedPatient && selectedTest && (
+          <div className="space-y-4">
+            <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
+              {parameterCharts.map((chart) => (
+                <ParameterTrendCard key={chart.parameter.name} chart={chart} onView={setFocusedChart} />
+              ))}
+            </div>
+            {parameterCharts.length === 0 && <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">This test has no configured parameters to trend.</p>}
+          </div>
+        )}
 
         <DataTable
           columns={[
@@ -416,10 +477,35 @@ export function PatientTrendsPanel({ data, allowedPatientIds = null, title = 'Pa
             { key: 'referenceRange', label: 'Range' },
             { key: 'flag', label: 'Flag', render: (row) => <StatusBadge status={row.flag} /> }
           ]}
-          rows={trendRows}
-          emptyMessage="Select a patient, test and parameter to view historical trend values."
+          rows={allTrendRows}
+          emptyMessage="Select a patient and repeated lab test to view historical trend values for all parameters."
         />
       </div>
+
+      <Modal
+        open={Boolean(focusedChart)}
+        title={focusedChart ? `${selectedTest?.name || 'Test'} · ${focusedChart.parameter.name}` : 'Patient trend chart'}
+        description={focusedChart ? `Large view of ${focusedChart.parameter.name} progress for ${selectedPatient?.fullName || 'selected patient'}.` : ''}
+        onClose={() => setFocusedChart(null)}
+        footer={<Button variant="secondary" onClick={() => setFocusedChart(null)}>Close</Button>}
+      >
+        {focusedChart && (
+          <div className="space-y-5">
+            <PatientProgressChart rows={focusedRows} parameterName={focusedChart.parameter.name} />
+            <DataTable
+              columns={[
+                { key: 'approvedAt', label: 'Date', render: (row) => formatDateTime(row.approvedAt || row.createdAt) },
+                { key: 'value', label: 'Value', render: (row) => <span className="font-black text-slate-950">{row.value} {row.unit}</span> },
+                { key: 'referenceRange', label: 'Range' },
+                { key: 'flag', label: 'Flag', render: (row) => <StatusBadge status={row.flag} /> },
+                { key: 'orderId', label: 'Order ID' }
+              ]}
+              rows={focusedRows}
+              emptyMessage="No historical values found for this parameter in the selected date range."
+            />
+          </div>
+        )}
+      </Modal>
     </Card>
   );
 }
