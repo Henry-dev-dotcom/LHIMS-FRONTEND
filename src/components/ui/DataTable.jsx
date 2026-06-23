@@ -13,6 +13,17 @@ function renderCell(column, row) {
   return column.render ? column.render(row) : row[column.key];
 }
 
+// Accessible-name-safe value: a custom render() returns JSX, which stringifies
+// to "[object Object]" inside a template literal. Prefer the raw cell value for
+// labels, falling back to the column label only when there is no usable value.
+function cellLabel(column, row) {
+  const raw = row?.[column?.key];
+  if (raw != null && (typeof raw === 'string' || typeof raw === 'number')) return String(raw);
+  const rendered = renderCell(column, row);
+  if (rendered != null && (typeof rendered === 'string' || typeof rendered === 'number')) return String(rendered);
+  return '';
+}
+
 function MobileDetail({ column, row, compact = false }) {
   return (
     <div className={clsx('min-w-0 rounded-2xl bg-slate-50 px-3 py-2', compact && 'rounded-xl px-2.5 py-2')}>
@@ -43,7 +54,7 @@ export function DataTable({ columns, rows, emptyMessage = 'No records found.', d
             </div>
           </div>
         ) : rows.map((row, index) => (
-          <article key={row.id || index} className="bg-white p-3 sm:p-4" aria-label={`${primaryColumn?.label || 'Record'} ${primaryColumn ? renderCell(primaryColumn, row) ?? index + 1 : index + 1}`}>
+          <article key={row.id || index} className="bg-white p-3 sm:p-4" aria-label={`${primaryColumn?.label || 'Record'} ${(primaryColumn && cellLabel(primaryColumn, row)) || index + 1}`}>
             <div className="mb-3 flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{primaryColumn?.label || `Record ${index + 1}`}</p>
