@@ -341,43 +341,44 @@ export function DoctorNewOrderPage() {
       />
 
       <section className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/80 p-3 shadow-soft backdrop-blur sm:p-5">
-        <div className="mb-4 flex flex-col gap-3 rounded-[1.5rem] bg-gradient-to-r from-clinical-50 to-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-clinical-600">New Order Workspace</p>
-            <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">{activeStep.label}</h2>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">Complete this step, then continue. The next panel opens inside this same New Order section instead of stacking every form on the screen.</p>
+        <div className="mb-3 rounded-[1.5rem] bg-gradient-to-r from-clinical-50 to-slate-50 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-clinical-600">New Order Workspace</p>
+              <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">{activeStep.label}</h2>
+            </div>
+            <span className="inline-flex w-fit items-center rounded-full bg-white px-3 py-1.5 text-xs font-black text-slate-600 shadow-sm ring-1 ring-slate-200">Step {step} of {WIZARD_STEPS.length}</span>
           </div>
-          <span className="inline-flex w-fit items-center rounded-full bg-white px-3 py-1.5 text-xs font-black text-slate-600 shadow-sm ring-1 ring-slate-200">Step {step} of {WIZARD_STEPS.length}</span>
+
+          <nav className="mt-4" aria-label="Order progress">
+            <ol className="flex items-center gap-1 overflow-x-auto rounded-3xl border border-slate-200 bg-white p-2 shadow-sm sm:gap-2 sm:p-3">
+              {WIZARD_STEPS.map((item, index) => {
+                const isCurrent = step === item.id;
+                const isDone = step > item.id;
+                const reachable = canReach(item.id);
+                return (
+                  <li key={item.id} className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
+                    <button
+                      type="button"
+                      onClick={() => goToStep(item.id)}
+                      disabled={!reachable}
+                      aria-current={isCurrent ? 'step' : undefined}
+                      className={`flex min-w-0 items-center gap-2 rounded-2xl px-2 py-1.5 transition sm:px-3 ${reachable ? 'cursor-pointer hover:bg-slate-50' : 'cursor-not-allowed'}`}
+                    >
+                      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-black ${isCurrent ? 'bg-clinical-600 text-white' : isDone ? 'bg-clinical-100 text-clinical-700' : 'bg-slate-100 text-slate-400'}`}>
+                        {isDone ? <CheckCircle2 className="h-5 w-5" /> : item.id}
+                      </span>
+                      <span className={`hidden truncate text-sm font-black sm:block ${isCurrent ? 'text-clinical-700' : isDone ? 'text-slate-700' : 'text-slate-400'}`}>{item.label}</span>
+                    </button>
+                    {index < WIZARD_STEPS.length - 1 && <span className={`h-0.5 flex-1 rounded ${step > item.id ? 'bg-clinical-300' : 'bg-slate-200'}`} />}
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
         </div>
 
-        <nav aria-label="Order progress">
-          <ol className="flex items-center gap-1 overflow-x-auto rounded-3xl border border-slate-200 bg-white p-2 shadow-sm sm:gap-2 sm:p-3">
-          {WIZARD_STEPS.map((item, index) => {
-            const isCurrent = step === item.id;
-            const isDone = step > item.id;
-            const reachable = canReach(item.id);
-            return (
-              <li key={item.id} className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
-                <button
-                  type="button"
-                  onClick={() => goToStep(item.id)}
-                  disabled={!reachable}
-                  aria-current={isCurrent ? 'step' : undefined}
-                  className={`flex min-w-0 items-center gap-2 rounded-2xl px-2 py-1.5 transition sm:px-3 ${reachable ? 'cursor-pointer hover:bg-slate-50' : 'cursor-not-allowed'}`}
-                >
-                  <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-black ${isCurrent ? 'bg-clinical-600 text-white' : isDone ? 'bg-clinical-100 text-clinical-700' : 'bg-slate-100 text-slate-400'}`}>
-                    {isDone ? <CheckCircle2 className="h-5 w-5" /> : item.id}
-                  </span>
-                  <span className={`hidden truncate text-sm font-black sm:block ${isCurrent ? 'text-clinical-700' : isDone ? 'text-slate-700' : 'text-slate-400'}`}>{item.label}</span>
-                </button>
-                {index < WIZARD_STEPS.length - 1 && <span className={`h-0.5 flex-1 rounded ${step > item.id ? 'bg-clinical-300' : 'bg-slate-200'}`} />}
-              </li>
-            );
-          })}
-        </ol>
-      </nav>
-
-      <form onSubmit={openReview} className="mt-5 min-h-[520px] space-y-5">
+        <form onSubmit={openReview} className="mt-3 min-h-[520px] space-y-5">
         {stepError && (
           <div className="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-900">{stepError}</div>
         )}
