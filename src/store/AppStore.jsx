@@ -500,7 +500,7 @@ function reducer(state, action) {
         urgency: action.payload.urgency,
         clinicalNotes: action.payload.clinicalNotes
       }, state.auth?.userName, state.auth?.role);
-      return { ...state, data: nextData, currentPage: 'doctor-dashboard', ui: { ...state.ui, toast: toast('success', 'Order submitted to reception queue') } };
+      return { ...state, data: nextData, currentPage: 'doctor-dashboard', ui: { ...state.ui, toast: toast('success', 'Order submitted and routed to the required workflow queue(s)') } };
     }
     case 'UPDATE_DOCTOR_PROFILE': {
       const timestamp = nowIso();
@@ -876,6 +876,8 @@ function reducer(state, action) {
       if (!itemIds.length) return { ...state, ui: { ...state.ui, toast: toast('error', 'Select at least one laboratory test or scan for this walk-in patient.') } };
       const validItems = itemIds.filter((itemId) => (state.data.catalog || []).some((item) => item.id === itemId));
       if (validItems.length !== itemIds.length) return { ...state, ui: { ...state.ui, toast: toast('error', 'One or more selected tests are no longer available in the catalog.') } };
+      const directLabCount = validItems.filter((itemId) => (state.data.catalog || []).find((item) => item.id === itemId)?.department === 'Laboratory').length;
+      const directScanCount = validItems.filter((itemId) => (state.data.catalog || []).find((item) => item.id === itemId)?.department === 'Imaging').length;
 
       const actor = state.auth?.userName || 'Reception';
       const beforeOrderIds = new Set((state.data.orders || []).map((order) => order.id));
@@ -922,9 +924,9 @@ function reducer(state, action) {
         } : visit),
         notifications: [{
           id: idWithPrefix('NOT-', nextData.notifications || []),
-          title: 'Walk-in request routed',
-          body: `${createdOrder.id} was created at reception and routed to the requested department queue(s).`,
-          audience: 'receptionist',
+          title: 'Walk-in diagnostic request routed',
+          body: `${createdOrder.id} was created at reception and routed directly to the diagnostic department queue(s).`,
+          audience: directLabCount > 0 ? 'lab' : (directScanCount > 0 ? 'imaging' : 'diagnostics'),
           channel: 'In-platform',
           status: 'Delivered',
           read: false,
@@ -947,7 +949,7 @@ function reducer(state, action) {
           ...state.ui,
           activeWalkInPatientId: patientId,
           activeWalkInVisitId: visitId || state.ui.activeWalkInVisitId,
-          toast: toast('success', `${createdOrder.id} created, invoiced and routed to department queue(s)`)
+          toast: toast('success', `${createdOrder.id} created, invoiced and routed directly to diagnostics`)
         }
       };
     }
@@ -1590,7 +1592,7 @@ function reducer(state, action) {
           details: `${sample.id} accepted for ${labItemIds.length} lab test(s)`
         })
       };
-      return { ...state, data: nextData, ui: { ...state.ui, activeLabAcceptOrderId: orderId, activeAcceptedSampleOrderId: orderId, toast: toast('success', `${sample.id} accepted. You can keep accepting samples, then open Accepted Samples when ready.`) } };
+      return { ...state, data: nextData, currentPage: 'accepted-samples', ui: { ...state.ui, activeLabAcceptOrderId: orderId, activeAcceptedSampleOrderId: orderId, sidebarOpen: false, toast: toast('success', `${sample.id} accepted and sent directly to diagnostics result entry.`) } };
     }
     case 'BATCH_ACCEPT_LAB_SAMPLES': {
       const orderIds = Array.from(new Set(action.orderIds || [])).filter(Boolean);
@@ -1633,7 +1635,7 @@ function reducer(state, action) {
           details: `${acceptedSamples.length} sample(s) accepted in one batch.`
         })
       };
-      return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', `${acceptedSamples.length} sample(s) accepted. Open Accepted Samples when ready.`) } };
+      return { ...state, data: nextData, currentPage: 'accepted-samples', ui: { ...state.ui, sidebarOpen: false, toast: toast('success', `${acceptedSamples.length} sample(s) accepted and sent directly to diagnostics result entry.`) } };
     }
     case 'OPEN_ACCEPTED_SAMPLE': {
       return { ...state, currentPage: 'accepted-samples', ui: { ...state.ui, sidebarOpen: false, activeAcceptedSampleOrderId: action.orderId } };
@@ -1816,21 +1818,14 @@ function reducer(state, action) {
       };
       const doctorNotification = createRoleNotification(state.data, {
         title: 'Lab result finalised',
-        body: `${signedResult.orderId} has been signed off and is ready for doctor review.`,
+        body: `${signedResult.orderId} has been signed off and sent directly to the clinician for review.`,
         audience: 'doctor',
         entityId: signedResult.orderId,
         deliveryType: 'Lab Result Finalised'
       });
-      const receptionNotification = createRoleNotification({ ...state.data, notifications: [doctorNotification, ...(state.data.notifications || [])] }, {
-        title: 'Lab report ready for release',
-        body: `${signedResult.orderId} is ready for patient-safe delivery and printing.`,
-        audience: 'receptionist',
-        entityId: signedResult.orderId,
-        deliveryType: 'Lab Report Ready'
-      });
-      const patientNotification = createRoleNotification({ ...state.data, notifications: [receptionNotification, doctorNotification, ...(state.data.notifications || [])] }, {
+      const patientNotification = createRoleNotification({ ...state.data, notifications: [doctorNotification, ...(state.data.notifications || [])] }, {
         title: 'Result ready',
-        body: `Your result is ready. Use the secure patient portal link or contact reception for access. No clinical values are included in this notice.`,
+        body: `Your result is ready. Use the secure patient portal link or contact your clinician for access. No clinical values are included in this notice.`,
         audience: 'patient',
         channel: 'SMS',
         status: 'Queued',
@@ -1840,7 +1835,7 @@ function reducer(state, action) {
       let nextData = {
         ...state.data,
         results: state.data.results.map((item) => item.id === result.id ? signedResult : item),
-        notifications: [patientNotification, receptionNotification, doctorNotification, ...(state.data.notifications || [])],
+        notifications: [patientNotification, doctorNotification, ...(state.data.notifications || [])],
         auditLogs: addAudit(state.data.auditLogs || [], {
           actor: signedResult.signedBy,
           role: state.auth?.role || 'lab',
@@ -1851,7 +1846,7 @@ function reducer(state, action) {
         })
       };
       nextData = maybeReleaseOrderAfterResultApproval(nextData, result.orderId, state.auth);
-      return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', 'Lab result signed, hashed and released') } };
+      return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', 'Lab result signed, hashed and sent directly to the clinician') } };
     }
 
     case 'PRINT_SAMPLE_LABEL': {

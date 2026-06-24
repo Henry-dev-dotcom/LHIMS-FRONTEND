@@ -21,7 +21,7 @@ export function LabAcceptPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Laboratory · Sample Acceptance" title="Accept Lab Sample" description="Review patient/order details and accept the lab sample before result entry." />
+      <PageHeader eyebrow="Laboratory · Sample Acceptance" title="Accept Lab Sample" description="Review patient/order details. Once the sample is accepted, the case opens directly in the diagnostic result-entry workspace." />
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.4fr]">
         <Card title="Find lab request" subtitle="Search a patient or order if you came directly to this page.">
           <div className="relative mb-4">
@@ -37,7 +37,7 @@ export function LabAcceptPage() {
             ))}
           </div>
         </Card>
-        <Card title="Sample acceptance panel" subtitle="Accept the received specimen or reject it with a reason for recollection.">
+        <Card title="Diagnostic routing panel" subtitle="Accept the received specimen and send it straight to diagnostics, or reject it with a reason for recollection.">
           {!activeOrder ? <p className="text-sm text-slate-500">No lab order selected.</p> : (
             <div className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2">
@@ -53,7 +53,7 @@ export function LabAcceptPage() {
                 <FormField label="Sample Type"><select className={inputClass} value={sampleType} onChange={(event) => setSampleType(event.target.value)}><option>Blood</option><option>Urine</option><option>Stool</option><option>Swab</option><option>Serum</option><option>Plasma</option></select></FormField>
                 <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Requested</p><p className="font-black text-slate-950">{formatDateTime(activeOrder.createdAt)}</p></div>
               </div>
-              {acceptedSample ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="font-black text-emerald-800">Sample accepted: {acceptedSample.id}</p><p className="text-sm text-emerald-700">Accepted by {acceptedSample.acceptedBy || acceptedSample.collectedBy} at {formatDateTime(acceptedSample.acceptedAt || acceptedSample.collectedAt)}</p></div> : <Button onClick={() => dispatch({ type: 'ACCEPT_LAB_SAMPLE', orderId: activeOrder.id, payload: { sampleType } })}><CheckCircle2 className="h-4 w-4" /> Accept Sample</Button>}
+              {acceptedSample ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="font-black text-emerald-800">Sample accepted: {acceptedSample.id}</p><p className="text-sm text-emerald-700">Accepted by {acceptedSample.acceptedBy || acceptedSample.collectedBy} at {formatDateTime(acceptedSample.acceptedAt || acceptedSample.collectedAt)}</p></div> : <Button onClick={() => dispatch({ type: 'ACCEPT_LAB_SAMPLE', orderId: activeOrder.id, payload: { sampleType } })}><CheckCircle2 className="h-4 w-4" /> Send to Diagnostics</Button>}
               <Button variant="danger" onClick={() => { const reason = window.prompt('Reason for rejection / recollection?'); if (reason) dispatch({ type: 'REJECT_SAMPLE', sampleId: acceptedSample?.id || '', reason }); }} disabled={!acceptedSample}><XCircle className="h-4 w-4" /> Reject Accepted Sample</Button>
               {rejectedSamples.length > 0 && <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">Rejected history: {rejectedSamples.map((sample) => `${sample.id}: ${sample.rejectionReason}`).join(' · ')}</div>}
             </div>

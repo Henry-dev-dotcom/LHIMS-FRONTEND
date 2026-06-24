@@ -10,7 +10,7 @@ export function DoctorPatientTrendsPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow="Doctor Portal"
+        eyebrow="Clinician Portal"
         title="Patient Trends"
         description="Search a referred patient, select a repeated test, then view a line chart showing the patient's progress across multiple visits."
         actions={<LineChart className="h-5 w-5 text-clinical-600" />}

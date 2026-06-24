@@ -35,16 +35,26 @@ function isSameDay(a, b = new Date()) {
 function CatalogSearchModal({ open, onClose, catalog, selectedItems, toggleItem, clearItems }) {
   const [query, setQuery] = useState('');
   const [department, setDepartment] = useState('');
-  const matches = catalog
-    .filter((item) => (!department || item.department === department))
-    .filter((item) => catalogMatches(item, query));
+  const [searchActive, setSearchActive] = useState(false);
+
+  const departmentItems = catalog.filter((item) => !department || item.department === department);
+  const dropdownMatches = query.trim()
+    ? departmentItems.filter((item) => catalogMatches(item, query)).slice(0, 10)
+    : [];
+  const selectedCatalogItems = selectedItems.map((id) => catalog.find((item) => item.id === id)).filter(Boolean);
+
+  function chooseFromDropdown(id) {
+    toggleItem(id);
+    setQuery('');
+    setSearchActive(true);
+  }
 
   return (
     <Modal
       open={open}
       onClose={onClose}
       title="Add test or scan"
-      description="Search by test/scan name, catalog ID, department, modality, or common abbreviation. Prices remain hidden from doctors and clinicians."
+      description="Search by test/scan name, catalog ID, department, modality, or common abbreviation. Search results now open directly under the search bar. Prices remain hidden from clinicians."
       footer={(
         <>
           <div className="mr-auto text-sm font-black text-slate-500">{selectedItems.length} selected</div>
@@ -55,10 +65,53 @@ function CatalogSearchModal({ open, onClose, catalog, selectedItems, toggleItem,
     >
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-[1fr_190px]">
-          <div className="relative">
+          <div className="relative z-30">
             <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-            <input className={`${inputClass} pl-9`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search FBC, t1, LFT, ultrasound, scan..." autoFocus />
+            <input
+              className={`${inputClass} pl-9`}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onFocus={() => setSearchActive(true)}
+              onBlur={() => window.setTimeout(() => setSearchActive(false), 120)}
+              placeholder="Search FBC, t1, LFT, ultrasound, scan..."
+              autoFocus
+            />
+
+            {searchActive && query.trim() && (
+              <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 max-h-80 overflow-y-auto rounded-3xl border border-slate-200 bg-white p-2 shadow-2xl">
+                <div className="mb-2 flex items-center justify-between px-2 py-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Search results</p>
+                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-500">{dropdownMatches.length} shown</span>
+                </div>
+
+                {dropdownMatches.map((item) => {
+                  const selected = selectedItems.includes(item.id);
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onMouseDown={(event) => { event.preventDefault(); chooseFromDropdown(item.id); }}
+                      className={`flex w-full flex-col gap-2 rounded-2xl px-3 py-3 text-left transition sm:flex-row sm:items-center sm:justify-between ${selected ? 'bg-clinical-50 ring-2 ring-clinical-200' : 'hover:bg-slate-50'}`}
+                    >
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate font-black text-slate-950">{item.name}</p>
+                          <StatusBadge status={item.type} />
+                        </div>
+                        <p className="mt-1 text-xs font-semibold text-slate-500">{item.id} · {item.department === 'Imaging' ? 'Radiology / Scan' : item.department}{item.modality ? ` · ${item.modality}` : ''} · ETA {item.expectedHours}h</p>
+                      </div>
+                      <span className={`w-fit rounded-full px-3 py-1 text-xs font-black ${selected ? 'bg-clinical-600 text-white' : 'bg-slate-100 text-slate-600'}`}>{selected ? 'Added' : 'Add'}</span>
+                    </button>
+                  );
+                })}
+
+                {dropdownMatches.length === 0 && (
+                  <p className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">No tests or scans match your search.</p>
+                )}
+              </div>
+            )}
           </div>
+
           <select className={inputClass} value={department} onChange={(event) => setDepartment(event.target.value)}>
             <option value="">Both departments</option>
             <option value="Laboratory">Laboratory</option>
@@ -82,21 +135,33 @@ function CatalogSearchModal({ open, onClose, catalog, selectedItems, toggleItem,
           </div>
         </div>
 
-        <div className="max-h-[55vh] space-y-2 overflow-y-auto pr-1">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Click items to add/remove them, then press Done to return to the order.</p>
-          {matches.map((item) => {
-            const selected = selectedItems.includes(item.id);
-            return (
-              <button key={item.id} type="button" onClick={() => toggleItem(item.id)} className={`flex w-full flex-col gap-3 rounded-2xl border p-3 text-left transition sm:flex-row sm:items-center sm:justify-between sm:p-4 ${selected ? 'border-clinical-300 bg-clinical-50 ring-4 ring-clinical-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
-                <div>
-                  <div className="flex flex-wrap items-center gap-2"><p className="font-black text-slate-950">{item.name}</p><StatusBadge status={item.type} /></div>
-                  <p className="mt-1 text-sm text-slate-500">ID: {item.id} · {item.department === 'Imaging' ? 'Radiology / Scan' : item.department}{item.modality ? ` · ${item.modality}` : ''} · ETA {item.expectedHours}h</p>
-                </div>
-                <span className={`w-full rounded-full px-3 py-1 text-center text-xs font-black sm:w-auto ${selected ? 'bg-clinical-600 text-white' : 'bg-slate-100 text-slate-600'}`}>{selected ? 'Added' : 'Add'}</span>
-              </button>
-            );
-          })}
-          {matches.length === 0 && <p className="rounded-2xl bg-slate-50 p-3 text-sm font-semibold text-slate-500">No tests or scans match your search.</p>}
+        <div className="rounded-2xl border border-slate-200 bg-white p-3">
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wider text-slate-500">Selected tests / scans</p>
+              <p className="text-sm text-slate-500">Use the search bar above. Matching tests drop down immediately under it.</p>
+            </div>
+            <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">{selectedCatalogItems.length} selected</span>
+          </div>
+
+          {selectedCatalogItems.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {selectedCatalogItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => toggleItem(item.id)}
+                  className="inline-flex items-center gap-2 rounded-full bg-clinical-50 px-3 py-1.5 text-xs font-black text-clinical-700 ring-1 ring-clinical-200 hover:bg-red-50 hover:text-red-600 hover:ring-red-200"
+                  title="Remove selected item"
+                >
+                  {item.id} · {item.name}
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-500">No tests or scans selected yet.</p>
+          )}
         </div>
       </div>
     </Modal>
@@ -127,7 +192,7 @@ function ReviewOrderModal({ open, onClose, onConfirm, patient, newPatient, patie
             <p className="text-sm text-slate-500">{patientMode === 'existing' ? patient?.id : 'New patient record will be created'}</p>
           </div>
           <div className="rounded-2xl bg-slate-50 p-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Doctor / Hospital</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Clinician / Hospital</p>
             <p className="mt-1 font-black text-slate-950">{doctor?.name}</p>
             <p className="text-sm text-slate-500">{hospital?.name}</p>
           </div>
@@ -270,9 +335,9 @@ export function DoctorNewOrderPage() {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-5">
       <PageHeader
-        eyebrow="Doctor Portal · New Order Form"
+        eyebrow="Clinician Portal · New Order Form"
         title="Create Test / Scan Order"
-        description="A cleaner step-by-step workflow. Only one order window is shown at a time, and Continue moves the doctor to the next stage without leaving New Order."
+        description="A cleaner step-by-step workflow. Only one order window is shown at a time, and Continue moves the clinician to the next stage without leaving New Order."
       />
 
       <section className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/80 p-3 shadow-soft backdrop-blur sm:p-5">
@@ -377,7 +442,7 @@ export function DoctorNewOrderPage() {
         )}
 
         {step === 2 && (
-          <Card title="Tests / Scans" subtitle="Add multiple lab tests and scans for one patient. Doctors cannot see prices.">
+          <Card title="Tests / Scans" subtitle="Add multiple lab tests and scans for one patient. Clinicians cannot see prices.">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="font-black text-slate-950">Selected investigations</p>
@@ -437,7 +502,7 @@ export function DoctorNewOrderPage() {
                   <p className="text-sm text-slate-500">{patientMode === 'existing' ? (selectedPatient?.id || '—') : 'New patient record will be created'}</p>
                 </div>
                 <div className="rounded-2xl bg-slate-50 p-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Doctor / Hospital</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Clinician / Hospital</p>
                   <p className="mt-1 font-black text-slate-950">{doctor?.name}</p>
                   <p className="text-sm text-slate-500">{hospital?.name}</p>
                 </div>
@@ -474,7 +539,7 @@ export function DoctorNewOrderPage() {
                 <li>2. Routes to the lab / scan departments</li>
                 <li>3. Results return to you</li>
               </ol>
-              <p className="mt-3 rounded-2xl bg-slate-50 p-3 text-xs leading-5 text-slate-500">Price privacy: doctors and clinicians cannot view lab or scan prices. Pricing is visible only to Finance and Reception.</p>
+              <p className="mt-3 rounded-2xl bg-slate-50 p-3 text-xs leading-5 text-slate-500">Price privacy: clinicians cannot view lab or scan prices. Pricing is visible only to Finance and Reception.</p>
             </Card>
           </div>
         )}

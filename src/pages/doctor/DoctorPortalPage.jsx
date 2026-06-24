@@ -18,7 +18,7 @@ function CompactDoctorProfile({ doctor, hospital, dispatch }) {
 
   return (
     <Card
-      title="Doctor Profile"
+      title="Clinician Profile"
       subtitle="Hospital-side profile shown on orders and reports."
       actions={<Button variant="secondary" onClick={() => { setDraft(doctor); setEditing(true); }}><Edit3 className="h-4 w-4" /> Edit Profile</Button>}
       className="h-full"
@@ -29,7 +29,7 @@ function CompactDoctorProfile({ doctor, hospital, dispatch }) {
             <UserRound className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-wider text-clinical-700">Doctor</p>
+            <p className="text-xs font-black uppercase tracking-wider text-clinical-700">Clinician</p>
             <p className="mt-1 font-black leading-tight text-slate-950">{doctor?.name}</p>
             <p className="text-sm text-slate-500">{doctor?.specialty}</p>
           </div>
@@ -56,8 +56,8 @@ function CompactDoctorProfile({ doctor, hospital, dispatch }) {
 
       <Modal
         open={editing}
-        title="Edit Doctor Profile"
-        description="Update doctor profile data used by the doctor portal and report letterhead."
+        title="Edit Clinician Profile"
+        description="Update clinician profile data used by the clinician portal and report letterhead."
         onClose={() => setEditing(false)}
         footer={<><Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button><Button onClick={() => { dispatch({ type: 'UPDATE_DOCTOR_PROFILE', doctorId: doctor.id, payload: draft }); setEditing(false); }}>Save Profile</Button></>}
       >
@@ -118,9 +118,9 @@ export function DoctorPortalPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow="Doctor Portal"
-        title="Doctor Dashboard"
-        description="A cleaner doctor workspace. Use the sidebar sections for New Order, Active Orders, Completed Orders, Results Viewer, and Patient Trends."
+        eyebrow="Clinician Portal"
+        title="Clinician Dashboard"
+        description="A cleaner clinician workspace. Use the sidebar sections for New Order, Active Orders, Completed Orders, Results Viewer, and Patient Trends."
         actions={<><Button onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-new-order' })}><Send className="h-4 w-4" /> New Order</Button><Button variant="secondary" onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-patient-trends' })}><LineChart className="h-4 w-4" /> Patient Trends</Button></>}
       />
 

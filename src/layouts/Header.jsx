@@ -12,14 +12,14 @@ import { ROLES } from '../data/roles';
 
 const dashboardMeta = {
   'doctor-dashboard': {
-    eyebrow: 'Doctor Portal',
-    title: 'Hospital-side doctor workspace',
+    eyebrow: 'Clinician Portal',
+    title: 'Hospital-side clinician workspace',
     description: 'Places patient orders, follows active work, receives released results, and manages result notification preferences.'
   },
   'reception-dashboard': {
     eyebrow: 'Reception Desk',
     title: 'Incoming order and check-in command center',
-    description: 'Confirms doctor orders, handles walk-ins, manages patient check-in, and routes work to billing, lab and scan units.'
+    description: 'Confirms clinician orders, handles walk-ins, manages patient check-in, and routes work to billing, lab and scan units.'
   },
   'lab-dashboard': {
     eyebrow: 'Laboratory Unit',

@@ -22,14 +22,14 @@ function DetailedResultModal({ order, data, dispatch, onClose }) {
     <Modal
       open={Boolean(order)}
       title={`${order.id} · Result Viewer`}
-      description="Doctor-side result review with reference ranges, abnormal flags, report text, and PDF download."
+      description="Clinician-side result review with reference ranges, abnormal flags, report text, and PDF download."
       onClose={onClose}
       footer={<><Button variant="secondary" onClick={onClose}>Close</Button><Button onClick={() => { const report = getReportForOrder(data, order.id); if (report) dispatch({ type: 'MARK_REPORT_DOWNLOADED', reportId: report.id }); openReportPrintWindow({ ...order, resultReport: report }); }}><Download className="h-4 w-4" /> Download Report PDF</Button></>}
     >
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Patient</p><p className="mt-2 font-black text-slate-950">{order.patient?.fullName}</p><p className="text-sm text-slate-500">{order.patient?.id}</p></div>
-          <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Doctor</p><p className="mt-2 font-black text-slate-950">{order.doctor?.name}</p><p className="text-sm text-slate-500">{order.hospital?.name}</p></div>
+          <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Clinician</p><p className="mt-2 font-black text-slate-950">{order.doctor?.name}</p><p className="text-sm text-slate-500">{order.hospital?.name}</p></div>
           <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Status</p><div className="mt-2"><StatusBadge status={order.status} /></div><p className="mt-2 text-sm text-slate-500">Released {formatDateTime(order.updatedAt)}</p></div>
         </div>
         {order.results.map((result) => (
@@ -77,7 +77,7 @@ export function DoctorResultsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Doctor Portal · Result Viewer"
+        eyebrow="Clinician Portal · Result Viewer"
         title="Results Viewer"
         description="Review released results on-screen with reference ranges and abnormal-value highlighting, then download a printable PDF report."
       />

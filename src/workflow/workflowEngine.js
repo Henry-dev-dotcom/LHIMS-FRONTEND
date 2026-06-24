@@ -94,7 +94,7 @@ export function createResultDeliveryBundle(data, orderId, { actor = 'System', ro
       'Delivered',
       'Result released',
       `${orderId} has been finalized. Log in to view the report.`,
-      doctor?.name || 'Doctor dashboard'
+      doctor?.name || 'Clinician dashboard'
     ));
   }
   if (preferences.email && (force || !alreadyHas('Email'))) {
@@ -348,8 +348,8 @@ export function createOrder(data, payload, actor = 'System', role = 'doctor') {
     invoices: [invoice, ...(data.invoices || [])],
     notifications: payload.skipIntakeNotification ? (data.notifications || []) : [{
       id: idWithPrefix('NOT-', data.notifications || []),
-      title: isWalkInRequest ? 'Walk-in test request' : 'Incoming doctor order',
-      body: isWalkInRequest ? `${orderId} was created directly by reception for a walk-in patient.` : `${orderId} is awaiting reception confirmation.`,
+      title: isWalkInRequest ? 'Walk-in test request' : 'Incoming clinician order',
+      body: isWalkInRequest ? `${orderId} was created directly by reception for a walk-in patient.` : `${orderId} is visible to the required workflow queue(s).`,
       audience: isWalkInRequest ? 'billing' : 'receptionist',
       channel: 'In-platform',
       status: 'Delivered',
@@ -360,7 +360,7 @@ export function createOrder(data, payload, actor = 'System', role = 'doctor') {
     auditLogs: addAudit(data.auditLogs || [], {
       actor,
       role,
-      action: isWalkInRequest ? 'Reception created walk-in test request' : 'Doctor submitted order',
+      action: isWalkInRequest ? 'Reception created walk-in test request' : 'Clinician submitted order',
       module: isWalkInRequest ? 'Reception Walk-ins' : 'Order Intake',
       entityId: orderId,
       details: `${payload.itemIds.length} item(s) requested`

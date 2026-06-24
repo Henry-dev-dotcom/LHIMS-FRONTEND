@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Download, FileText, Mail, MessageSquare, Search, Send, ShieldCheck } from 'lucide-react';
+import { Download, FileText, Search, Send, ShieldCheck } from 'lucide-react';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -56,16 +56,13 @@ export function ReceptionResultsInboxPage() {
     openReportPrintWindow({ ...order, resultReport: report });
   }
 
-  function send(order, channel) {
-    dispatch({ type: 'SEND_RESULT_TO_PATIENT', payload: { orderId: order.id, channel } });
-  }
 
   const tableRows = section === 'abnormal' ? releasedOrders.filter(resultHasAbnormal) : releasedOrders;
 
   const resultsTable = (
     <Card
-      title={section === 'abnormal' ? 'Abnormal released results' : 'Released results for reception'}
-      subtitle="Patient-facing messages are privacy-safe by default and do not include clinical values."
+      title={section === 'abnormal' ? 'Abnormal released results' : 'Released results reference'}
+      subtitle="Results are already delivered to the clinician. Reception can print a patient-safe copy when needed."
       compact
       actions={<div className="grid gap-3 md:grid-cols-[minmax(220px,1fr)_180px]"><input className={inputClass} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search patient, order, doctor, test..." /><select className={inputClass} value={filter} onChange={(event) => setFilter(event.target.value)}><option value="">All results</option><option value="Laboratory">Laboratory</option><option value="Imaging">Imaging</option><option value="Abnormal">Abnormal only</option></select></div>}
     >
@@ -77,7 +74,7 @@ export function ReceptionResultsInboxPage() {
           { key: 'items', label: 'Investigations', render: (order) => <div className="flex max-w-[240px] flex-wrap gap-1">{(order.items || []).map((item) => <span key={item.id} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">{item.name}</span>)}</div> },
           { key: 'report', label: 'Report', render: (order) => getReportForOrder(data, order.id)?.id || 'PDF-ready' },
           { key: 'updatedAt', label: 'Released', render: (order) => formatDateTime(order.updatedAt) },
-          { key: 'actions', label: 'Actions', render: (order) => <div className="flex flex-wrap gap-1.5"><Button className="px-3 py-1.5 text-xs" onClick={() => printReport(order)}><Download className="h-3.5 w-3.5" /> Print</Button><Button className="px-3 py-1.5 text-xs" variant="secondary" onClick={() => send(order, 'Email')}><Mail className="h-3.5 w-3.5" /> Email</Button><Button className="px-3 py-1.5 text-xs" variant="secondary" onClick={() => send(order, 'WhatsApp')}><MessageSquare className="h-3.5 w-3.5" /> WhatsApp</Button></div> }
+          { key: 'actions', label: 'Actions', render: (order) => <div className="flex flex-wrap gap-1.5"><Button className="px-3 py-1.5 text-xs" onClick={() => printReport(order)}><Download className="h-3.5 w-3.5" /> Print Copy</Button><span className="rounded-full bg-clinical-50 px-3 py-1.5 text-xs font-black text-clinical-700 ring-1 ring-clinical-100">Sent to clinician</span></div> }
         ]}
         rows={tableRows}
         emptyMessage="No released result reports match this filter."
@@ -90,7 +87,7 @@ export function ReceptionResultsInboxPage() {
       <PageHeader
         eyebrow="Reception"
         title="Reception Results Inbox"
-        description="View released results, print reports, and send privacy-safe patient notices."
+        description="View released results and print patient-safe copies. Final reports are delivered directly to the clinician automatically."
       />
       <ReceptionPageTabs label="Results inbox sections" sections={pageSections} active={section} onChange={setSection} />
 

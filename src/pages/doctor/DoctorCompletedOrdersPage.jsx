@@ -86,7 +86,7 @@ export function DoctorCompletedOrdersPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow="Doctor Portal"
+        eyebrow="Clinician Portal"
         title="Completed Orders"
         description="A clean archive of finalized orders with direct result viewing and PDF/report download actions."
       />

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Eye, Search, Send } from 'lucide-react';
+import { Eye, Search } from 'lucide-react';
 import { useAppStore } from '../../store/AppStore';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/ui/Card';
@@ -45,7 +45,7 @@ function ActiveOrderDetailModal({ order, onClose }) {
 }
 
 export function DoctorActiveOrdersPage() {
-  const { state, dispatch } = useAppStore();
+  const { state } = useAppStore();
   const { activeOrders } = getDoctorContextFromState(state);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -75,19 +75,18 @@ export function DoctorActiveOrdersPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow="Doctor Portal"
+        eyebrow="Clinician Portal"
         title="Active Orders"
-        description="Track submitted, confirmed, in-progress, and pending-review orders in a focused doctor workspace."
-        actions={<Button onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-new-order' })}><Send className="h-4 w-4" /> New Order</Button>}
+        description="Track submitted, confirmed, in-progress, and pending-review orders in a focused clinician workspace."
       />
 
-      <div className="grid gap-3 md:grid-cols-5">
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
         {[
           ['All Active', summary.all], ['Submitted', summary.submitted], ['In Progress', summary.inProgress], ['Pending Review', summary.review], ['Urgent', summary.urgent]
         ].map(([label, value]) => (
-          <div key={label} className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-            <p className="text-xl font-black text-slate-950">{value}</p>
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</p>
+          <div key={label} className="flex min-h-[3rem] items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
+            <p className="text-lg font-black leading-none text-slate-950">{value}</p>
+            <p className="truncate text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">{label}</p>
           </div>
         ))}
       </div>
@@ -96,10 +95,10 @@ export function DoctorActiveOrdersPage() {
         title="My Active Orders"
         subtitle="Use filters to follow current work by status, urgency, patient, or test."
         actions={(
-          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-            <div className="relative min-w-[220px] flex-1 sm:w-80 sm:flex-none"><Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" /><input className={`${inputClass} pl-9`} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search order, patient, test..." /></div>
-            <select className={inputClass} value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="">All statuses</option>{statusOptions.map((status) => <option key={status}>{status}</option>)}</select>
-            <select className={inputClass} value={urgencyFilter} onChange={(event) => setUrgencyFilter(event.target.value)}><option value="">All urgency</option><option>Routine</option><option>Urgent</option></select>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="relative w-full sm:w-64"><Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" /><input className={`${inputClass} h-10 !w-full py-2 pl-9`} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search order, patient, test..." /></div>
+            <select className={`${inputClass} h-10 !w-full py-2 sm:!w-40`} value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="">All statuses</option>{statusOptions.map((status) => <option key={status}>{status}</option>)}</select>
+            <select className={`${inputClass} h-10 !w-full py-2 sm:!w-40`} value={urgencyFilter} onChange={(event) => setUrgencyFilter(event.target.value)}><option value="">All urgency</option><option>Routine</option><option>Urgent</option></select>
           </div>
         )}
       >

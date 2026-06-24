@@ -59,15 +59,15 @@ export function LabQueuePage() {
       <PageHeader
         eyebrow="Laboratory · Requested Patients"
         title="Lab Queue"
-        description="Only lab-routed requests are shown here. Search patients, select multiple requests, and accept samples in batches before result entry."
+        description="Only lab-routed requests are shown here. Once samples are presented, they can be sent directly to diagnostics without waiting for reception acceptance."
       />
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard label="Lab Patients" value={baseRows.length} icon={Search} tone="blue" />
-        <MetricCard label="Waiting Acceptance" value={pending.length} icon={CheckCircle2} tone="yellow" />
+        <MetricCard label="Awaiting Sample" value={pending.length} icon={CheckCircle2} tone="yellow" />
         <MetricCard label="Urgent" value={urgent} icon={CheckCircle2} tone="red" />
         <MetricCard label="Pending Review" value={pendingReview} icon={CheckCircle2} tone="purple" />
       </div>
-      <Card title="Requested lab patients" subtitle="Search by patient name, order ID, doctor, hospital, or test name. Use batch acceptance when several samples arrive together.">
+      <Card title="Requested lab patients" subtitle="Search by patient name, order ID, doctor, hospital, or test name. Use batch routing when several samples arrive together.">
         <div className="mb-4 grid gap-3 xl:grid-cols-[1fr_200px_220px]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -77,8 +77,8 @@ export function LabQueuePage() {
           <select className={inputClass} value={sampleFilter} onChange={(event) => setSampleFilter(event.target.value)}><option value="">All sample states</option><option>Not Accepted</option><option>Accepted</option><option>Rejected</option><option>Recollection Requested</option></select>
         </div>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-          <div className="text-sm font-semibold text-slate-600"><span className="font-black text-slate-950">{selected.length}</span> selected for batch acceptance</div>
-          <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={toggleAll}>{allVisibleSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />} {allVisibleSelected ? 'Clear visible' : 'Select visible'}</Button><Button disabled={!selected.length} onClick={batchAccept}><CheckCircle2 className="h-4 w-4" /> Accept Selected Samples</Button></div>
+          <div className="text-sm font-semibold text-slate-600"><span className="font-black text-slate-950">{selected.length}</span> selected for direct diagnostic routing</div>
+          <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={toggleAll}>{allVisibleSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />} {allVisibleSelected ? 'Clear visible' : 'Select visible'}</Button><Button disabled={!selected.length} onClick={batchAccept}><CheckCircle2 className="h-4 w-4" /> Send Selected to Diagnostics</Button></div>
         </div>
         <DataTable
           columns={[
@@ -90,7 +90,7 @@ export function LabQueuePage() {
             { key: 'urgency', label: 'Urgency', render: (row) => <StatusBadge status={row.urgency} /> },
             { key: 'status', label: 'Sample', render: (row) => <StatusBadge status={sampleStateForOrder(data, row.id)} /> },
             { key: 'createdAt', label: 'Requested', render: (row) => formatDateTime(row.createdAt) },
-            { key: 'actions', label: 'Action', render: (row) => <Button onClick={() => dispatch({ type: 'OPEN_LAB_ACCEPT', orderId: row.id })}><CheckCircle2 className="h-4 w-4" /> Review / Accept</Button> }
+            { key: 'actions', label: 'Action', render: (row) => <Button onClick={() => dispatch({ type: 'OPEN_LAB_ACCEPT', orderId: row.id })}><CheckCircle2 className="h-4 w-4" /> Review / Send</Button> }
           ]}
           rows={rows}
           emptyMessage="No lab-routed patients match your search."

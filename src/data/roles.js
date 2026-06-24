@@ -27,8 +27,8 @@ import {
 export const ROLES = [
   {
     id: 'doctor',
-    label: 'Doctor',
-    subtitle: 'External hospital-side doctor',
+    label: 'Clinician',
+    subtitle: 'External hospital-side clinician',
     demoUser: 'Dr. Abena Mensah',
     demoUsername: 'doctor',
     demoPassword: 'doctor123',
@@ -45,7 +45,7 @@ export const ROLES = [
     demoUsername: 'reception',
     demoPassword: 'reception123',
     landing: 'reception-dashboard',
-    accessSummary: 'Confirms incoming doctor orders, handles patient check-in, appointments and daily visits.'
+    accessSummary: 'Confirms incoming clinician orders, handles patient check-in, appointments and daily visits.'
   },
   {
     id: 'lab',
@@ -92,12 +92,12 @@ export const ROLES = [
 export const NAV_ITEMS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, roles: ['doctor','receptionist','lab','scan','billing','admin'], section: 'Overview' },
 
-  { id: 'doctor-dashboard', label: 'Doctor Dashboard', icon: UserRound, roles: ['doctor','admin'], section: 'Doctor' },
-  { id: 'doctor-new-order', label: 'New Order', icon: ClipboardList, roles: ['doctor','admin'], section: 'Doctor' },
-  { id: 'doctor-active-orders', label: 'Active Orders', icon: Clock, roles: ['doctor','admin'], section: 'Doctor' },
-  { id: 'doctor-completed-orders', label: 'Completed Orders', icon: CheckCircle2, roles: ['doctor','admin'], section: 'Doctor' },
-  { id: 'doctor-results', label: 'Results Viewer', icon: ShieldCheck, roles: ['doctor','admin'], section: 'Doctor' },
-  { id: 'doctor-patient-trends', label: 'Patient Trends', icon: LineChart, roles: ['doctor','admin'], section: 'Doctor' },
+  { id: 'doctor-dashboard', label: 'Clinician Dashboard', icon: UserRound, roles: ['doctor','admin'], section: 'Clinician' },
+  { id: 'doctor-new-order', label: 'New Order', icon: ClipboardList, roles: ['doctor','admin'], section: 'Clinician' },
+  { id: 'doctor-active-orders', label: 'Active Orders', icon: Clock, roles: ['doctor','admin'], section: 'Clinician' },
+  { id: 'doctor-completed-orders', label: 'Completed Orders', icon: CheckCircle2, roles: ['doctor','admin'], section: 'Clinician' },
+  { id: 'doctor-results', label: 'Results Viewer', icon: ShieldCheck, roles: ['doctor','admin'], section: 'Clinician' },
+  { id: 'doctor-patient-trends', label: 'Patient Trends', icon: LineChart, roles: ['doctor','admin'], section: 'Clinician' },
 
   { id: 'reception-dashboard', label: 'Reception', icon: LayoutDashboard, roles: ['receptionist','admin'], section: 'Reception' },
   { id: 'incoming-orders', label: 'Incoming Orders', icon: ClipboardList, roles: ['receptionist','admin'], section: 'Reception' },
@@ -150,7 +150,7 @@ export const NAV_ITEMS = [
 ];
 
 export const ROLE_DASHBOARD_REQUIREMENTS = {
-  doctor: ['Doctor Profile', 'New Order Form', 'My Orders Active', 'My Orders Completed', 'Result Viewer', 'PDF Report Download', 'Notification Preferences', 'Patient Search'],
+  doctor: ['Clinician Profile', 'New Order Form', 'My Orders Active', 'My Orders Completed', 'Result Viewer', 'PDF Report Download', 'Notification Preferences', 'Patient Search'],
   receptionist: ['Incoming Orders Queue', 'Patient Check-In', 'Order Confirmation Panel', 'Appointment Scheduler', 'Walk-in Registration', 'Walk-in Test Requests', 'Direct Walk-in Invoice Creation', 'Daily Visit Log', 'Duplicate Patient Resolution', 'Reception Results Inbox'],
   lab: ['Lab Order Queue', 'Sample Collection Log', 'Test Panel Checklist', 'Result Entry Form', 'Results Archive', 'Equipment/Analyzer Reference', 'Review & Sign-off', 'Retest/Reject Sample Action'],
   scan: ['Scan Order Queue', 'Equipment/Room Booking', 'Image Upload', 'Radiologist Report Field', 'Comparison to Prior Scans', 'Review & Sign-off', 'Internal Technician Notes'],

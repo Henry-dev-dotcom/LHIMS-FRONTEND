@@ -39,7 +39,7 @@ export function LoginPage() {
                 Choose one of the six system roles or use the quick credentials. Each login opens a dedicated landing page with refined navigation and permission-aware workflow pages.
               </p>
               <div className="mt-8 hidden gap-3 text-sm sm:grid sm:grid-cols-2">
-                {['Doctor', 'Receptionist', 'Lab Staff', 'Scan / Imaging', 'Billing / Finance', 'Admin'].map((item) => (
+                {['Clinician', 'Receptionist', 'Lab Staff', 'Scan / Imaging', 'Billing / Finance', 'Admin'].map((item) => (
                   <div key={item} className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white/75">
                     <CheckCircle2 className="h-4 w-4 text-emerald-300" />
                     <span>{item}</span>
