@@ -392,18 +392,21 @@ export function DoctorNewOrderPage() {
       <PageHeader
         eyebrow="Clinician Portal · New Order Form"
         title="Create Test / Scan Order"
-        description={<OrderHeaderProgress step={step} canReach={canReach} onStepChange={goToStep} />}
-        actions={step === 1 ? <PatientModeHeaderSwitch patientMode={patientMode} onChange={setPatientMode} /> : null}
+        description={step === 1 ? <PatientModeHeaderSwitch patientMode={patientMode} onChange={setPatientMode} /> : null}
+        actions={null}
       />
 
       <section className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/80 p-3 shadow-soft backdrop-blur sm:p-5">
+        <div className="mb-4">
+          <OrderHeaderProgress step={step} canReach={canReach} onStepChange={goToStep} />
+        </div>
         <form onSubmit={openReview} className="min-h-[520px] space-y-5">
         {stepError && (
           <div className="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-900">{stepError}</div>
         )}
 
         {step === 1 && (
-          <Card title="Patient Selection" subtitle="Search patients already on the system or create a new record.">
+          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
             {patientMode === 'existing' ? (
               <div className="space-y-3">
                 <div className="relative">
@@ -447,7 +450,7 @@ export function DoctorNewOrderPage() {
                 {duplicateCandidates.length > 0 && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800 md:col-span-2">Possible duplicate patient found: {duplicateCandidates.map((p) => p.fullName).join(', ')}</div>}
               </div>
             )}
-          </Card>
+          </div>
         )}
 
         {step === 2 && (

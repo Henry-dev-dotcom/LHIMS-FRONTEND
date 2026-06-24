@@ -4,7 +4,6 @@ import { useAppStore } from '../../store/AppStore';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { DataTable } from '../../components/ui/DataTable';
 import { Modal } from '../../components/ui/Modal';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { FormField, inputClass } from '../../components/ui/FormField';
@@ -12,16 +11,51 @@ import { formatDateTime } from '../../utils/formatters';
 import { openReportPrintWindow } from '../../utils/reporting';
 import { getDoctorContextFromState, getReportForOrder, orderItemsText } from './doctorUtils';
 
-function CompactDoctorProfile({ doctor, hospital, dispatch }) {
+function DashboardMetric({ label, value, Icon }) {
+  return (
+    <div className="flex min-h-[70px] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-clinical-50 text-clinical-700">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-2xl font-black leading-none text-slate-950">{value}</p>
+        <p className="mt-1 text-[11px] font-black uppercase tracking-[0.12em] text-slate-400">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function QuickAction({ icon: Icon, title, description, onClick, active = false }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex min-h-[82px] w-full items-start gap-3 rounded-2xl border p-4 text-left transition ${
+        active
+          ? 'border-clinical-200 bg-clinical-50 hover:border-clinical-300 hover:bg-white'
+          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+      }`}
+    >
+      <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${active ? 'bg-white text-clinical-700' : 'bg-slate-50 text-slate-600'}`}>
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="min-w-0">
+        <p className="font-black leading-tight text-slate-950">{title}</p>
+        <p className="mt-1 text-sm leading-snug text-slate-500">{description}</p>
+      </div>
+    </button>
+  );
+}
+
+function CompactClinicianProfile({ doctor, hospital, dispatch }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(doctor);
 
   return (
     <Card
       title="Clinician Profile"
-      subtitle="Hospital-side profile shown on orders and reports."
-      actions={<Button variant="secondary" onClick={() => { setDraft(doctor); setEditing(true); }}><Edit3 className="h-4 w-4" /> Edit Profile</Button>}
-      className="h-full"
+      subtitle="Details used on requests and reports."
+      actions={<Button variant="secondary" onClick={() => { setDraft(doctor); setEditing(true); }}><Edit3 className="h-4 w-4" /> Edit</Button>}
+      compact
     >
       <div className="space-y-4">
         <div className="flex items-start gap-3 rounded-2xl bg-clinical-50 p-4">
@@ -29,29 +63,24 @@ function CompactDoctorProfile({ doctor, hospital, dispatch }) {
             <UserRound className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-wider text-clinical-700">Clinician</p>
-            <p className="mt-1 font-black leading-tight text-slate-950">{doctor?.name}</p>
-            <p className="text-sm text-slate-500">{doctor?.specialty}</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-clinical-700">Clinician</p>
+            <p className="mt-1 break-words font-black leading-tight text-slate-950">{doctor?.name}</p>
+            <p className="break-words text-sm text-slate-500">{doctor?.specialty}</p>
           </div>
         </div>
 
-        <dl className="space-y-3 text-sm">
+        <div className="grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-1">
           <div className="rounded-2xl bg-slate-50 p-3">
-            <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Hospital</dt>
-            <dd className="mt-1 font-black text-slate-950">{hospital?.name}</dd>
-            <dd className="mt-1"><StatusBadge status={hospital?.accountStatus || 'Unknown'} /></dd>
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Hospital</p>
+            <p className="mt-1 break-words font-black text-slate-950">{hospital?.name}</p>
+            <div className="mt-2"><StatusBadge status={hospital?.accountStatus || 'Unknown'} /></div>
           </div>
           <div className="rounded-2xl bg-slate-50 p-3">
-            <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">License No.</dt>
-            <dd className="mt-1 font-black text-slate-950">{doctor?.licenseNumber}</dd>
-            <dd className="text-sm text-slate-500">Medical and Dental Council</dd>
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Contact</p>
+            <p className="mt-1 break-words font-black text-slate-950">{doctor?.phone}</p>
+            <p className="break-words text-sm text-slate-500">{doctor?.email}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 p-3">
-            <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Contact</dt>
-            <dd className="mt-1 font-black text-slate-950">{doctor?.phone}</dd>
-            <dd className="break-words text-sm text-slate-500">{doctor?.email}</dd>
-          </div>
-        </dl>
+        </div>
       </div>
 
       <Modal
@@ -73,129 +102,130 @@ function CompactDoctorProfile({ doctor, hospital, dispatch }) {
   );
 }
 
-function NotificationPreferences({ doctor, dispatch }) {
+function CompactPreferences({ doctor, hospital, dispatch }) {
   const prefs = doctor?.notificationPreferences || { email: false, sms: false };
   return (
-    <Card title="Notification Preferences" subtitle="Result-release alert channels. SMS contains no clinical detail." compact>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-        {[['email','Email result alerts'], ['sms','SMS result alerts']].map(([key, label]) => (
-          <button key={key} onClick={() => dispatch({ type: 'UPDATE_NOTIFICATION_PREFS', doctorId: doctor.id, payload: { [key]: !prefs[key] } })} className="flex w-full items-center justify-between rounded-2xl border border-slate-200 p-3 text-left transition hover:bg-slate-50">
-            <div><p className="font-black text-slate-900">{label}</p><p className="text-xs text-slate-500">Notify when results are released.</p></div>
+    <Card title="Alerts & Account" subtitle="Notification channels and linked hospital account." compact>
+      <div className="space-y-3">
+        {[['email','Email alerts'], ['sms','SMS alerts']].map(([key, label]) => (
+          <button key={key} onClick={() => dispatch({ type: 'UPDATE_NOTIFICATION_PREFS', doctorId: doctor.id, payload: { [key]: !prefs[key] } })} className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 p-3 text-left transition hover:bg-slate-50">
+            <div className="min-w-0">
+              <p className="font-black text-slate-900">{label}</p>
+              <p className="text-xs text-slate-500">Result-release notification</p>
+            </div>
             <StatusBadge status={prefs[key] ? 'Active' : 'Inactive'} />
           </button>
         ))}
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm">
+          <div className="flex items-start gap-2">
+            <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+            <div className="min-w-0">
+              <p className="break-words font-black text-slate-950">{hospital?.name}</p>
+              <p className="break-words text-slate-500">Billing: {hospital?.billingContact}</p>
+            </div>
+          </div>
+        </div>
       </div>
     </Card>
   );
 }
 
-function HospitalAccountInfo({ hospital }) {
+function ActiveOrderCard({ order }) {
   return (
-    <Card title="Hospital / Account" subtitle="Linked hospital billing and status." compact>
-      <dl className="space-y-2 text-sm">
-        <div className="flex justify-between gap-4"><dt className="text-slate-500">Hospital</dt><dd className="text-right font-black text-slate-900">{hospital?.name}</dd></div>
-        <div className="flex justify-between gap-4"><dt className="text-slate-500">Billing</dt><dd className="text-right font-black text-slate-900">{hospital?.billingContact}</dd></div>
-        <div className="flex justify-between gap-4"><dt className="text-slate-500">Status</dt><dd><StatusBadge status={hospital?.accountStatus || 'Unknown'} /></dd></div>
-      </dl>
-    </Card>
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-black text-slate-950">{order.id}</p>
+          <p className="break-words text-sm font-bold text-slate-700">{order.patient?.fullName || 'Unknown patient'}</p>
+          <p className="text-xs text-slate-400">{order.patient?.id || '—'}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <StatusBadge status={order.urgency || 'Routine'} />
+          <StatusBadge status={order.status} />
+        </div>
+      </div>
+      <p className="mt-3 break-words text-sm leading-relaxed text-slate-600">{orderItemsText(order)}</p>
+      <p className="mt-3 text-xs font-bold uppercase tracking-[0.12em] text-slate-400">Expected: {formatDateTime(order.expectedCompletionAt)}</p>
+    </div>
+  );
+}
+
+function CompletedOrderCard({ order, data, dispatch }) {
+  const report = getReportForOrder(data, order.id);
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-black text-slate-950">{order.id}</p>
+          <p className="break-words text-sm font-bold text-slate-700">{order.patient?.fullName || 'Unknown patient'}</p>
+          <p className="mt-1 break-words text-sm text-slate-500">{orderItemsText(order)}</p>
+        </div>
+        <Button onClick={() => { if (report) dispatch({ type: 'MARK_REPORT_DOWNLOADED', reportId: report.id }); openReportPrintWindow({ ...order, resultReport: report }); }}>
+          <Download className="h-4 w-4" /> PDF
+        </Button>
+      </div>
+      <p className="mt-3 text-xs font-bold uppercase tracking-[0.12em] text-slate-400">Released: {formatDateTime(order.updatedAt)}</p>
+    </div>
   );
 }
 
 export function DoctorPortalPage() {
   const { state, dispatch } = useAppStore();
   const { data, doctor, hospital, activeOrders, completedOrders, doctorPatients } = getDoctorContextFromState(state);
-  const recentActive = activeOrders.slice(0, 4);
-  const recentCompleted = completedOrders.slice(0, 4);
+  const recentActive = activeOrders.slice(0, 3);
+  const recentCompleted = completedOrders.slice(0, 3);
   const unreadAlerts = data.notifications.filter((notification) => notification.audience === 'doctor' && !notification.read).length;
 
   const metricCards = [
-    ['Active Orders', activeOrders.length, Clock],
-    ['Completed Results', completedOrders.length, CheckCircle2],
-    ['Referred Patients', doctorPatients.length, UserRound],
-    ['Unread Alerts', unreadAlerts, Bell]
+    ['Active', activeOrders.length, Clock],
+    ['Completed', completedOrders.length, CheckCircle2],
+    ['Patients', doctorPatients.length, UserRound],
+    ['Alerts', unreadAlerts, Bell]
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-8">
       <PageHeader
         eyebrow="Clinician Portal"
         title="Clinician Dashboard"
-        description="A cleaner clinician workspace. Use the sidebar sections for New Order, Active Orders, Completed Orders, Results Viewer, and Patient Trends."
-        actions={<><Button onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-new-order' })}><Send className="h-4 w-4" /> New Order</Button><Button variant="secondary" onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-patient-trends' })}><LineChart className="h-4 w-4" /> Patient Trends</Button></>}
+        description="Focused overview of orders, results, alerts, and quick actions."
+        actions={<Button onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-new-order' })}><Send className="h-4 w-4" /> New Order</Button>}
       />
 
-      <div className="grid gap-5 xl:grid-cols-[320px_1fr]">
-        <CompactDoctorProfile doctor={doctor} hospital={hospital} dispatch={dispatch} />
-        <div className="space-y-5">
-          <div className="grid gap-4 md:grid-cols-4">
-            {metricCards.map(([label, value, Icon]) => (
-              <div key={label} className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-                <Icon className="mb-3 h-5 w-5 text-clinical-600" />
-                <p className="text-xl font-black text-slate-950">{value}</p>
-                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <button onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-new-order' })} className="rounded-3xl border border-clinical-100 bg-clinical-50 p-5 text-left transition hover:border-clinical-300 hover:bg-white">
-              <Send className="mb-3 h-5 w-5 text-clinical-700" />
-              <p className="font-black text-slate-950">Create New Order</p>
-              <p className="mt-1 text-sm text-slate-500">Search patient and add multiple tests/scans.</p>
-            </button>
-            <button onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-active-orders' })} className="rounded-3xl border border-slate-200 bg-white p-5 text-left transition hover:bg-slate-50">
-              <Clock className="mb-3 h-5 w-5 text-slate-600" />
-              <p className="font-black text-slate-950">Active Orders</p>
-              <p className="mt-1 text-sm text-slate-500">Track orders still being processed.</p>
-            </button>
-            <button onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-completed-orders' })} className="rounded-3xl border border-slate-200 bg-white p-5 text-left transition hover:bg-slate-50">
-              <FileText className="mb-3 h-5 w-5 text-slate-600" />
-              <p className="font-black text-slate-950">Completed Orders</p>
-              <p className="mt-1 text-sm text-slate-500">Review finalized results and reports.</p>
-            </button>
-            <button onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-patient-trends' })} className="rounded-3xl border border-slate-200 bg-white p-5 text-left transition hover:bg-slate-50">
-              <LineChart className="mb-3 h-5 w-5 text-slate-600" />
-              <p className="font-black text-slate-950">Patient Trends</p>
-              <p className="mt-1 text-sm text-slate-500">Track repeated test progress.</p>
-            </button>
-          </div>
-        </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {metricCards.map(([label, value, Icon]) => (
+          <DashboardMetric key={label} label={label} value={value} Icon={Icon} />
+        ))}
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
-        <div className="space-y-5">
-          <Card title="Recent Active Orders" subtitle="A short dashboard preview. Open Active Orders for the full worklist." actions={<Button variant="secondary" onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-active-orders' })}>View All</Button>}>
-            <DataTable
-              columns={[
-                { key: 'id', label: 'Order ID', render: (order) => <span className="font-black text-slate-950">{order.id}</span> },
-                { key: 'patient', label: 'Patient', render: (order) => <div><p className="font-bold">{order.patient?.fullName}</p><p className="text-xs text-slate-400">{order.patient?.id}</p></div> },
-                { key: 'items', label: 'Tests / Scans', render: orderItemsText },
-                { key: 'status', label: 'Status', render: (order) => <StatusBadge status={order.status} /> },
-                { key: 'expected', label: 'Expected', render: (order) => formatDateTime(order.expectedCompletionAt) }
-              ]}
-              rows={recentActive}
-              emptyMessage="No active orders."
-            />
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="space-y-5 min-w-0">
+          <Card title="Quick Actions" subtitle="Common clinician tasks are grouped here to reduce page clutter." compact>
+            <div className="grid gap-3 md:grid-cols-2">
+              <QuickAction active icon={Send} title="Create New Order" description="Request tests or scans for a patient." onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-new-order' })} />
+              <QuickAction icon={Clock} title="Active Orders" description="Follow pending and in-progress work." onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-active-orders' })} />
+              <QuickAction icon={FileText} title="Completed Results" description="Open finalized reports and PDFs." onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-completed-orders' })} />
+              <QuickAction icon={LineChart} title="Patient Trends" description="Review repeated investigations over time." onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-patient-trends' })} />
+            </div>
           </Card>
 
-          <Card title="Recently Completed" subtitle="A short preview of released reports." actions={<Button variant="secondary" onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-completed-orders' })}>View Completed</Button>}>
-            <DataTable
-              columns={[
-                { key: 'id', label: 'Order ID', render: (order) => <span className="font-black text-slate-950">{order.id}</span> },
-                { key: 'patient', label: 'Patient', render: (order) => order.patient?.fullName || '—' },
-                { key: 'items', label: 'Tests / Scans', render: orderItemsText },
-                { key: 'date', label: 'Released', render: (order) => formatDateTime(order.updatedAt) },
-                { key: 'actions', label: 'Actions', render: (order) => <Button onClick={() => { const report = getReportForOrder(data, order.id); if (report) dispatch({ type: 'MARK_REPORT_DOWNLOADED', reportId: report.id }); openReportPrintWindow({ ...order, resultReport: report }); }}><Download className="h-4 w-4" /> PDF</Button> }
-              ]}
-              rows={recentCompleted}
-              emptyMessage="No completed results released yet."
-            />
+          <Card title="Recent Active Orders" subtitle="Compact preview of current work. Use Active Orders for the full list." actions={<Button variant="secondary" onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-active-orders' })}>View All</Button>} compact>
+            <div className="grid gap-3">
+              {recentActive.length ? recentActive.map((order) => <ActiveOrderCard key={order.id} order={order} />) : <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">No active orders.</p>}
+            </div>
+          </Card>
+
+          <Card title="Recently Completed" subtitle="Latest released results from the diagnostic department." actions={<Button variant="secondary" onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'doctor-completed-orders' })}>View Completed</Button>} compact>
+            <div className="grid gap-3">
+              {recentCompleted.length ? recentCompleted.map((order) => <CompletedOrderCard key={order.id} order={order} data={data} dispatch={dispatch} />) : <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">No completed results released yet.</p>}
+            </div>
           </Card>
         </div>
-        <div className="space-y-5">
-          <NotificationPreferences doctor={doctor} dispatch={dispatch} />
-          <HospitalAccountInfo hospital={hospital} />
-        </div>
+
+        <aside className="space-y-5 min-w-0">
+          <CompactClinicianProfile doctor={doctor} hospital={hospital} dispatch={dispatch} />
+          <CompactPreferences doctor={doctor} hospital={hospital} dispatch={dispatch} />
+        </aside>
       </div>
     </div>
   );
