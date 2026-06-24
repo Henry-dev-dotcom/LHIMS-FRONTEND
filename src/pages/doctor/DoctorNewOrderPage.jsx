@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, CheckCircle2, ClipboardList, Plus, Search, Send, Star, Trash2, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, ClipboardList, Plus, Search, Send, Star, Trash2, X } from 'lucide-react';
 import { useAppStore } from '../../store/AppStore';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/ui/Card';
@@ -157,6 +157,13 @@ function ReviewOrderModal({ open, onClose, onConfirm, patient, newPatient, patie
   );
 }
 
+const WIZARD_STEPS = [
+  { id: 1, label: 'Patient' },
+  { id: 2, label: 'Investigations' },
+  { id: 3, label: 'Clinical context' },
+  { id: 4, label: 'Review & submit' }
+];
+
 export function DoctorNewOrderPage() {
   const { state, dispatch } = useAppStore();
   const { data } = state;
@@ -172,6 +179,8 @@ export function DoctorNewOrderPage() {
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
+  const [step, setStep] = useState(1);
+  const [stepError, setStepError] = useState('');
 
   const systemPatients = useMemo(() => data.patients || [], [data.patients]);
   const patientMatches = systemPatients.filter((patient) => patientMatchesSearch(patient, patientSearch));
@@ -191,6 +200,35 @@ export function DoctorNewOrderPage() {
     return (data.orders || []).filter((order) => order.patientId === patientId && order.doctorId === doctor?.id && order.status !== 'Cancelled' && isSameDay(order.createdAt) && (order.itemIds || []).some((id) => selectedItems.includes(id)));
   }, [data.orders, doctor?.id, patientMode, selectedPatientId, selectedItems]);
 
+  // Per-step gating: a step is only "passable" once its own requirement is met.
+  const step1Valid = patientMode === 'existing' ? Boolean(selectedPatientId) : Boolean(newPatient.fullName.trim());
+  const step2Valid = selectedItems.length > 0;
+  const canReach = (target) => target <= 1 || (target === 2 ? step1Valid : step1Valid && step2Valid);
+
+  function goToStep(target) {
+    if (!canReach(target)) return;
+    setStepError('');
+    setStep(target);
+  }
+
+  function goNext() {
+    if (step === 1 && !step1Valid) {
+      setStepError(patientMode === 'existing' ? 'Select an existing patient to continue.' : 'Enter the new patient full name to continue.');
+      return;
+    }
+    if (step === 2 && !step2Valid) {
+      setStepError('Add at least one test or scan to continue.');
+      return;
+    }
+    setStepError('');
+    setStep((current) => Math.min(WIZARD_STEPS.length, current + 1));
+  }
+
+  function goBack() {
+    setStepError('');
+    setStep((current) => Math.max(1, current - 1));
+  }
+
   function toggleItem(id) {
     setSelectedItems((current) => current.includes(id) ? current.filter((itemId) => itemId !== id) : [...current, id]);
   }
@@ -202,6 +240,9 @@ export function DoctorNewOrderPage() {
   function openReview(event) {
     event.preventDefault();
     setAttemptedSubmit(true);
+    // If something is missing, jump back to the step that needs attention.
+    if (!step1Valid) { setStep(1); return; }
+    if (!step2Valid) { setStep(2); return; }
     if (validationIssues.length) return;
     setReviewOpen(true);
   }
@@ -223,26 +264,61 @@ export function DoctorNewOrderPage() {
     setReviewOpen(false);
   }
 
+  const activeStep = WIZARD_STEPS.find((item) => item.id === step) || WIZARD_STEPS[0];
+  const nextStep = WIZARD_STEPS.find((item) => item.id === step + 1);
+
   return (
-    <div className="space-y-5">
+    <div className="mx-auto w-full max-w-5xl space-y-5">
       <PageHeader
         eyebrow="Doctor Portal · New Order Form"
         title="Create Test / Scan Order"
-        description="A guided ordering flow: choose a patient, add multiple investigations, review the request, then submit it to reception."
+        description="A cleaner step-by-step workflow. Only one order window is shown at a time, and Continue moves the doctor to the next stage without leaving New Order."
       />
 
-      <form onSubmit={openReview} className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,0.9fr)]">
-        <div className="space-y-5 xl:col-span-2">
-          {attemptedSubmit && validationIssues.length > 0 && (
-            <div className="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
-              <p className="font-black">Complete the order before review:</p>
-              <ul className="mt-2 list-disc pl-5">
-                {validationIssues.map((issue) => <li key={issue}>{issue}</li>)}
-              </ul>
-            </div>
-          )}
+      <section className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/80 p-3 shadow-soft backdrop-blur sm:p-5">
+        <div className="mb-4 flex flex-col gap-3 rounded-[1.5rem] bg-gradient-to-r from-clinical-50 to-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-clinical-600">New Order Workspace</p>
+            <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">{activeStep.label}</h2>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">Complete this step, then continue. The next panel opens inside this same New Order section instead of stacking every form on the screen.</p>
+          </div>
+          <span className="inline-flex w-fit items-center rounded-full bg-white px-3 py-1.5 text-xs font-black text-slate-600 shadow-sm ring-1 ring-slate-200">Step {step} of {WIZARD_STEPS.length}</span>
+        </div>
 
-          <Card title="1. Patient Selection" subtitle="Search patients already on the system or create a new record.">
+        <nav aria-label="Order progress">
+          <ol className="flex items-center gap-1 overflow-x-auto rounded-3xl border border-slate-200 bg-white p-2 shadow-sm sm:gap-2 sm:p-3">
+          {WIZARD_STEPS.map((item, index) => {
+            const isCurrent = step === item.id;
+            const isDone = step > item.id;
+            const reachable = canReach(item.id);
+            return (
+              <li key={item.id} className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
+                <button
+                  type="button"
+                  onClick={() => goToStep(item.id)}
+                  disabled={!reachable}
+                  aria-current={isCurrent ? 'step' : undefined}
+                  className={`flex min-w-0 items-center gap-2 rounded-2xl px-2 py-1.5 transition sm:px-3 ${reachable ? 'cursor-pointer hover:bg-slate-50' : 'cursor-not-allowed'}`}
+                >
+                  <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-black ${isCurrent ? 'bg-clinical-600 text-white' : isDone ? 'bg-clinical-100 text-clinical-700' : 'bg-slate-100 text-slate-400'}`}>
+                    {isDone ? <CheckCircle2 className="h-5 w-5" /> : item.id}
+                  </span>
+                  <span className={`hidden truncate text-sm font-black sm:block ${isCurrent ? 'text-clinical-700' : isDone ? 'text-slate-700' : 'text-slate-400'}`}>{item.label}</span>
+                </button>
+                {index < WIZARD_STEPS.length - 1 && <span className={`h-0.5 flex-1 rounded ${step > item.id ? 'bg-clinical-300' : 'bg-slate-200'}`} />}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
+
+      <form onSubmit={openReview} className="mt-5 min-h-[520px] space-y-5">
+        {stepError && (
+          <div className="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-900">{stepError}</div>
+        )}
+
+        {step === 1 && (
+          <Card title="Patient Selection" subtitle="Search patients already on the system or create a new record.">
             <div className="mb-4 grid gap-3 md:grid-cols-2">
               <button type="button" onClick={() => setPatientMode('existing')} className={`rounded-2xl border p-4 text-left transition ${patientMode === 'existing' ? 'border-clinical-300 bg-clinical-50 ring-4 ring-clinical-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
                 <p className="font-black text-slate-950">Existing Patient</p>
@@ -298,8 +374,10 @@ export function DoctorNewOrderPage() {
               </div>
             )}
           </Card>
+        )}
 
-          <Card title="2. Tests / Scans" subtitle="Add multiple lab tests and scans for one patient. Doctors cannot see prices.">
+        {step === 2 && (
+          <Card title="Tests / Scans" subtitle="Add multiple lab tests and scans for one patient. Doctors cannot see prices.">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="font-black text-slate-950">Selected investigations</p>
@@ -328,38 +406,90 @@ export function DoctorNewOrderPage() {
               {chosenCatalogItems.length === 0 && <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm font-semibold text-slate-500">No tests or scans selected yet.</div>}
             </div>
           </Card>
+        )}
 
-          <Card title="3. Clinical Context" subtitle="Add urgency and notes for the receiving departments.">
+        {step === 3 && (
+          <Card title="Clinical Context" subtitle="Add urgency and notes for the receiving departments.">
             <div className="grid gap-4 md:grid-cols-2">
               <FormField label="Urgency"><select className={inputClass} value={urgency} onChange={(event) => setUrgency(event.target.value)}><option>Routine</option><option>Urgent</option></select></FormField>
               <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Expected completion</p><p className="mt-1 font-black text-slate-950">{expected ? formatDateTime(expected) : 'Select tests/scans first'}</p></div>
               <FormField label="Clinical Notes" className="md:col-span-2"><textarea className={inputClass} rows={4} value={clinicalNotes} onChange={(event) => setClinicalNotes(event.target.value)} placeholder="Clinical indication, patient history, and special instructions..." /></FormField>
             </div>
           </Card>
+        )}
+
+        {step === 4 && (
+          <div className="space-y-5">
+            {attemptedSubmit && validationIssues.length > 0 && (
+              <div className="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+                <p className="font-black">Complete the order before review:</p>
+                <ul className="mt-2 list-disc pl-5">
+                  {validationIssues.map((issue) => <li key={issue}>{issue}</li>)}
+                </ul>
+              </div>
+            )}
+
+            <Card title="Review & Submit" subtitle="Confirm the order details before sending to reception.">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl bg-slate-50 p-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Patient</p>
+                  <p className="mt-1 font-black text-slate-950">{patientMode === 'existing' ? selectedPatient?.fullName || 'None selected' : newPatient.fullName || 'New patient'}</p>
+                  <p className="text-sm text-slate-500">{patientMode === 'existing' ? (selectedPatient?.id || '—') : 'New patient record will be created'}</p>
+                </div>
+                <div className="rounded-2xl bg-slate-50 p-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Doctor / Hospital</p>
+                  <p className="mt-1 font-black text-slate-950">{doctor?.name}</p>
+                  <p className="text-sm text-slate-500">{hospital?.name}</p>
+                </div>
+                <div className="rounded-2xl bg-slate-50 p-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Urgency</p>
+                  <div className="mt-1"><StatusBadge status={urgency} /></div>
+                  <p className="mt-2 text-sm text-slate-500">Expected: {expected ? formatDateTime(expected) : '—'}</p>
+                </div>
+                <div className="rounded-2xl bg-slate-50 p-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Items</p>
+                  <p className="mt-1 font-black text-slate-950">{chosenCatalogItems.length} test/scan item(s)</p>
+                  <p className="text-sm text-slate-500">Prices hidden from clinicians.</p>
+                </div>
+              </div>
+
+              {chosenCatalogItems.length > 0 && (
+                <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Tests / Scans</p>
+                  <div className="flex flex-wrap gap-2">{chosenCatalogItems.map((item) => <span key={item.id} className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-700">{item.id} · {item.name}</span>)}</div>
+                </div>
+              )}
+
+              {clinicalNotes.trim() && (
+                <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Clinical notes</p>
+                  <p className="text-sm leading-6 text-slate-600">{clinicalNotes}</p>
+                </div>
+              )}
+            </Card>
+
+            <Card title="What happens next" subtitle="Submission routes to reception and the required departments." compact>
+              <ol className="space-y-2 text-sm font-semibold text-slate-600">
+                <li>1. Reception confirms the order</li>
+                <li>2. Routes to the lab / scan departments</li>
+                <li>3. Results return to you</li>
+              </ol>
+              <p className="mt-3 rounded-2xl bg-slate-50 p-3 text-xs leading-5 text-slate-500">Price privacy: doctors and clinicians cannot view lab or scan prices. Pricing is visible only to Finance and Reception.</p>
+            </Card>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+          <Button type="button" variant="secondary" onClick={goBack} disabled={step === 1}><ArrowLeft className="h-4 w-4" /> Back</Button>
+          <p className="hidden text-xs font-black uppercase tracking-[0.14em] text-slate-400 sm:block">{activeStep.label}</p>
+          {step < WIZARD_STEPS.length ? (
+            <Button type="button" onClick={goNext}>Continue to {nextStep?.label || 'Review'} <ArrowRight className="h-4 w-4" /></Button>
+          ) : (
+            <Button type="submit"><ClipboardList className="h-4 w-4" /> Review Order</Button>
+          )}
         </div>
-
-        <aside className="space-y-5 xl:sticky xl:top-28 xl:self-start">
-          <Card title="Order Summary" subtitle="Review before submitting." compact>
-            <div className="space-y-4 text-sm">
-              <div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Patient</p><p className="font-black text-slate-950">{patientMode === 'existing' ? selectedPatient?.fullName || 'None selected' : newPatient.fullName || 'New patient'}</p></div>
-              <div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Doctor</p><p className="font-black text-slate-950">{doctor?.name}</p><p className="text-slate-500">{hospital?.name}</p></div>
-              <div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Items</p><p className="font-black text-slate-950">{chosenCatalogItems.length}</p><p className="text-slate-500">{chosenCatalogItems.map((item) => item.name).join(', ') || 'No items selected'}</p></div>
-              <div><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Urgency</p><StatusBadge status={urgency} /></div>
-              <Button type="submit" className="w-full"><ClipboardList className="h-4 w-4" /> Review Order</Button>
-            </div>
-          </Card>
-
-          <Card title="Order workflow" subtitle="Submission routes to reception and the required departments." compact>
-            <ol className="space-y-2 text-sm font-semibold text-slate-600">
-              <li>1. Select patient</li><li>2. Add investigations</li><li>3. Confirm order</li><li>4. Reception routes to departments</li><li>5. Results return to doctor</li>
-            </ol>
-          </Card>
-
-          <Card title="Price privacy" subtitle="Doctors and clinicians cannot view lab or scan prices." compact>
-            <p className="text-sm leading-6 text-slate-600">Pricing is only visible to Finance and Reception. This order form shows clinical catalog details, expected completion time, and department routing only.</p>
-          </Card>
-        </aside>
-      </form>
+        </form>
+      </section>
 
       <CatalogSearchModal open={catalogOpen} onClose={() => setCatalogOpen(false)} catalog={data.catalog || []} selectedItems={selectedItems} toggleItem={toggleItem} clearItems={() => setSelectedItems([])} />
       <ReviewOrderModal open={reviewOpen} onClose={() => setReviewOpen(false)} onConfirm={confirmSubmitOrder} patient={selectedPatient} newPatient={newPatient} patientMode={patientMode} doctor={doctor} hospital={hospital} items={chosenCatalogItems} urgency={urgency} clinicalNotes={clinicalNotes} expected={expected} duplicateOrders={sameDayDuplicates} />
