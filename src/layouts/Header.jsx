@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { isValidElement, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 import { Bell, ChevronDown, Home, LogOut, Menu, RotateCcw, Sparkles, UserRound } from 'lucide-react';
@@ -228,29 +228,33 @@ export function Header() {
           <div className="mt-2.5 border-t border-slate-100 pt-2.5">
             <h1 className="line-clamp-1 text-[1.05rem] font-black leading-tight tracking-tight text-slate-950">{pageHeader?.title || 'Diagnosis Center'}</h1>
             {pageHeader?.description && (
-              <div ref={screenGuideRef} className="relative mt-1.5 inline-block text-xs font-semibold leading-5 text-slate-500">
-                <button
-                  type="button"
-                  className="inline-flex min-h-0 cursor-pointer items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500 shadow-sm transition duration-200 hover:bg-clinical-50 hover:text-clinical-700 active:scale-[0.98]"
-                  aria-label="Open screen guide"
-                  aria-expanded={screenGuideOpen}
-                  aria-controls="mobile-screen-guide-panel"
-                  onClick={() => setScreenGuideOpen((value) => !value)}
-                >
-                  Screen guide
-                  <ChevronDown className={clsx('h-3 w-3 transition-transform duration-200', screenGuideOpen && 'rotate-180')} />
-                </button>
-                <div
-                  id="mobile-screen-guide-panel"
-                  role="status"
-                  className={clsx(
-                    'pointer-events-none absolute left-0 top-[calc(100%+0.45rem)] z-[140] w-[min(20rem,calc(100vw-2rem))] origin-top-left rounded-2xl border border-clinical-100 bg-white/98 p-3 text-xs font-semibold leading-5 text-slate-600 opacity-0 shadow-lift ring-1 ring-slate-950/5 backdrop-blur-xl transition duration-200 ease-out',
-                    screenGuideOpen ? 'pointer-events-auto translate-y-0 scale-100 opacity-100' : '-translate-y-1 scale-[0.98] opacity-0'
-                  )}
-                >
-                  <p className="break-words">{pageHeader.description}</p>
+              isValidElement(pageHeader.description) ? (
+                <div className="mt-2">{pageHeader.description}</div>
+              ) : (
+                <div ref={screenGuideRef} className="relative mt-1.5 inline-block text-xs font-semibold leading-5 text-slate-500">
+                  <button
+                    type="button"
+                    className="inline-flex min-h-0 cursor-pointer items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500 shadow-sm transition duration-200 hover:bg-clinical-50 hover:text-clinical-700 active:scale-[0.98]"
+                    aria-label="Open screen guide"
+                    aria-expanded={screenGuideOpen}
+                    aria-controls="mobile-screen-guide-panel"
+                    onClick={() => setScreenGuideOpen((value) => !value)}
+                  >
+                    Screen guide
+                    <ChevronDown className={clsx('h-3 w-3 transition-transform duration-200', screenGuideOpen && 'rotate-180')} />
+                  </button>
+                  <div
+                    id="mobile-screen-guide-panel"
+                    role="status"
+                    className={clsx(
+                      'pointer-events-none absolute left-0 top-[calc(100%+0.45rem)] z-[140] w-[min(20rem,calc(100vw-2rem))] origin-top-left rounded-2xl border border-clinical-100 bg-white/98 p-3 text-xs font-semibold leading-5 text-slate-600 opacity-0 shadow-lift ring-1 ring-slate-950/5 backdrop-blur-xl transition duration-200 ease-out',
+                      screenGuideOpen ? 'pointer-events-auto translate-y-0 scale-100 opacity-100' : '-translate-y-1 scale-[0.98] opacity-0'
+                    )}
+                  >
+                    <p className="break-words">{pageHeader.description}</p>
+                  </div>
                 </div>
-              </div>
+              )
             )}
           </div>
         </div>
@@ -258,22 +262,26 @@ export function Header() {
       </div>
 
       <div className="hidden overflow-visible lg:block">
-        <div className="relative flex min-h-[4.6rem] max-w-full items-center justify-between gap-3 overflow-visible rounded-[1.35rem] border border-white/85 bg-white/94 px-6 py-2.5 shadow-card backdrop-blur-xl">
+        <div className="relative flex min-h-[5.35rem] max-w-full items-start justify-between gap-4 overflow-visible rounded-[1.35rem] border border-white/85 bg-white/94 px-6 py-2.5 shadow-card backdrop-blur-xl">
           <div className="min-w-0 flex-1 pr-2">
             {pageHeader?.eyebrow && (
               <p className="inline-flex items-center gap-1.5 rounded-full border border-clinical-100 bg-clinical-50/80 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-clinical-800 shadow-sm">
                 <Sparkles className="h-3 w-3" /> {pageHeader.eyebrow}
               </p>
             )}
-            <div className="mt-1.5 flex min-w-0 flex-col gap-2 xl:flex-row xl:items-end xl:justify-between">
-              <div className="min-w-0">
-                <h1 className="truncate text-[1.65rem] font-black tracking-tight text-slate-950">{pageHeader?.title || 'Diagnosis Center'}</h1>
-                {pageHeader?.description && <p className="mt-0.5 line-clamp-1 max-w-5xl text-sm leading-5 text-slate-600">{pageHeader.description}</p>}
-              </div>
-              {pageHeader?.actions && <div className="flex shrink-0 flex-wrap gap-2">{pageHeader.actions}</div>}
+            <div className="mt-1.5 min-w-0">
+              <h1 className="truncate text-[1.65rem] font-black tracking-tight text-slate-950">{pageHeader?.title || 'Diagnosis Center'}</h1>
+              {pageHeader?.description && (
+                isValidElement(pageHeader.description) ? (
+                  <div className="mt-1.5 max-w-5xl">{pageHeader.description}</div>
+                ) : (
+                  <p className="mt-0.5 line-clamp-1 max-w-5xl text-sm leading-5 text-slate-600">{pageHeader.description}</p>
+                )
+              )}
             </div>
           </div>
-          <div className="relative z-[95] flex shrink-0 items-center gap-2">
+          <div className="relative z-[95] flex shrink-0 flex-col items-end gap-2 pt-0.5">
+            <div className="flex items-center gap-2">
             <div ref={notificationTriggerRef} className="relative">
               <button
                 className="relative grid h-10 w-10 place-items-center rounded-2xl border border-slate-200/80 bg-white/90 text-slate-600 shadow-sm transition hover:border-clinical-200 hover:bg-clinical-50 hover:text-clinical-700"
@@ -317,6 +325,8 @@ export function Header() {
                 <ChevronDown className="h-4 w-4 text-slate-400" />
               </button>
             </div>
+          </div>
+          {pageHeader?.actions && <div className="flex w-full max-w-[28rem] flex-wrap justify-end gap-2">{pageHeader.actions}</div>}
           </div>
         </div>
       </div>

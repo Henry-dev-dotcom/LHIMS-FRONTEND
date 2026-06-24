@@ -229,6 +229,61 @@ const WIZARD_STEPS = [
   { id: 4, label: 'Review & submit' }
 ];
 
+
+function OrderHeaderProgress({ step, canReach, onStepChange }) {
+  return (
+    <nav className="w-full" aria-label="Order progress">
+      <ol className="flex max-w-4xl items-center gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white/90 p-1.5 shadow-sm sm:gap-2">
+        {WIZARD_STEPS.map((item, index) => {
+          const isCurrent = step === item.id;
+          const isDone = step > item.id;
+          const reachable = canReach(item.id);
+          return (
+            <li key={item.id} className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
+              <button
+                type="button"
+                onClick={() => onStepChange(item.id)}
+                disabled={!reachable}
+                aria-current={isCurrent ? 'step' : undefined}
+                className={`flex min-w-0 items-center gap-2 rounded-xl px-2 py-1.5 transition ${reachable ? 'cursor-pointer hover:bg-slate-50' : 'cursor-not-allowed'}`}
+              >
+                <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-black ${isCurrent ? 'bg-clinical-600 text-white' : isDone ? 'bg-clinical-100 text-clinical-700' : 'bg-slate-100 text-slate-400'}`}>
+                  {isDone ? <CheckCircle2 className="h-4 w-4" /> : item.id}
+                </span>
+                <span className={`hidden truncate text-xs font-black sm:block ${isCurrent ? 'text-clinical-700' : isDone ? 'text-slate-700' : 'text-slate-400'}`}>{item.label}</span>
+              </button>
+              {index < WIZARD_STEPS.length - 1 && <span className={`h-0.5 flex-1 rounded ${step > item.id ? 'bg-clinical-300' : 'bg-slate-200'}`} />}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
+function PatientModeHeaderSwitch({ patientMode, onChange }) {
+  return (
+    <div className="grid w-full min-w-[22rem] max-w-[28rem] grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-white/95 p-1 shadow-sm">
+      <button
+        type="button"
+        onClick={() => onChange('existing')}
+        className={`rounded-xl px-3 py-2 text-left transition ${patientMode === 'existing' ? 'bg-clinical-50 text-clinical-800 ring-1 ring-clinical-200' : 'text-slate-600 hover:bg-slate-50'}`}
+      >
+        <span className="block text-xs font-black leading-4">Existing Patient</span>
+        <span className="block truncate text-[10px] font-semibold leading-4 text-slate-500">Search record</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('new')}
+        className={`rounded-xl px-3 py-2 text-left transition ${patientMode === 'new' ? 'bg-clinical-50 text-clinical-800 ring-1 ring-clinical-200' : 'text-slate-600 hover:bg-slate-50'}`}
+      >
+        <span className="block text-xs font-black leading-4">New Patient</span>
+        <span className="block truncate text-[10px] font-semibold leading-4 text-slate-500">Create record</span>
+      </button>
+    </div>
+  );
+}
+
 export function DoctorNewOrderPage() {
   const { state, dispatch } = useAppStore();
   const { data } = state;
@@ -333,69 +388,22 @@ export function DoctorNewOrderPage() {
   const nextStep = WIZARD_STEPS.find((item) => item.id === step + 1);
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-5">
+    <div className="mx-auto w-full max-w-5xl space-y-4">
       <PageHeader
         eyebrow="Clinician Portal · New Order Form"
         title="Create Test / Scan Order"
-        description="A cleaner step-by-step workflow. Only one order window is shown at a time, and Continue moves the clinician to the next stage without leaving New Order."
+        description={<OrderHeaderProgress step={step} canReach={canReach} onStepChange={goToStep} />}
+        actions={step === 1 ? <PatientModeHeaderSwitch patientMode={patientMode} onChange={setPatientMode} /> : null}
       />
 
       <section className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/80 p-3 shadow-soft backdrop-blur sm:p-5">
-        <div className="mb-3 rounded-[1.5rem] bg-gradient-to-r from-clinical-50 to-slate-50 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-clinical-600">New Order Workspace</p>
-              <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">{activeStep.label}</h2>
-            </div>
-            <span className="inline-flex w-fit items-center rounded-full bg-white px-3 py-1.5 text-xs font-black text-slate-600 shadow-sm ring-1 ring-slate-200">Step {step} of {WIZARD_STEPS.length}</span>
-          </div>
-
-          <nav className="mt-4" aria-label="Order progress">
-            <ol className="flex items-center gap-1 overflow-x-auto rounded-3xl border border-slate-200 bg-white p-2 shadow-sm sm:gap-2 sm:p-3">
-              {WIZARD_STEPS.map((item, index) => {
-                const isCurrent = step === item.id;
-                const isDone = step > item.id;
-                const reachable = canReach(item.id);
-                return (
-                  <li key={item.id} className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
-                    <button
-                      type="button"
-                      onClick={() => goToStep(item.id)}
-                      disabled={!reachable}
-                      aria-current={isCurrent ? 'step' : undefined}
-                      className={`flex min-w-0 items-center gap-2 rounded-2xl px-2 py-1.5 transition sm:px-3 ${reachable ? 'cursor-pointer hover:bg-slate-50' : 'cursor-not-allowed'}`}
-                    >
-                      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-black ${isCurrent ? 'bg-clinical-600 text-white' : isDone ? 'bg-clinical-100 text-clinical-700' : 'bg-slate-100 text-slate-400'}`}>
-                        {isDone ? <CheckCircle2 className="h-5 w-5" /> : item.id}
-                      </span>
-                      <span className={`hidden truncate text-sm font-black sm:block ${isCurrent ? 'text-clinical-700' : isDone ? 'text-slate-700' : 'text-slate-400'}`}>{item.label}</span>
-                    </button>
-                    {index < WIZARD_STEPS.length - 1 && <span className={`h-0.5 flex-1 rounded ${step > item.id ? 'bg-clinical-300' : 'bg-slate-200'}`} />}
-                  </li>
-                );
-              })}
-            </ol>
-          </nav>
-        </div>
-
-        <form onSubmit={openReview} className="mt-3 min-h-[520px] space-y-5">
+        <form onSubmit={openReview} className="min-h-[520px] space-y-5">
         {stepError && (
           <div className="rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-900">{stepError}</div>
         )}
 
         {step === 1 && (
           <Card title="Patient Selection" subtitle="Search patients already on the system or create a new record.">
-            <div className="mb-4 grid gap-3 md:grid-cols-2">
-              <button type="button" onClick={() => setPatientMode('existing')} className={`rounded-2xl border p-4 text-left transition ${patientMode === 'existing' ? 'border-clinical-300 bg-clinical-50 ring-4 ring-clinical-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
-                <p className="font-black text-slate-950">Existing Patient</p>
-                <p className="text-sm text-slate-500">Search by patient name, ID, phone, email, or national ID.</p>
-              </button>
-              <button type="button" onClick={() => setPatientMode('new')} className={`rounded-2xl border p-4 text-left transition ${patientMode === 'new' ? 'border-clinical-300 bg-clinical-50 ring-4 ring-clinical-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
-                <p className="font-black text-slate-950">New Patient</p>
-                <p className="text-sm text-slate-500">Create a patient record during order submission.</p>
-              </button>
-            </div>
-
             {patientMode === 'existing' ? (
               <div className="space-y-3">
                 <div className="relative">
