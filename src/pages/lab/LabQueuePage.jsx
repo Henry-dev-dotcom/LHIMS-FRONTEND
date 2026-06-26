@@ -3,7 +3,6 @@ import { ArrowLeft, CheckCircle2, CheckSquare, FlaskConical, Search, Square } fr
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { DataTable } from '../../components/ui/DataTable';
 import { MetricCard } from '../../components/ui/MetricCard';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { inputClass } from '../../components/ui/FormField';
@@ -29,6 +28,67 @@ function sampleStateForOrder(data, orderId) {
 
 function acceptedSampleForOrder(data, orderId) {
   return (data.sampleLogs || []).find((sample) => sample.orderId === orderId && sample.status === 'Accepted');
+}
+
+function labItemNames(order) {
+  return (order.items || []).map((item) => item.name).filter(Boolean);
+}
+
+function LabQueueRequestCard({ order, data, selected, onToggle, onOpen }) {
+  const sampleState = sampleStateForOrder(data, order.id);
+  const isAccepted = sampleState === 'Accepted';
+  const itemNames = labItemNames(order);
+
+  return (
+    <article className={`rounded-3xl border p-4 transition ${selected ? 'border-clinical-300 bg-clinical-50/70 shadow-sm' : 'border-slate-200 bg-white hover:border-clinical-200 hover:bg-slate-50/60'}`}>
+      <div className="grid gap-4 xl:grid-cols-[minmax(220px,0.9fr)_minmax(320px,1.35fr)_minmax(260px,0.9fr)]">
+        <div className="flex min-w-0 items-start gap-3">
+          <button
+            type="button"
+            disabled={isAccepted}
+            onClick={() => onToggle(order.id)}
+            className="mt-1 shrink-0 text-clinical-700 disabled:text-slate-300"
+            aria-label={selected ? `Deselect ${order.patient?.fullName || order.id}` : `Select ${order.patient?.fullName || order.id}`}
+          >
+            {selected ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5" />}
+          </button>
+          <div className="min-w-0">
+            <p className="truncate text-base font-black text-slate-950">{order.patient?.fullName}</p>
+            <p className="mt-0.5 text-sm font-semibold text-slate-500">{order.patient?.id}</p>
+            <p className="mt-2 text-xs font-black uppercase tracking-[0.14em] text-slate-400">Order ID</p>
+            <p className="mt-0.5 break-words text-sm font-black text-slate-900">{order.id}</p>
+          </div>
+        </div>
+
+        <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Lab tests</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {itemNames.length ? itemNames.map((name, index) => (
+              <span key={`${order.id}-${name}-${index}`} className="max-w-full rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold leading-5 text-slate-700 shadow-sm">
+                {name}
+              </span>
+            )) : (
+              <span className="text-sm font-semibold text-slate-500">No lab tests listed</span>
+            )}
+          </div>
+        </div>
+
+        <div className="min-w-0 space-y-3">
+          <div className="rounded-2xl bg-slate-50 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Clinician / Hospital</p>
+            <p className="mt-1 truncate font-black text-slate-900">{order.doctor?.name}</p>
+            <p className="truncate text-sm text-slate-500">{order.hospital?.name}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={order.urgency} />
+            <StatusBadge status={sampleState} />
+            <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-500">{formatDateTime(order.createdAt)}</span>
+          </div>
+          <Button onClick={() => onOpen(order)} className="w-full justify-center"><CheckCircle2 className="h-4 w-4" /> {isAccepted ? 'Open' : 'Review / Send'}</Button>
+        </div>
+      </div>
+    </article>
+  );
 }
 
 function LabQueueStepper({ currentStep }) {
@@ -153,21 +213,23 @@ export function LabQueuePage() {
               </div>
             </div>
 
-            <DataTable
-              columns={[
-                { key: 'select', label: '', render: (row) => <button type="button" disabled={sampleStateForOrder(data, row.id) === 'Accepted'} onClick={() => toggleRow(row.id)} className="text-clinical-700 disabled:text-slate-300">{selected.includes(row.id) ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5" />}</button> },
-                { key: 'patient', label: 'Patient', render: (row) => <div><p className="font-black text-slate-950">{row.patient?.fullName}</p><p className="text-xs text-slate-400">{row.patient?.id}</p></div> },
-                { key: 'id', label: 'Order ID', render: (row) => <span className="font-black text-slate-950">{row.id}</span> },
-                { key: 'tests', label: 'Lab Tests', render: (row) => <div className="max-w-[300px] text-sm font-semibold text-slate-700">{describeOrderItems(row.items)}</div> },
-                { key: 'doctor', label: 'Clinician / Hospital', render: (row) => <div><p className="font-semibold">{row.doctor?.name}</p><p className="text-xs text-slate-400">{row.hospital?.name}</p></div> },
-                { key: 'urgency', label: 'Urgency', render: (row) => <StatusBadge status={row.urgency} /> },
-                { key: 'status', label: 'Sample', render: (row) => <StatusBadge status={sampleStateForOrder(data, row.id)} /> },
-                { key: 'createdAt', label: 'Requested', render: (row) => formatDateTime(row.createdAt) },
-                { key: 'actions', label: 'Action', render: (row) => <Button onClick={() => openReviewWorkspace(row)}><CheckCircle2 className="h-4 w-4" /> {sampleStateForOrder(data, row.id) === 'Accepted' ? 'Open' : 'Review / Send'}</Button> }
-              ]}
-              rows={rows}
-              emptyMessage="No lab-routed patients match your search."
-            />
+            <div className="space-y-3">
+              {rows.length ? rows.map((row) => (
+                <LabQueueRequestCard
+                  key={row.id}
+                  order={row}
+                  data={data}
+                  selected={selected.includes(row.id)}
+                  onToggle={toggleRow}
+                  onOpen={openReviewWorkspace}
+                />
+              )) : (
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                  <p className="font-black text-slate-900">No lab-routed patients match your search.</p>
+                  <p className="mt-2 text-sm text-slate-500">Adjust the search term, order status, or sample state filter.</p>
+                </div>
+              )}
+            </div>
           </div>
         </Card>
       )}
