@@ -689,7 +689,7 @@ function reducer(state, action) {
     }
 
     case 'OPEN_SCAN_ACCEPT': {
-      return { ...state, currentPage: 'scan-accept', ui: { ...state.ui, sidebarOpen: false, activeScanAcceptOrderId: action.orderId } };
+      return { ...state, currentPage: 'scan-queue', ui: { ...state.ui, sidebarOpen: false, activeScanAcceptOrderId: action.orderId } };
     }
     case 'ACCEPT_SCAN_ORDER': {
       const orderId = action.orderId || state.ui.activeScanAcceptOrderId;
@@ -1554,7 +1554,7 @@ function reducer(state, action) {
 
 
     case 'OPEN_LAB_ACCEPT': {
-      return { ...state, currentPage: 'lab-accept', ui: { ...state.ui, sidebarOpen: false, activeLabAcceptOrderId: action.orderId } };
+      return { ...state, currentPage: 'lab-queue', ui: { ...state.ui, sidebarOpen: false, activeLabAcceptOrderId: action.orderId } };
     }
     case 'ACCEPT_LAB_SAMPLE': {
       const orderId = action.orderId || state.ui.activeLabAcceptOrderId;
