@@ -202,7 +202,7 @@ export function ScanQueuePage() {
                 { key: 'select', label: '', render: (row) => <button type="button" disabled={scanStateForOrder(data, row.id) === 'Accepted'} onClick={() => toggleRow(row.id)} className="text-clinical-700 disabled:text-slate-300">{selected.includes(row.id) ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5" />}</button> },
                 { key: 'patient', label: 'Patient', render: (row) => <div><p className="font-black text-slate-950">{row.patient?.fullName}</p><p className="text-xs text-slate-400">{row.patient?.id}</p></div> },
                 { key: 'id', label: 'Order ID', render: (row) => <span className="font-black text-slate-950">{row.id}</span> },
-                { key: 'scans', label: 'Scans', render: (row) => <div className="max-w-[300px] text-sm font-semibold text-slate-700">{describeScanItems(row.items)}</div> },
+                { key: 'scans', label: 'Scans', render: (row) => <div className="max-w-full text-sm font-semibold text-slate-700">{describeScanItems(row.items)}</div> },
                 { key: 'doctor', label: 'Clinician / Hospital', render: (row) => <div><p className="font-semibold">{row.doctor?.name}</p><p className="text-xs text-slate-400">{row.hospital?.name}</p></div> },
                 { key: 'urgency', label: 'Urgency', render: (row) => <StatusBadge status={row.urgency} /> },
                 { key: 'scanStatus', label: 'Scan State', render: (row) => <StatusBadge status={scanStateForOrder(data, row.id)} /> },

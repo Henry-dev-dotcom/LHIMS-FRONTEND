@@ -9,6 +9,7 @@ import { PAGE_HEADER_EVENT } from '../components/ui/PageHeader';
 import { useAppStore } from '../store/AppStore';
 import { PAGE_META } from '../routes/routeRegistry';
 import { ROLES } from '../data/roles';
+import '../styles/getlabs-theme.css';
 
 const dashboardMeta = {
   'doctor-dashboard': {
@@ -326,7 +327,7 @@ export function Header() {
               </button>
             </div>
           </div>
-          {pageHeader?.actions && <div className="flex w-full max-w-[28rem] flex-wrap justify-end gap-2">{pageHeader.actions}</div>}
+          {pageHeader?.actions && <div className="flex w-full max-w-full flex-wrap justify-end gap-2 xl:max-w-[28rem]">{pageHeader.actions}</div>}
           </div>
         </div>
       </div>
@@ -335,13 +336,13 @@ export function Header() {
         <>
           <button
             type="button"
-            className="fixed inset-0 z-[129] bg-slate-950/40 backdrop-blur-sm md:hidden"
+            className="getlabs-floating-overlay fixed inset-0 z-[129] bg-slate-950/40 backdrop-blur-sm md:hidden"
             aria-label="Close user menu"
             onClick={() => setUserMenuOpen(false)}
           />
           <div
           ref={userDropdownRef}
-          className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-[130] max-h-[calc(86dvh-env(safe-area-inset-bottom))] overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-lift ring-1 ring-slate-950/5 md:inset-x-auto md:bottom-auto md:right-[var(--user-menu-right)] md:top-[var(--user-menu-top)] md:w-[calc(100vw-1.5rem)] md:max-w-72 md:rounded-3xl"
+          className="getlabs-floating-panel fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-[130] max-h-[calc(86dvh-env(safe-area-inset-bottom))] overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-lift ring-1 ring-slate-950/5 md:inset-x-auto md:bottom-auto md:right-[var(--user-menu-right)] md:top-[var(--user-menu-top)] md:w-[calc(100vw-1.5rem)] md:max-w-72 md:rounded-3xl"
           style={{ '--user-menu-top': `${userMenuPosition.top}px`, '--user-menu-right': `${userMenuPosition.right}px` }}
           role="menu"
           aria-label="User session menu"

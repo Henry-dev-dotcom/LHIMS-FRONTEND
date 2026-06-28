@@ -54,8 +54,8 @@ export const ROLES = [
     demoUser: 'Kwame Adu',
     demoUsername: 'lab',
     demoPassword: 'lab123',
-    landing: 'lab-dashboard',
-    accessSummary: 'Processes lab-routed orders, samples, structured result entry and review handoff.'
+    landing: 'lab-queue',
+    accessSummary: 'Manages lab queue acceptance, accepted sample result entry, and sent result storage.'
   },
   {
     id: 'scan',
@@ -108,16 +108,16 @@ export const NAV_ITEMS = [
   { id: 'reception-results', label: 'Results Inbox', icon: Send, roles: ['receptionist','admin'], section: 'Reception' },
 
   { id: 'patients', label: 'Patient Records', icon: UsersRound, roles: ['receptionist','doctor','lab','scan','billing','admin'], section: 'Core Records' },
-  { id: 'orders', label: 'Order Registry', icon: ClipboardList, roles: ['receptionist','doctor','lab','scan','billing','admin'], section: 'Core Records' },
+  { id: 'orders', label: 'Order Registry', icon: ClipboardList, roles: ['receptionist','doctor','scan','billing','admin'], section: 'Core Records' },
 
-  { id: 'lab-dashboard', label: 'Laboratory', icon: FlaskConical, roles: ['lab','admin'], section: 'Laboratory' },
-  { id: 'lab-queue', label: 'Lab Queue', icon: ClipboardList, roles: ['lab','admin'], section: 'Laboratory' },
-  { id: 'sample-log', label: 'Sample Log', icon: Database, roles: ['lab','admin'], section: 'Laboratory' },
-  { id: 'lab-accept', label: 'Accept Sample', icon: CheckCircle2, roles: ['lab','admin'], section: 'Laboratory' },
+  { id: 'lab-dashboard', label: 'Laboratory', icon: FlaskConical, roles: ['admin'], section: 'Laboratory' },
+  { id: 'lab-queue', label: 'Queue', icon: ClipboardList, roles: ['lab','admin'], section: 'Laboratory' },
+  { id: 'sample-log', label: 'Sample Log', icon: Database, roles: ['admin'], section: 'Laboratory' },
+  { id: 'lab-accept', label: 'Accept Sample', icon: CheckCircle2, roles: ['admin'], section: 'Laboratory' },
   { id: 'accepted-samples', label: 'Accepted Samples', icon: CheckCircle2, roles: ['lab','admin'], section: 'Laboratory' },
-  { id: 'lab-review', label: 'Review & Sign-off', icon: ShieldCheck, roles: ['lab','admin'], section: 'Laboratory' },
+  { id: 'lab-review', label: 'Review & Sign-off', icon: ShieldCheck, roles: ['admin'], section: 'Laboratory' },
   { id: 'lab-results', label: 'Results', icon: FileText, roles: ['lab','admin'], section: 'Laboratory' },
-  { id: 'lab-rejections', label: 'Rejected / Retest', icon: History, roles: ['lab','admin'], section: 'Laboratory' },
+  { id: 'lab-rejections', label: 'Rejected / Retest', icon: History, roles: ['admin'], section: 'Laboratory' },
 
   { id: 'scan-dashboard', label: 'Scan / Imaging', icon: ScanLine, roles: ['scan','admin'], section: 'Imaging' },
   { id: 'scan-queue', label: 'Scan Queue', icon: ClipboardList, roles: ['scan','admin'], section: 'Imaging' },
@@ -138,13 +138,13 @@ export const NAV_ITEMS = [
 
   { id: 'admin-dashboard', label: 'Admin', icon: ShieldCheck, roles: ['admin'], section: 'Admin' },
   { id: 'users', label: 'User Management', icon: UserCog, roles: ['admin'], section: 'Admin' },
-  { id: 'hospitals', label: 'Hospitals / Partners', icon: Building2, roles: ['admin'], section: 'Admin' },
+  { id: 'hospitals', label: 'Facilities / Partners', icon: Building2, roles: ['admin'], section: 'Admin' },
   { id: 'audit-log', label: 'Audit Log', icon: History, roles: ['admin'], section: 'Admin' },
   { id: 'security', label: 'Security & Reliability', icon: ShieldCheck, roles: ['admin'], section: 'Admin' },
   { id: 'notification-settings', label: 'Notification Settings', icon: Bell, roles: ['admin'], section: 'Admin' },
   { id: 'result-delivery', label: 'Results Inbox / Delivery', icon: Send, roles: ['admin','billing','receptionist'], section: 'Results' },
 
-  { id: 'reports', label: 'Reports', icon: FileBarChart2, roles: ['billing','admin','lab','scan'], section: 'Reporting' },
+  { id: 'reports', label: 'Reports', icon: FileBarChart2, roles: ['billing','admin','scan'], section: 'Reporting' },
   { id: 'settings', label: 'Settings', icon: Settings, roles: ['admin'], section: 'System' },
   { id: 'api-readiness', label: 'API Readiness', icon: ServerCog, roles: ['admin'], section: 'System' }
 ];
@@ -152,8 +152,8 @@ export const NAV_ITEMS = [
 export const ROLE_DASHBOARD_REQUIREMENTS = {
   doctor: ['Clinician Profile', 'New Order Form', 'My Orders Active', 'My Orders Completed', 'Result Viewer', 'PDF Report Download', 'Notification Preferences', 'Patient Search'],
   receptionist: ['Incoming Orders Queue', 'Patient Check-In', 'Order Confirmation Panel', 'Appointment Scheduler', 'Walk-in Registration', 'Walk-in Test Requests', 'Direct Walk-in Invoice Creation', 'Daily Visit Log', 'Duplicate Patient Resolution', 'Reception Results Inbox'],
-  lab: ['Lab Order Queue', 'Sample Collection Log', 'Test Panel Checklist', 'Result Entry Form', 'Results Archive', 'Equipment/Analyzer Reference', 'Review & Sign-off', 'Retest/Reject Sample Action'],
+  lab: ['Queue', 'Accepted Samples', 'Results'],
   scan: ['Scan Order Queue', 'Equipment/Room Booking', 'Image Upload', 'Radiologist Report Field', 'Comparison to Prior Scans', 'Review & Sign-off', 'Internal Technician Notes'],
   billing: ['Test/Scan Price Catalog', 'Invoice Generator', 'Payment Status Tracker', 'Payment Method Log', 'Outstanding Balances Report', 'Insurance Claim Reference', 'Cashier Float', 'Expenses', 'Account Ledger', 'Billing Analytics', 'Revenue Summary', 'Refund/Adjustment Tool'],
-  admin: ['User Management', 'Hospital/Partner Management', 'Catalog Management', 'Department Management', 'System-Wide Reporting Dashboard', 'Audit Log', 'Notification Settings', 'Data Export']
+  admin: ['User Management', 'Diagnostic Facility Management', 'Hospital/Partner Management', 'Facility Feature Customization', 'Catalog Management', 'Department Management', 'System-Wide Reporting Dashboard', 'Audit Log', 'Notification Settings', 'Data Export']
 };

@@ -444,7 +444,7 @@ export function ReceptionWalkInsPage() {
             columns={[
               { key: 'id', label: 'Order', render: (row) => <span className="font-black text-slate-950">{row.id}</span> },
               { key: 'patient', label: 'Patient', render: (row) => <div><p className="font-bold text-slate-950">{row.patient?.fullName || '—'}</p><p className="text-xs text-slate-500">{row.patient?.id}</p></div> },
-              { key: 'items', label: 'Requested Items', render: (row) => <div className="max-w-[320px] text-sm font-semibold text-slate-700">{describeOrderItems(row.items)}</div> },
+              { key: 'items', label: 'Requested Items', render: (row) => <div className="max-w-full text-sm font-semibold text-slate-700">{describeOrderItems(row.items)}</div> },
               { key: 'status', label: 'Order Status', render: (row) => <StatusBadge status={row.status} /> },
               { key: 'billing', label: 'Billing', render: (row) => <StatusBadge status={row.invoice?.status || row.billingStatus || 'Pending'} /> },
               { key: 'amount', label: 'Amount', render: (row) => money(row.invoice?.amount || row.invoice?.total || 0) },

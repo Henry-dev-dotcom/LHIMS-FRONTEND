@@ -412,6 +412,61 @@ function actorFromAuth(auth) {
   };
 }
 
+
+const DEFAULT_FACILITY_FEATURES = {
+  clinicianRequests: true,
+  receptionWalkins: true,
+  laboratory: true,
+  imaging: true,
+  billing: true,
+  resultsDelivery: true,
+  reporting: true,
+  apiAccess: false,
+  patientMessaging: false,
+  documentUpload: true
+};
+
+const DEFAULT_FACILITY_DEPARTMENTS = ['Reception', 'Laboratory', 'Imaging', 'Billing'];
+
+function normalizeFacilityPayload(payload = {}, existing = {}) {
+  const featurePayload = payload.features || payload.enabledFeatures || {};
+  const deliveryPayload = payload.resultDelivery || {};
+  const limitsPayload = payload.limits || {};
+  return {
+    name: String(payload.name ?? existing.name ?? '').trim(),
+    code: String(payload.code ?? existing.code ?? '').trim().toUpperCase(),
+    type: payload.type || existing.type || 'Full Diagnostic Facility',
+    status: payload.status || existing.status || 'Active',
+    contactPerson: payload.contactPerson ?? existing.contactPerson ?? '',
+    phone: payload.phone ?? existing.phone ?? '',
+    email: payload.email ?? existing.email ?? '',
+    address: payload.address ?? existing.address ?? '',
+    region: payload.region ?? existing.region ?? '',
+    administrator: payload.administrator ?? existing.administrator ?? '',
+    billingContact: payload.billingContact ?? existing.billingContact ?? '',
+    departments: Array.isArray(payload.departments) ? payload.departments : (existing.departments || DEFAULT_FACILITY_DEPARTMENTS),
+    catalogItemIds: Array.isArray(payload.catalogItemIds) ? payload.catalogItemIds : (existing.catalogItemIds || []),
+    features: { ...DEFAULT_FACILITY_FEATURES, ...(existing.features || {}), ...featurePayload },
+    resultDelivery: {
+      sendToClinician: deliveryPayload.sendToClinician ?? existing.resultDelivery?.sendToClinician ?? true,
+      sendToReception: deliveryPayload.sendToReception ?? existing.resultDelivery?.sendToReception ?? false,
+      allowPatientCopy: deliveryPayload.allowPatientCopy ?? existing.resultDelivery?.allowPatientCopy ?? false,
+      requireDigitalSignature: deliveryPayload.requireDigitalSignature ?? existing.resultDelivery?.requireDigitalSignature ?? true
+    },
+    branding: {
+      primaryColor: payload.branding?.primaryColor ?? existing.branding?.primaryColor ?? '#191816',
+      accentColor: payload.branding?.accentColor ?? existing.branding?.accentColor ?? '#f2b35d',
+      logoName: payload.branding?.logoName ?? existing.branding?.logoName ?? ''
+    },
+    limits: {
+      maxUsers: Number(limitsPayload.maxUsers ?? existing.limits?.maxUsers ?? 25),
+      maxClinicians: Number(limitsPayload.maxClinicians ?? existing.limits?.maxClinicians ?? 10),
+      dailyOrderLimit: Number(limitsPayload.dailyOrderLimit ?? existing.limits?.dailyOrderLimit ?? 250)
+    },
+    notes: payload.notes ?? existing.notes ?? ''
+  };
+}
+
 function reducer(state, action) {
   switch (action.type) {
     case 'LOGIN_AS': {
@@ -1195,6 +1250,51 @@ function reducer(state, action) {
       };
       return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', 'User account updated') } };
     }
+
+    case 'ADMIN_CREATE_FACILITY': {
+      const payload = normalizeFacilityPayload(action.payload || {});
+      if (!payload.name) return { ...state, ui: { ...state.ui, toast: toast('error', 'Facility name is required.') } };
+      const timestamp = nowIso();
+      const facility = {
+        id: idWithPrefix('FAC-', state.data.facilities || []),
+        ...payload,
+        code: payload.code || `FAC-${String((state.data.facilities || []).length + 1).padStart(3, '0')}`,
+        createdAt: timestamp,
+        updatedAt: timestamp
+      };
+      const nextData = {
+        ...state.data,
+        facilities: [facility, ...(state.data.facilities || [])],
+        auditLogs: addAudit(state.data.auditLogs || [], {
+          actor: state.auth?.userName || 'Admin',
+          role: state.auth?.role || 'admin',
+          action: 'Diagnostic facility created',
+          module: 'Admin / Facilities',
+          entityId: facility.id,
+          details: `${facility.name} · ${Object.entries(facility.features || {}).filter(([, enabled]) => enabled).length} enabled features`
+        })
+      };
+      return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', 'Diagnostic facility created') } };
+    }
+    case 'ADMIN_UPDATE_FACILITY': {
+      const { facilityId, payload = {} } = action;
+      const existing = (state.data.facilities || []).find((facility) => facility.id === facilityId);
+      if (!existing) return { ...state, ui: { ...state.ui, toast: toast('error', 'Facility not found.') } };
+      const updated = { ...existing, ...normalizeFacilityPayload(payload, existing), id: existing.id, createdAt: existing.createdAt, updatedAt: nowIso() };
+      const nextData = {
+        ...state.data,
+        facilities: (state.data.facilities || []).map((facility) => facility.id === facilityId ? updated : facility),
+        auditLogs: addAudit(state.data.auditLogs || [], {
+          actor: state.auth?.userName || 'Admin',
+          role: state.auth?.role || 'admin',
+          action: 'Diagnostic facility updated',
+          module: 'Admin / Facilities',
+          entityId: facilityId,
+          details: `${updated.name} is ${updated.status}`
+        })
+      };
+      return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', 'Facility customization saved') } };
+    }
     case 'ADMIN_CREATE_HOSPITAL': {
       const payload = action.payload || {};
       if (!String(payload.name || '').trim()) return { ...state, ui: { ...state.ui, toast: toast('error', 'Hospital name is required.') } };
@@ -1560,7 +1660,9 @@ function reducer(state, action) {
       const orderId = action.orderId || state.ui.activeLabAcceptOrderId;
       const order = (state.data.orders || []).find((item) => item.id === orderId);
       if (!order) return { ...state, ui: { ...state.ui, toast: toast('error', 'Lab order not found.') } };
-      const labItemIds = getLabItemIdsForOrder(state.data, orderId);
+      const requestedLabItemIds = getLabItemIdsForOrder(state.data, orderId);
+      const selectedLabItemIds = Array.isArray(action.payload?.labItemIds) ? action.payload.labItemIds.filter((id) => requestedLabItemIds.includes(id)) : [];
+      const labItemIds = selectedLabItemIds.length ? selectedLabItemIds : requestedLabItemIds;
       if (!labItemIds.length) return { ...state, ui: { ...state.ui, toast: toast('error', 'This order has no lab tests routed to Laboratory.') } };
       const timestamp = nowIso();
       let nextData = state.data;
@@ -1726,6 +1828,128 @@ function reducer(state, action) {
         })
       };
       return { ...state, data: nextData, ui: { ...state.ui, toast: toast('success', isDraft ? `${testItem.name} draft saved${normalizedFiles.length ? ' with imported file(s)' : ''}` : `${testItem.name} sent for review${normalizedFiles.length ? ' with imported file(s)' : ''}`) } };
+    }
+
+
+    case 'PUSH_LAB_RESULT_TO_CLINICIAN': {
+      const { orderId, parameters = [], equipment = '', technicianNotes = '', reportText = '', files = [] } = action.payload || {};
+      const order = (state.data.orders || []).find((item) => item.id === orderId);
+      if (!order) return { ...state, ui: { ...state.ui, toast: toast('error', 'Lab order not found.') } };
+      const hasAccepted = (state.data.sampleLogs || []).some((sample) => sample.orderId === orderId && sample.status === 'Accepted');
+      if (!hasAccepted) return { ...state, ui: { ...state.ui, toast: toast('error', 'Accept the sample before pushing results.') } };
+      const submittedParameters = (parameters || []).map((parameter) => {
+        const value = String(parameter.value || '').trim();
+        return {
+          testId: parameter.testId || '',
+          testName: parameter.testName || '',
+          id: parameter.id || parameter.name || '',
+          name: parameter.name || 'Result',
+          value,
+          unit: parameter.unit || '',
+          referenceRange: parameter.referenceRange || '',
+          low: parameter.low ?? '',
+          high: parameter.high ?? '',
+          criticalLow: parameter.criticalLow ?? '',
+          criticalHigh: parameter.criticalHigh ?? '',
+          flag: parameter.flag || computeResultFlag(value, parameter.low, parameter.high, parameter.criticalLow, parameter.criticalHigh)
+        };
+      });
+      if (!submittedParameters.length || submittedParameters.some((parameter) => parameter.value === '')) {
+        return { ...state, ui: { ...state.ui, toast: toast('error', 'Enter all laboratory result values before pushing to the clinician.') } };
+      }
+      const timestamp = nowIso();
+      let nextData = state.data;
+      if (order.status === 'Confirmed' || order.status === 'Submitted') {
+        nextData = ensureOrderInProgress(nextData, orderId, state.auth);
+      }
+      const existing = (nextData.results || []).find((result) => result.orderId === orderId && result.department === 'Laboratory');
+      const normalizedFiles = (files || []).map((file, index) => ({
+        id: file.id || `LAB-FILE-${Date.now()}-${index}`,
+        name: file.name || file.fileName || 'Imported result document',
+        fileName: file.fileName || file.name || 'Imported result document',
+        type: file.type || file.fileType || 'application/octet-stream',
+        fileType: file.fileType || file.type || 'application/octet-stream',
+        size: Number(file.size ?? file.fileSize ?? 0),
+        fileSize: Number(file.fileSize ?? file.size ?? 0),
+        uploadedAt: file.uploadedAt || timestamp,
+        uploadedBy: file.uploadedBy || state.auth?.userName || 'Lab Staff',
+        source: file.source || 'Accepted Samples result import',
+        testId: file.testId || '',
+        testName: file.testName || '',
+        dataUrl: file.dataUrl || '',
+        url: file.url || '',
+        note: file.note || ''
+      }));
+      const secureId = createSecureId(existing || { orderId, id: orderId });
+      const resultBase = {
+        ...(existing || {}),
+        id: existing?.id || idWithPrefix('RES-', nextData.results || []),
+        orderId,
+        department: 'Laboratory',
+        status: 'Final / Released',
+        parameters: submittedParameters,
+        reportText: reportText || existing?.reportText || 'Laboratory result completed and sent to clinician.',
+        equipment: equipment || existing?.equipment || '',
+        internalNotes: technicianNotes || existing?.internalNotes || '',
+        files: normalizedFiles,
+        abnormal: submittedParameters.some((parameter) => ['High', 'Low', 'Critical'].includes(parameter.flag)),
+        approvedBy: state.auth?.userName || 'Lab Staff',
+        approvedAt: timestamp,
+        signedBy: state.auth?.userName || 'Lab Staff',
+        signedAt: timestamp,
+        digitalSignature: action.payload?.signatureDataUrl || existing?.digitalSignature || '',
+        signatureStatus: 'Signed',
+        secureId,
+        verificationUrl: `#/verify-report/${secureId}`,
+        patientPortalUrl: `#/patient/results/${secureId}`,
+        previousHash: existing?.reportHash || existing?.previousHash || '',
+        createdAt: existing?.createdAt || timestamp,
+        updatedAt: timestamp,
+        versionHistory: existing?.versionHistory || [],
+        amendments: existing?.amendments || []
+      };
+      const resultRecord = {
+        ...resultBase,
+        reportHash: simpleHash(createReportHashPayload(resultBase))
+      };
+      const doctorNotification = createRoleNotification(nextData, {
+        title: 'Lab result sent',
+        body: `${orderId} has laboratory results ready for clinician review.`,
+        audience: 'doctor',
+        entityId: orderId,
+        deliveryType: 'Lab Result Sent'
+      });
+      const patientNotification = createRoleNotification({ ...nextData, notifications: [doctorNotification, ...(nextData.notifications || [])] }, {
+        title: 'Result ready',
+        body: 'Your laboratory result is ready. Please contact your clinician for secure review.',
+        audience: 'patient',
+        channel: 'SMS',
+        status: 'Queued',
+        entityId: orderId,
+        deliveryType: 'Privacy-safe Patient Result Notice'
+      });
+      nextData = {
+        ...nextData,
+        results: existing
+          ? nextData.results.map((result) => result.id === existing.id ? resultRecord : result)
+          : [resultRecord, ...(nextData.results || [])],
+        orders: (nextData.orders || []).map((item) => item.id === orderId ? {
+          ...item,
+          updatedAt: timestamp,
+          timeline: [...(item.timeline || []), { status: 'Laboratory result pushed to clinician', actor: state.auth?.userName || 'Lab Staff', role: state.auth?.role || 'lab', timestamp }]
+        } : item),
+        notifications: [patientNotification, doctorNotification, ...(nextData.notifications || [])],
+        auditLogs: addAudit(nextData.auditLogs || [], {
+          actor: state.auth?.userName || 'Lab Staff',
+          role: state.auth?.role || 'lab',
+          action: 'Laboratory result pushed to clinician',
+          module: 'Laboratory',
+          entityId: orderId,
+          details: `${submittedParameters.length} parameter(s) sent. Hash ${resultRecord.reportHash}.`
+        })
+      };
+      nextData = maybeReleaseOrderAfterResultApproval(nextData, orderId, state.auth);
+      return { ...state, data: nextData, currentPage: 'lab-results', ui: { ...state.ui, activeAcceptedSampleOrderId: orderId, sidebarOpen: false, toast: toast('success', 'Lab result pushed directly to the clinician and stored in Results') } };
     }
 
     case 'UPDATE_LAB_RESULT_ARCHIVE': {

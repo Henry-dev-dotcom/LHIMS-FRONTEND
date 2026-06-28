@@ -4,6 +4,7 @@ import { ROLES } from '../../data/roles';
 import { useAppStore } from '../../store/AppStore';
 import { Button } from '../../components/ui/Button';
 import { ToastHost } from '../../components/ui/ToastHost';
+import '../../styles/getlabs-theme.css';
 
 export function LoginPage() {
   const { dispatch } = useAppStore();
@@ -17,79 +18,89 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dff1ff,transparent_32%),radial-gradient(circle_at_bottom_right,#d8fff0,transparent_28%),linear-gradient(135deg,#081a33,#102a52_45%,#0f766e)] p-3 sm:p-5">
-      <div className="mx-auto flex min-h-[calc(100dvh-1.5rem)] max-w-7xl items-center justify-center sm:min-h-[calc(100vh-40px)]">
-        <div className="grid w-full overflow-hidden rounded-[1.4rem] border border-white/70 bg-white/95 shadow-panel backdrop-blur-xl sm:rounded-[2rem] xl:grid-cols-[0.9fr_1.1fr]">
-          <div className="relative overflow-hidden bg-slate-950 p-5 text-white sm:p-8 lg:p-12">
-            <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-clinical-500/20 blur-3xl" />
-            <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-emerald-500/20 blur-3xl" />
-            <div className="relative">
-              <div className="mb-6 flex items-center gap-3 sm:mb-10">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-clinical-500 to-emerald-500">
-                  <Activity className="h-7 w-7" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-black sm:text-2xl">Diagnosis Center</h1>
-                  <p className="text-sm text-white/50">Order & Results Management Platform</p>
-                </div>
+    <div className="getlabs-login min-h-screen bg-[#f8f1e8] p-4 text-[#2f2f2d] sm:p-6">
+      <div className="mx-auto flex min-h-[calc(100dvh-2rem)] max-w-7xl flex-col">
+        <header className="flex items-center justify-between gap-4 py-3 sm:py-5">
+          <div className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-sm bg-[#2f2f2d] text-white">
+              <Activity className="h-7 w-7" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black tracking-tight text-[#2f2f2d]">Diagnosis Center</h1>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#756f67]">Orders · Billing · Results</p>
+            </div>
+          </div>
+          <button type="button" className="getlabs-outline-button hidden sm:inline-flex" onClick={() => setUsername('admin')}>Demo access</button>
+        </header>
+
+        <main className="grid flex-1 overflow-hidden rounded-[2rem] border border-[#e3d8c9] bg-[#fffaf3] shadow-[0_30px_80px_rgba(47,47,45,0.12)] lg:grid-cols-[0.92fr_1.08fr]">
+          <section className="relative min-h-[22rem] overflow-hidden bg-[#eadbc7] p-7 sm:p-10 lg:p-12">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,255,255,0.75),transparent_26%),linear-gradient(135deg,rgba(255,250,243,0.1),rgba(47,47,45,0.18))]" />
+            <div className="absolute -bottom-20 -right-10 h-72 w-72 rounded-full bg-[#d8c5a9]/80 blur-3xl" />
+            <div className="relative flex h-full flex-col justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.28em] text-[#2f2f2d]/70">Clinical workspace</p>
+                <h2 className="getlabs-serif mt-5 max-w-xl text-4xl leading-[1.03] tracking-[-0.04em] text-[#2f2f2d] sm:text-5xl lg:text-6xl">
+                  Manage lab requests with a calmer, cleaner workflow.
+                </h2>
+                <p className="mt-5 max-w-lg text-base leading-8 text-[#5f5a53]">
+                  A warm, simple interface for clinicians, reception, laboratory, scan, billing, and administration teams.
+                </p>
               </div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Clinical Workspace</p>
-              <h2 className="mt-3 max-w-md text-2xl font-black leading-tight tracking-tight sm:text-4xl">Polished role-based platform workspace.</h2>
-              <p className="mt-4 max-w-md text-sm leading-6 text-white/65 sm:mt-5">
-                Choose one of the six system roles or use the quick credentials. Each login opens a dedicated landing page with refined navigation and permission-aware workflow pages.
-              </p>
-              <div className="mt-8 hidden gap-3 text-sm sm:grid sm:grid-cols-2">
-                {['Clinician', 'Receptionist', 'Lab Staff', 'Scan / Imaging', 'Billing / Finance', 'Admin'].map((item) => (
-                  <div key={item} className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white/75">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-300" />
-                    <span>{item}</span>
+
+              <div className="mt-10 grid gap-3 text-sm sm:grid-cols-2">
+                {['Queue requests', 'Accept samples', 'Enter results', 'Send to clinician'].map((item) => (
+                  <div key={item} className="flex items-center gap-2 border border-[#2f2f2d]/15 bg-[#fffaf3]/70 px-4 py-3 text-[#3c3935] backdrop-blur">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span className="font-bold">{item}</span>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="p-4 sm:p-8 lg:p-12">
-            <div className="grid gap-6 sm:gap-8 xl:grid-cols-[0.9fr_1.1fr]">
+          <section className="p-5 sm:p-8 lg:p-12">
+            <div className="grid gap-8 xl:grid-cols-[0.9fr_1.1fr]">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-clinical-600">Test credentials</p>
-                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">Sign in</h2>
-                <p className="mt-2 text-sm text-slate-500">Use the quick cards or enter credentials to open the correct role workspace.</p>
-                <form onSubmit={submitCredentials} className="mt-5 space-y-4 rounded-[1.35rem] border border-slate-200 bg-slate-50 p-4 sm:mt-6 sm:rounded-3xl sm:p-5">
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-[#756f67]">Secure sign in</p>
+                <h2 className="getlabs-serif mt-2 text-4xl leading-tight tracking-[-0.04em] text-[#2f2f2d]">Open your workspace.</h2>
+                <p className="mt-3 text-sm leading-6 text-[#756f67]">Use the demo credentials or select a role to continue into the platform.</p>
+
+                <form onSubmit={submitCredentials} className="mt-6 space-y-4 border border-[#e3d8c9] bg-[#f8f1e8] p-4 sm:p-5">
                   <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-slate-500"><UserRound className="h-3.5 w-3.5" /> Username</span>
-                    <input value={username} onChange={(event) => setUsername(event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none ring-clinical-100 transition focus:border-clinical-300 focus:ring-4" />
+                    <span className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-[#756f67]"><UserRound className="h-3.5 w-3.5" /> Username</span>
+                    <input value={username} onChange={(event) => setUsername(event.target.value)} className="getlabs-input" />
                   </label>
                   <label className="block">
-                    <span className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-slate-500"><KeyRound className="h-3.5 w-3.5" /> Password</span>
-                    <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none ring-clinical-100 transition focus:border-clinical-300 focus:ring-4" />
+                    <span className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-[#756f67]"><KeyRound className="h-3.5 w-3.5" /> Password</span>
+                    <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="getlabs-input" />
                   </label>
                   {selectedRole && (
-                    <div className="rounded-2xl bg-white px-4 py-3 text-xs text-slate-600">
-                      <span className="font-black text-slate-900">Selected:</span> {selectedRole.label} — {selectedRole.demoUser}
+                    <div className="border border-[#e3d8c9] bg-[#fffaf3] px-4 py-3 text-xs text-[#756f67]">
+                      <span className="font-black text-[#2f2f2d]">Selected:</span> {selectedRole.label} — {selectedRole.demoUser}
                     </div>
                   )}
-                  <Button className="w-full" type="submit"><ShieldCheck className="h-4 w-4" /> Sign in</Button>
+                  <Button className="getlabs-primary-button w-full justify-center" type="submit"><ShieldCheck className="h-4 w-4" /> Sign in</Button>
                 </form>
               </div>
 
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-clinical-600">Quick role login</p>
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-[#756f67]">Quick role login</p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                   {ROLES.map((role) => (
                     <button
                       key={role.id}
                       onClick={() => dispatch({ type: 'LOGIN_AS', roleId: role.id })}
-                      className="group rounded-[1.25rem] border border-slate-200 bg-white p-4 text-left shadow-soft transition hover:-translate-y-1 hover:border-clinical-200 hover:bg-clinical-50 hover:shadow-lift sm:rounded-3xl sm:p-5"
+                      className="group border border-[#e3d8c9] bg-[#fffaf3] p-4 text-left transition hover:-translate-y-0.5 hover:border-[#2f2f2d] hover:shadow-[0_18px_40px_rgba(47,47,45,0.12)] sm:p-5"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-black text-slate-950">{role.label}</p>
-                          <p className="mt-1 text-xs leading-5 text-slate-500">{role.subtitle}</p>
+                          <p className="font-black text-[#2f2f2d]">{role.label}</p>
+                          <p className="mt-1 text-xs leading-5 text-[#756f67]">{role.subtitle}</p>
                         </div>
-                        <ArrowRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-clinical-600" />
+                        <ArrowRight className="h-5 w-5 text-[#756f67] transition group-hover:translate-x-1 group-hover:text-[#2f2f2d]" />
                       </div>
-                      <div className="mt-4 rounded-2xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600">
+                      <div className="mt-4 border border-[#e3d8c9] bg-[#f8f1e8] px-3 py-2 text-xs font-bold text-[#5f5a53]">
                         {role.demoUsername} / {role.demoPassword}
                       </div>
                     </button>
@@ -97,8 +108,8 @@ export function LoginPage() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </section>
+        </main>
       </div>
       <ToastHost />
     </div>

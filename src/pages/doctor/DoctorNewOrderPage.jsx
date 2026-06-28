@@ -263,7 +263,7 @@ function OrderHeaderProgress({ step, canReach, onStepChange }) {
 
 function PatientModeHeaderSwitch({ patientMode, onChange }) {
   return (
-    <div className="grid w-full min-w-[22rem] max-w-[28rem] grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-white/95 p-1 shadow-sm">
+    <div className="grid w-full min-w-0 max-w-full grid-cols-2 sm:max-w-[28rem] gap-1 rounded-2xl border border-slate-200 bg-white/95 p-1 shadow-sm">
       <button
         type="button"
         onClick={() => onChange('existing')}

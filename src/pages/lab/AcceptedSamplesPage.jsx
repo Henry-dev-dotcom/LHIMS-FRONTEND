@@ -1,378 +1,561 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ClipboardCheck, Download, Edit3, FileCheck2, FileText, Paperclip, Printer, Search, Send, Save, UploadCloud, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  ClipboardList,
+  FileText,
+  FlaskConical,
+  ListChecks,
+  Search,
+  Send,
+  UploadCloud,
+  UserRound,
+  X
+} from 'lucide-react';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { DataTable } from '../../components/ui/DataTable';
-import { Modal } from '../../components/ui/Modal';
-import { FormField, inputClass } from '../../components/ui/FormField';
+import { MetricCard } from '../../components/ui/MetricCard';
 import { StatusBadge } from '../../components/ui/StatusBadge';
+import { inputClass } from '../../components/ui/FormField';
 import { useAppStore } from '../../store/AppStore';
-import { getLabCatalogItems, getLabOrders } from '../../utils/orderViews';
 import { formatDateTime } from '../../utils/formatters';
-import { computeResultFlag } from '../../utils/labFlags';
+import { describeOrderItems, getLabOrders } from '../../utils/orderViews';
 
-
-const RESULT_FILE_ACCEPT = '.pdf,.doc,.docx,.txt,.rtf,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/rtf';
-const RESULT_FILE_MAX_BYTES = 8 * 1024 * 1024;
-const RESULT_FILE_INLINE_BYTES = 1.5 * 1024 * 1024;
 
 function formatFileSize(size = 0) {
-  const value = Number(size || 0);
-  if (!value) return '0 KB';
-  if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024))} KB`;
-  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  const bytes = Number(size) || 0;
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function isAllowedResultFile(file) {
-  const name = String(file?.name || '').toLowerCase();
-  const type = String(file?.type || '').toLowerCase();
-  return (
-    name.endsWith('.pdf') ||
-    name.endsWith('.doc') ||
-    name.endsWith('.docx') ||
-    name.endsWith('.txt') ||
-    name.endsWith('.rtf') ||
-    type === 'application/pdf' ||
-    type === 'application/msword' ||
-    type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-    type === 'text/plain' ||
-    type === 'application/rtf'
-  );
-}
-
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
+function readFileAsDataUrl(file) {
+  return new Promise((resolve) => {
+    if (!file || typeof FileReader === 'undefined') {
+      resolve('');
+      return;
+    }
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(reader.error || new Error('Could not read file.'));
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => resolve('');
     reader.readAsDataURL(file);
   });
 }
 
-function openImportedResultFile(file) {
-  if (!file?.dataUrl && !file?.url) return;
-  const win = window.open(file.dataUrl || file.url, '_blank', 'noopener,noreferrer');
-  if (!win) {
-    const link = document.createElement('a');
-    link.href = file.dataUrl || file.url;
-    link.download = file.name || file.fileName || 'lab-result-document';
-    link.click();
-  }
+function resultForOrder(data, orderId) {
+  return (data.results || []).find((result) => result.orderId === orderId && result.department === 'Laboratory');
 }
 
-function ResultFileList({ files = [], onRemove, compact = false }) {
-  if (!files.length) return null;
+function labItemsForOrder(data, order, sample) {
+  const orderedItems = order?.items || [];
+  const orderItemIds = new Set([...(order?.itemIds || []), ...orderedItems.map((item) => item.id)].filter(Boolean));
+  const acceptedItemIds = new Set((sample?.labItemIds || []).filter(Boolean));
+  const hasAcceptedItemFilter = acceptedItemIds.size > 0;
+  const isAcceptedItem = (item) => !hasAcceptedItemFilter || acceptedItemIds.has(item.id);
+
+  const catalogItems = (data.catalog || []).filter((item) => orderItemIds.has(item.id) && item.department === 'Laboratory' && isAcceptedItem(item));
+  const fallbackItems = orderedItems.filter((item) => (item.department === 'Laboratory' || !item.department) && isAcceptedItem(item));
+  const merged = catalogItems.length ? catalogItems : fallbackItems;
+
+  return merged.map((item) => ({
+    ...item,
+    ...(orderedItems.find((ordered) => ordered.id === item.id) || {})
+  }));
+}
+
+function normalizeParameter(parameter, index) {
+  return {
+    id: parameter.id || parameter.key || parameter.name || `parameter-${index}`,
+    name: parameter.name || parameter.label || parameter.parameter || `Parameter ${index + 1}`,
+    unit: parameter.unit || parameter.units || '',
+    referenceRange: parameter.referenceRange || parameter.range || parameter.normalRange || '',
+    low: parameter.low ?? parameter.min ?? '',
+    high: parameter.high ?? parameter.max ?? '',
+    criticalLow: parameter.criticalLow ?? parameter.criticalMin ?? '',
+    criticalHigh: parameter.criticalHigh ?? parameter.criticalMax ?? ''
+  };
+}
+
+function parametersForItem(item) {
+  const raw = item.parameters || item.resultParameters || item.referenceParameters || item.panel || [];
+  if (Array.isArray(raw) && raw.length) return raw.map(normalizeParameter);
+  return [normalizeParameter({ name: 'Result', unit: item.unit || '', referenceRange: item.referenceRange || item.normalRange || '' }, 0)];
+}
+
+function valueKey(testId, parameter) {
+  return `${testId}::${parameter.id || parameter.name}`;
+}
+
+function getExistingValue(result, testId, parameter) {
+  const existing = (result?.parameters || []).find((item) => item.testId === testId && (item.name === parameter.name || item.id === parameter.id));
+  return existing?.value || '';
+}
+
+function isTestComplete(testId, item, values) {
+  const parameters = parametersForItem(item);
+  return parameters.length > 0 && parameters.every((parameter) => String(values[valueKey(testId, parameter)] || '').trim());
+}
+
+function matchesSample(row, query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return [
+    row.sample?.id,
+    row.order?.id,
+    row.order?.patient?.fullName,
+    row.order?.patient?.id,
+    row.order?.patient?.phone,
+    row.order?.doctor?.name,
+    row.order?.hospital?.name,
+    describeOrderItems(row.labItems || row.order?.items || []),
+    row.order?.urgency,
+    row.result?.status
+  ]
+    .filter(Boolean)
+    .some((value) => String(value).toLowerCase().includes(q));
+}
+
+function LabResultWorkflow({ currentStep }) {
+  const steps = [
+    { number: 1, label: 'Accepted patients' },
+    { number: 2, label: 'Open tests' },
+    { number: 3, label: 'Enter results' },
+    { number: 4, label: 'Push to clinician' }
+  ];
+
   return (
-    <div className="space-y-2">
-      {files.map((file) => (
-        <div key={file.id || file.name} className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-clinical-50 text-clinical-700">
-              <FileText className="h-5 w-5" />
+    <div className="getlabs-lab-card rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
+      <div className="grid gap-2 md:grid-cols-4">
+        {steps.map((step) => {
+          const active = step.number === currentStep;
+          const complete = step.number < currentStep;
+          return (
+            <div key={step.number} className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${active ? 'bg-clinical-50 text-clinical-800' : complete ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-50 text-slate-500'}`}>
+              <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-black ${active ? 'bg-clinical-600 text-white' : complete ? 'bg-emerald-600 text-white' : 'bg-white text-slate-400'}`}>
+                {complete ? <CheckCircle2 className="h-4 w-4" /> : step.number}
+              </span>
+              <span className="text-sm font-black">{step.label}</span>
             </div>
-            <div className="min-w-0">
-              <p className="break-words text-sm font-black text-slate-950">{file.name || file.fileName || 'Imported result document'}</p>
-              <p className="text-xs font-semibold text-slate-500">
-                {file.type || file.fileType || 'Document'} · {formatFileSize(file.size || file.fileSize)}{file.dataUrl ? ' · preview stored' : ' · metadata stored'}
-              </p>
-              {!compact && file.note && <p className="mt-1 text-[11px] font-semibold text-amber-700">{file.note}</p>}
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {(file.dataUrl || file.url) && <Button size="sm" variant="secondary" onClick={() => openImportedResultFile(file)}><Download className="h-4 w-4" /> Open</Button>}
-            {onRemove && <Button size="sm" variant="ghost" onClick={() => onRemove(file.id)}><X className="h-4 w-4" /> Remove</Button>}
-          </div>
-        </div>
-      ))}
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-function getResultForTest(data, orderId, testId) {
-  const result = (data.results || []).find((item) => item.orderId === orderId && item.department === 'Laboratory');
-  const parameters = (result?.parameters || []).filter((parameter) => parameter.testId === testId);
-  const complete = parameters.length > 0 && parameters.every((parameter) => parameter.value !== '');
-  const partial = parameters.some((parameter) => parameter.value !== '') && !complete;
-  return { result, parameters, complete, partial, status: result?.status || 'Pending' };
-}
+function AcceptedPatientCard({ row, onOpen }) {
+  const finalised = row.result?.status === 'Final / Released';
+  const acceptedTime = row.sample?.acceptedAt || row.sample?.collectedAt || row.order?.createdAt;
+  const resultStatus = row.result?.status || 'Awaiting Result';
 
-function getTestStatus(data, orderId, testId) {
-  const info = getResultForTest(data, orderId, testId);
-  if (!info.parameters.length) return 'Pending';
-  if (info.status === 'Final / Released') return 'Final / Released';
-  if (info.status === 'Pending Review') return info.complete ? 'Pending Review' : 'Partial';
-  if (info.status === 'Draft') return 'Draft';
-  return info.complete ? 'Completed' : 'Draft';
-}
-
-function statusMatchesFilter(status, filter) {
-  if (!filter) return true;
-  if (filter === 'Pending') return status === 'Pending';
-  if (filter === 'Draft') return status === 'Draft' || status === 'Partial' || status === 'In Progress';
-  if (filter === 'Pending Review') return status === 'Pending Review';
-  if (filter === 'Completed') return status === 'Final / Released' || status === 'Completed';
-  return true;
-}
-
-function openSampleLabel(sample, order) {
-  const win = window.open('', '_blank', 'width=420,height=520');
-  if (!win) return;
-  win.document.write(`
-    <html><head><title>Sample Label ${sample.id}</title></head>
-    <body style="font-family:Arial,sans-serif;padding:24px;">
-      <div style="border:2px solid #111;padding:18px;width:320px;">
-        <h2 style="margin:0 0 8px;">DIAGNOSIS CENTER LAB</h2>
-        <div style="font-family:monospace;font-size:22px;font-weight:800;letter-spacing:2px;">${sample.id}</div>
-        <p><strong>Patient:</strong> ${order?.patient?.fullName || ''}</p>
-        <p><strong>Patient ID:</strong> ${order?.patient?.id || ''}</p>
-        <p><strong>Order:</strong> ${sample.orderId}</p>
-        <p><strong>Sample:</strong> ${sample.sampleType || '—'}</p>
-        <p><strong>Accepted:</strong> ${formatDateTime(sample.acceptedAt || sample.collectedAt)}</p>
-        <div style="margin-top:18px;border:1px dashed #111;padding:12px;text-align:center;font-family:monospace;">||||| ${sample.id} |||||</div>
-      </div>
-      <script>window.print();<\/script>
-    </body></html>
-  `);
-  win.document.close();
-}
-
-function ResultEntryModal({ open, onClose, order, sample, testItem, data, dispatch }) {
-  const fileInputRef = useRef(null);
-  const resultInfo = testItem ? getResultForTest(data, order?.id, testItem.id) : { result: null, parameters: [] };
-  const existing = resultInfo.parameters || [];
-  const existingFilesForTest = (resultInfo.result?.files || []).filter((file) => !file.testId || file.testId === testItem?.id);
-  const [values, setValues] = useState({});
-  const [equipment, setEquipment] = useState('Sysmex XN-550');
-  const [technicianNotes, setTechnicianNotes] = useState('');
-  const [reportText, setReportText] = useState('');
-  const [importedFiles, setImportedFiles] = useState([]);
-  const [fileMessage, setFileMessage] = useState('');
-
-  useEffect(() => {
-    if (!testItem) return;
-    setValues(Object.fromEntries((testItem.parameters || []).map((parameter) => [`${testItem.id}::${parameter.name}`, existing.find((entry) => entry.name === parameter.name)?.value || ''])));
-    setEquipment(resultInfo.result?.equipment || 'Sysmex XN-550');
-    setTechnicianNotes(resultInfo.result?.internalNotes || '');
-    setReportText(resultInfo.result?.reportText || '');
-    setImportedFiles(existingFilesForTest);
-    setFileMessage('');
-  }, [order?.id, testItem?.id, open]);
-
-  if (!testItem || !order) return null;
-
-  async function handleFileImport(event) {
-    const selectedFiles = Array.from(event.target.files || []);
-    if (!selectedFiles.length) return;
-    const nextFiles = [];
-    const rejected = [];
-    for (const file of selectedFiles) {
-      if (!isAllowedResultFile(file)) {
-        rejected.push(`${file.name} is not a supported PDF/Word/document file.`);
-        continue;
-      }
-      if (file.size > RESULT_FILE_MAX_BYTES) {
-        rejected.push(`${file.name} is larger than ${formatFileSize(RESULT_FILE_MAX_BYTES)}.`);
-        continue;
-      }
-      let dataUrl = '';
-      let note = '';
-      if (file.size <= RESULT_FILE_INLINE_BYTES) {
-        try {
-          dataUrl = await fileToDataUrl(file);
-        } catch {
-          note = 'Preview could not be stored, but file metadata is attached.';
-        }
-      } else {
-        note = 'Large file registered as metadata in demo storage. Backend upload endpoint can store file bytes in production.';
-      }
-      nextFiles.push({
-        id: `LAB-FILE-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        name: file.name,
-        fileName: file.name,
-        type: file.type || 'application/octet-stream',
-        fileType: file.type || 'application/octet-stream',
-        size: file.size,
-        fileSize: file.size,
-        uploadedAt: new Date().toISOString(),
-        uploadedBy: 'Lab Staff',
-        source: 'Imported lab result document',
-        testId: testItem.id,
-        testName: testItem.name,
-        dataUrl,
-        note
-      });
-    }
-    if (nextFiles.length) {
-      setImportedFiles((files) => [...files, ...nextFiles]);
-      setFileMessage(`${nextFiles.length} result document(s) attached to ${testItem.name}.`);
-    } else {
-      setFileMessage('No supported result documents were attached.');
-    }
-    if (rejected.length) setFileMessage(`${nextFiles.length} attached. ${rejected.join(' ')}`);
-    event.target.value = '';
-  }
-
-  function removeImportedFile(fileId) {
-    setImportedFiles((files) => files.filter((file) => file.id !== fileId));
-  }
-
-  const save = (mode) => {
-    dispatch({ type: 'ENTER_TEST_RESULT', payload: { orderId: order.id, testId: testItem.id, values, equipment, technicianNotes, reportText, files: importedFiles, mode } });
-    onClose();
-  };
   return (
-    <Modal open={open} onClose={onClose} title={`Enter results · ${testItem.name}`} description="Save drafts while working, then submit completed values for senior review/sign-off.">
-      <div className="space-y-4">
-        <div className="rounded-2xl border border-clinical-100 bg-clinical-50/60 p-3 text-xs font-semibold leading-5 text-clinical-800">
-          Sample {sample?.id || '—'} · Reference ranges and live flags are shown beside every parameter.
-        </div>
-        {(testItem.parameters || []).length === 0 ? (
-          <div className="rounded-2xl bg-amber-50 p-4 text-sm font-semibold text-amber-800">No editable reference-range parameters are defined for this test. Ask Admin to add parameters under Settings before final reporting.</div>
-        ) : (testItem.parameters || []).map((parameter) => {
-          const key = `${testItem.id}::${parameter.name}`;
-          const value = values[key] || '';
-          const flag = value === '' ? 'Pending' : computeResultFlag(value, parameter.low, parameter.high, parameter.criticalLow, parameter.criticalHigh);
-          const flagClass = flag === 'Normal' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : flag === 'High' || flag === 'Low' ? 'bg-amber-50 text-amber-700 border-amber-200' : flag === 'Critical' ? 'bg-rose-600 text-white border-rose-600' : 'bg-slate-50 text-slate-500 border-slate-200';
-          return (
-            <div key={key} className="rounded-2xl border border-slate-200 bg-white p-3">
-              <div className="grid gap-3 md:grid-cols-[1.15fr_1fr_120px_140px] md:items-center">
-                <div>
-                  <p className="font-black text-slate-950">{parameter.name}</p>
-                  <p className="text-xs font-semibold text-slate-500">Unit: {parameter.unit || '—'}</p>
-                </div>
-                <div className="rounded-2xl bg-slate-50 px-3 py-2">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Reference Range</p>
-                  <p className="mt-1 text-sm font-black text-slate-800">{parameter.referenceRange || 'No displayed range'}</p>
-                  <p className="mt-1 text-[11px] font-semibold text-slate-500">
-                    Low: {parameter.low ?? '—'} · High: {parameter.high ?? '—'}
-                    {parameter.criticalLow !== undefined && parameter.criticalLow !== '' ? ` · Critical low: ${parameter.criticalLow}` : ''}
-                    {parameter.criticalHigh !== undefined && parameter.criticalHigh !== '' ? ` · Critical high: ${parameter.criticalHigh}` : ''}
-                  </p>
-                </div>
-                <input className={inputClass} value={value} onChange={(event) => setValues({ ...values, [key]: event.target.value })} placeholder="Value" />
-                <div className={`rounded-full border px-3 py-2 text-center text-xs font-black ${flagClass}`}>{flag}</div>
-              </div>
+    <article className="getlabs-lab-card rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-clinical-200 hover:bg-slate-50/70">
+      <div className="grid gap-3 xl:grid-cols-[minmax(230px,1fr)_minmax(190px,0.62fr)_minmax(150px,0.45fr)_minmax(160px,0.48fr)_minmax(250px,0.8fr)]">
+        <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+          <div className="flex items-center gap-2">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-clinical-50 text-clinical-700">
+              <UserRound className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-base font-black text-slate-950">{row.order?.patient?.fullName}</p>
+              <p className="mt-0.5 text-sm font-semibold text-slate-500">{row.order?.patient?.id} · {row.order?.patient?.phone || 'No phone'}</p>
             </div>
-          );
-        })}
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField label="Analyzer / Equipment"><select className={inputClass} value={equipment} onChange={(event) => setEquipment(event.target.value)}>{(data.labAnalyzers || []).map((item) => <option key={item}>{item}</option>)}</select></FormField>
-          <FormField label="Report Comment"><input className={inputClass} value={reportText} onChange={(event) => setReportText(event.target.value)} placeholder="Optional report comment" /></FormField>
-        </div>
-        <div className="rounded-3xl border border-dashed border-clinical-200 bg-clinical-50/40 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <div className="flex items-center gap-2"><Paperclip className="h-4 w-4 text-clinical-700" /><p className="text-sm font-black text-slate-950">Import result PDF or document</p></div>
-              <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">Attach external analyzer reports, referral lab PDFs, Word documents, text reports, or scanned result documents to this patient result entry.</p>
-              <p className="mt-1 text-[11px] font-semibold text-slate-500">Supported: PDF, DOC, DOCX, TXT, RTF · max {formatFileSize(RESULT_FILE_MAX_BYTES)} per file.</p>
-            </div>
-            <Button variant="secondary" onClick={() => fileInputRef.current?.click()}><UploadCloud className="h-4 w-4" /> Import File</Button>
           </div>
-          <input ref={fileInputRef} className="hidden" type="file" multiple accept={RESULT_FILE_ACCEPT} onChange={handleFileImport} />
-          {fileMessage && <div className="mt-3 rounded-2xl bg-white/80 p-3 text-xs font-semibold text-slate-600">{fileMessage}</div>}
-          <div className="mt-3">
-            <ResultFileList files={importedFiles} onRemove={removeImportedFile} />
-            {!importedFiles.length && <div className="rounded-2xl bg-white/70 p-3 text-xs font-semibold text-slate-500"><FileCheck2 className="mb-1 h-4 w-4 text-slate-400" /> No imported result document attached yet.</div>}
-          </div>
+          <p className="mt-3 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Order ID</p>
+          <p className="mt-0.5 break-words text-sm font-black text-slate-900">{row.order?.id}</p>
         </div>
-        <FormField label="Internal Technician Notes"><textarea className={`${inputClass} min-h-24`} value={technicianNotes} onChange={(event) => setTechnicianNotes(event.target.value)} placeholder="Internal review notes, not visible on patient report." /></FormField>
-        <div className="grid gap-2 sm:flex sm:flex-wrap sm:justify-end [&_button]:w-full sm:[&_button]:w-auto"><Button variant="secondary" onClick={onClose}>Cancel</Button><Button variant="secondary" onClick={() => save('draft')}><Save className="h-4 w-4" /> Save Draft</Button><Button onClick={() => save('review')}><Send className="h-4 w-4" /> Submit for Review</Button></div>
+
+        <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Time</p>
+          <p className="mt-2 text-sm font-black leading-6 text-slate-900">{formatDateTime(acceptedTime)}</p>
+          <p className="mt-1 text-xs font-semibold text-slate-500">Accepted for result entry</p>
+        </div>
+
+        <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Priority</p>
+          <div className="mt-3"><StatusBadge status={row.order?.urgency || 'Routine'} /></div>
+        </div>
+
+        <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Result</p>
+          <div className="mt-3"><StatusBadge status={resultStatus} /></div>
+        </div>
+
+        <div className="min-w-0 space-y-3">
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Clinician / Hospital</p>
+            <p className="mt-1 truncate font-black text-slate-900">{row.order?.doctor?.name}</p>
+            <p className="truncate text-sm text-slate-500">{row.order?.hospital?.name}</p>
+          </div>
+          <Button disabled={finalised} onClick={() => onOpen(row)} className="w-full justify-center whitespace-nowrap">
+            <FileText className="h-4 w-4" /> {finalised ? 'Sent' : 'Enter Results'}
+          </Button>
+        </div>
       </div>
-    </Modal>
+    </article>
+  );
+}
+
+function TestResultModal({ test, values, files, onChange, onFileSelection, onRemoveFile, onClose, onSave }) {
+  if (!test) return null;
+  const parameters = parametersForItem(test);
+  const testFiles = files.filter((file) => file.testId === test.id);
+  const canSave = parameters.every((parameter) => String(values[valueKey(test.id, parameter)] || '').trim());
+
+  return (
+    <div className="getlabs-modal-overlay fixed inset-0 z-[300] flex items-center justify-center bg-slate-950/40 px-4 py-6 backdrop-blur-sm">
+      <div className="getlabs-modal-panel max-h-[92vh] w-full max-w-3xl overflow-hidden rounded-[2rem] bg-white shadow-2xl" role="dialog" aria-modal="true">
+        <div className="getlabs-modal-header flex flex-col gap-4 border-b border-slate-200 p-5 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-clinical-700">Enter test result</p>
+            <h3 className="mt-1 text-2xl font-black text-slate-950">{test.name}</h3>
+            <p className="mt-1 text-sm text-slate-500">Fill the result fields for this test only. When saved, this test will be marked as completed.</p>
+          </div>
+          <button type="button" onClick={onClose} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50" aria-label="Close result entry popup">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="max-h-[calc(92vh-170px)] overflow-y-auto p-5">
+          <div className="space-y-3">
+            {parameters.map((parameter) => (
+              <label key={valueKey(test.id, parameter)} className="block rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <span className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{parameter.name}</span>
+                <input
+                  className={`${inputClass} mt-2 bg-white`}
+                  value={values[valueKey(test.id, parameter)] || ''}
+                  onChange={(event) => onChange(test.id, parameter, event.target.value)}
+                  placeholder="Enter value"
+                />
+                <span className="mt-2 block text-xs font-semibold text-slate-500">
+                  {parameter.unit ? `Unit: ${parameter.unit}` : 'No unit'}{parameter.referenceRange ? ` · Ref: ${parameter.referenceRange}` : ''}
+                </span>
+              </label>
+            ))}
+          </div>
+
+          <div className="mt-4 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Add result document</p>
+                <p className="mt-1 text-sm font-semibold text-slate-600">Attach a PDF, Word document, spreadsheet, or image for this specific test.</p>
+              </div>
+              <label htmlFor={`test-file-upload-${test.id}`} className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800">
+                <UploadCloud className="h-4 w-4" /> Add Document
+              </label>
+              <input
+                id={`test-file-upload-${test.id}`}
+                className="sr-only"
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                onChange={(event) => onFileSelection(event, test)}
+              />
+            </div>
+
+            {testFiles.length > 0 && (
+              <div className="mt-4 space-y-2">
+                {testFiles.map((file) => (
+                  <div key={file.id} className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-3 text-sm shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <FileText className="h-4 w-4 shrink-0 text-clinical-600" />
+                      <div className="min-w-0">
+                        <p className="truncate font-black text-slate-800">{file.name || file.fileName}</p>
+                        <p className="text-xs font-semibold text-slate-500">{formatFileSize(file.size || file.fileSize)} · Attached to {test.name}</p>
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => onRemoveFile(file.id)} className="self-start rounded-full border border-slate-200 px-3 py-1 text-xs font-black text-slate-500 hover:border-rose-200 hover:text-rose-600 sm:self-auto" aria-label="Remove attached document">Remove</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="getlabs-modal-footer flex flex-col gap-3 border-t border-slate-200 bg-slate-50 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-semibold text-slate-500">All fields in this popup must be completed before the test is marked completed.</p>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button variant="secondary" className="justify-center" onClick={onClose}>Cancel</Button>
+            <Button disabled={!canSave} className="justify-center" onClick={() => onSave(test)}><CheckCircle2 className="h-4 w-4" /> Done with Test</Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
 export function AcceptedSamplesPage() {
   const { state, dispatch } = useAppStore();
   const data = state.data;
-  const [query, setQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [activeOrderId, setActiveOrderId] = useState(state.ui.activeAcceptedSampleOrderId || '');
-  const [entryTestId, setEntryTestId] = useState('');
   const labOrders = useMemo(() => getLabOrders(data), [data]);
-  const accepted = (data.sampleLogs || []).filter((sample) => sample.status === 'Accepted').map((sample) => {
-    const order = labOrders.find((item) => item.id === sample.orderId);
-    return { ...sample, order, patient: order?.patient, doctor: order?.doctor, hospital: order?.hospital };
-  }).filter((row) => row.order);
-  const rows = accepted.filter((row) => {
-    const q = query.trim().toLowerCase();
-    const rowTests = getLabCatalogItems(row.order, data.catalog || []);
-    const testStatuses = rowTests.map((test) => getTestStatus(data, row.orderId, test.id));
-    const matchesStatus = !statusFilter || testStatuses.some((item) => statusMatchesFilter(item, statusFilter));
-    const matchesQuery = !q || [row.id, row.orderId, row.patient?.fullName, row.patient?.id, row.doctor?.name, rowTests.map((test) => test.name).join(' ')].filter(Boolean).some((value) => String(value).toLowerCase().includes(q));
-    return matchesStatus && matchesQuery;
-  });
-  const activeOrder = labOrders.find((order) => order.id === activeOrderId) || rows[0]?.order;
-  const activeSample = accepted.find((sample) => sample.orderId === activeOrder?.id);
-  const activeTests = activeOrder ? getLabCatalogItems(activeOrder, data.catalog || []) : [];
-  const entryTest = activeTests.find((test) => test.id === entryTestId);
-  const draftCount = activeTests.filter((test) => getTestStatus(data, activeOrder?.id, test.id) === 'Draft').length;
-  const pendingReviewCount = activeTests.filter((test) => getTestStatus(data, activeOrder?.id, test.id) === 'Pending Review').length;
-  const completedCount = activeTests.filter((test) => ['Final / Released', 'Completed'].includes(getTestStatus(data, activeOrder?.id, test.id))).length;
+  const [query, setQuery] = useState('');
+  const [workspace, setWorkspace] = useState(state.ui.activeAcceptedSampleOrderId ? 'patient' : 'list');
+  const [activeOrderId, setActiveOrderId] = useState(state.ui.activeAcceptedSampleOrderId || '');
+  const [values, setValues] = useState({});
+  const [completedTests, setCompletedTests] = useState({});
+  const [activeTestId, setActiveTestId] = useState('');
+  const [equipment, setEquipment] = useState('');
+  const [technicianNotes, setTechnicianNotes] = useState('');
+  const [reportText, setReportText] = useState('');
+  const [files, setFiles] = useState([]);
+
+  const rows = useMemo(() => (data.sampleLogs || [])
+    .filter((sample) => sample.status === 'Accepted')
+    .map((sample) => {
+      const order = labOrders.find((item) => item.id === sample.orderId);
+      return { sample, order, result: resultForOrder(data, sample.orderId), catalog: data.catalog || [], labItems: order ? labItemsForOrder(data, order, sample) : [] };
+    })
+    .filter((row) => row.order)
+    .sort((a, b) => new Date(b.sample.acceptedAt || b.sample.collectedAt || 0) - new Date(a.sample.acceptedAt || a.sample.collectedAt || 0)), [data, labOrders]);
+
+  const pendingRows = rows.filter((row) => row.result?.status !== 'Final / Released');
+  const filteredRows = pendingRows.filter((row) => matchesSample(row, query));
+  const activeRow = rows.find((row) => row.order?.id === activeOrderId) || null;
+  const activeItems = activeRow ? activeRow.labItems : [];
+  const activeTest = activeItems.find((item) => item.id === activeTestId) || null;
+  const existingResult = activeRow?.result;
+  const completedCount = activeItems.filter((item) => completedTests[item.id]).length;
+  const allComplete = activeItems.length > 0 && completedCount === activeItems.length;
+  const urgentRows = pendingRows.filter((row) => row.order?.urgency === 'Urgent').length;
+
+  const openPatientWorkspace = (row) => {
+    const nextValues = {};
+    const nextCompleted = {};
+    const items = row.labItems || labItemsForOrder(data, row.order, row.sample);
+    items.forEach((item) => {
+      parametersForItem(item).forEach((parameter) => {
+        nextValues[valueKey(item.id, parameter)] = getExistingValue(row.result, item.id, parameter);
+      });
+      nextCompleted[item.id] = isTestComplete(item.id, item, nextValues);
+    });
+    setActiveOrderId(row.order.id);
+    setValues(nextValues);
+    setCompletedTests(nextCompleted);
+    setEquipment(row.result?.equipment || '');
+    setTechnicianNotes(row.result?.internalNotes || '');
+    setReportText(row.result?.reportText || '');
+    setFiles(row.result?.files || []);
+    setActiveTestId('');
+    setWorkspace('patient');
+  };
+
+  const backToList = () => {
+    setWorkspace('list');
+    setActiveOrderId('');
+    setActiveTestId('');
+  };
+
+  const openTestPopup = (test) => {
+    setActiveTestId(test.id);
+  };
+
+  const closeTestPopup = () => {
+    setActiveTestId('');
+  };
+
+  const updateValue = (testId, parameter, value) => {
+    setValues((current) => ({ ...current, [valueKey(testId, parameter)]: value }));
+    setCompletedTests((current) => ({ ...current, [testId]: false }));
+  };
+
+  const saveTestResult = (test) => {
+    setCompletedTests((current) => ({ ...current, [test.id]: true }));
+    setActiveTestId('');
+  };
+
+  const handleFileSelection = async (event, test) => {
+    const rawFiles = Array.from(event.target.files || []);
+    const selectedFiles = await Promise.all(rawFiles.map(async (file, index) => ({
+      id: `LAB-UPLOAD-${Date.now()}-${index}`,
+      name: file.name,
+      fileName: file.name,
+      type: file.type || 'application/octet-stream',
+      fileType: file.type || 'application/octet-stream',
+      size: file.size,
+      fileSize: file.size,
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: state.auth?.userName || 'Lab Staff',
+      source: 'Accepted Samples per-test result document upload',
+      testId: test.id,
+      testName: test.name,
+      dataUrl: await readFileAsDataUrl(file)
+    })));
+    if (selectedFiles.length) {
+      setFiles((current) => [...current, ...selectedFiles]);
+    }
+    event.target.value = '';
+  };
+
+  const removeFile = (fileId) => {
+    setFiles((current) => current.filter((file) => file.id !== fileId));
+  };
+
+  const buildParameters = () => activeItems.flatMap((item) => parametersForItem(item).map((parameter) => ({
+    testId: item.id,
+    testName: item.name,
+    id: parameter.id,
+    name: parameter.name,
+    value: values[valueKey(item.id, parameter)] || '',
+    unit: parameter.unit,
+    referenceRange: parameter.referenceRange,
+    low: parameter.low,
+    high: parameter.high,
+    criticalLow: parameter.criticalLow,
+    criticalHigh: parameter.criticalHigh
+  })));
+
+  const pushToClinician = () => {
+    if (!activeRow || !allComplete) return;
+    dispatch({
+      type: 'PUSH_LAB_RESULT_TO_CLINICIAN',
+      payload: {
+        orderId: activeRow.order.id,
+        parameters: buildParameters(),
+        equipment,
+        technicianNotes,
+        reportText,
+        files
+      }
+    });
+  };
+
+  const currentStep = activeTest ? 3 : (allComplete ? 4 : 2);
 
   return (
-    <div className="space-y-6">
-      <PageHeader eyebrow="Laboratory · Accepted Samples" title="Accepted Samples" description="Search accepted samples, open the patient sample window, save result drafts, and submit completed tests to the review/sign-off queue." />
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card title="Accepted" subtitle={String(accepted.length)} />
-        <Card title="Drafts" subtitle={String(draftCount)} />
-        <Card title="Pending review" subtitle={String(pendingReviewCount)} />
-        <Card title="Released" subtitle={String(completedCount)} />
-      </div>
-      <div className="grid gap-6 xl:grid-cols-[1fr_1.2fr]">
-        <Card title="Accepted sample search" subtitle="Search by patient, sample ID, order ID, doctor, or lab test.">
-          <div className="mb-4 grid gap-3 md:grid-cols-[1fr_190px]">
+    <div className="getlabs-page space-y-6">
+      <PageHeader
+        eyebrow="Laboratory · Result Entry"
+        title="Accepted Samples"
+        description="Search accepted patients, open the patient's tests, enter each result, then push completed results directly to the clinician."
+      />
+
+      {workspace === 'list' && (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Accepted Patients" value={pendingRows.length} icon={CheckCircle2} tone="blue" />
+          <MetricCard label="Awaiting Entry" value={pendingRows.length} icon={ClipboardList} tone="yellow" />
+          <MetricCard label="Urgent" value={urgentRows} icon={ClipboardList} tone="red" />
+          <MetricCard label="Sent Results" value={rows.length - pendingRows.length} icon={Send} tone="green" />
+        </div>
+      )}
+
+      {workspace !== 'list' && <LabResultWorkflow currentStep={currentStep} />}
+
+      {workspace === 'list' && (
+        <Card>
+          <div className="space-y-4">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
-              <input className={`${inputClass} pl-9`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search accepted patients..." />
+              <input className={`${inputClass} pl-9`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search patient name, patient ID, order ID, sample ID, or test..." />
             </div>
-            <select className={inputClass} value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="">All result states</option><option>Pending</option><option>Draft</option><option>Pending Review</option><option>Completed</option></select>
+            <div className="space-y-3">
+              {filteredRows.length ? filteredRows.map((row) => (
+                <AcceptedPatientCard key={row.sample.id} row={row} onOpen={openPatientWorkspace} />
+              )) : (
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                  <p className="font-black text-slate-900">No accepted patients are waiting for result entry.</p>
+                  <p className="mt-2 text-sm text-slate-500">Accepted samples appear here after they are completed in the Lab Queue.</p>
+                </div>
+              )}
+            </div>
           </div>
-          <DataTable
-            columns={[
-              { key: 'patient', label: 'Patient', render: (row) => <div><p className="font-black text-slate-950">{row.patient?.fullName}</p><p className="text-xs text-slate-400">{row.patient?.id}</p></div> },
-              { key: 'id', label: 'Sample ID', render: (row) => <span className="font-black text-slate-950">{row.id}</span> },
-              { key: 'orderId', label: 'Order' },
-              { key: 'status', label: 'Status', render: () => <StatusBadge status="Accepted" /> },
-              { key: 'actions', label: 'Action', render: (row) => <Button onClick={() => { setActiveOrderId(row.orderId); dispatch({ type: 'OPEN_ACCEPTED_SAMPLE', orderId: row.orderId }); }}><ClipboardCheck className="h-4 w-4" /> Open</Button> }
-            ]}
-            rows={rows}
-            emptyMessage="No accepted samples match your search."
-          />
         </Card>
-        <Card title="Patient sample window" subtitle="Each requested test has its own draft/result entry action.">
-          {!activeOrder ? <p className="text-sm text-slate-500">Select an accepted sample to begin.</p> : (
-            <div className="space-y-5">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Patient</p><p className="font-black text-slate-950">{activeOrder.patient?.fullName}</p><p className="text-sm text-slate-500">{activeOrder.patient?.id} · {activeOrder.patient?.phone}</p></div>
-                <div className="rounded-2xl bg-slate-50 p-3"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Order / Sample</p><p className="font-black text-slate-950">{activeOrder.id}</p><p className="text-sm text-slate-500">{activeSample?.id || '—'} · {formatDateTime(activeOrder.createdAt)}</p></div>
-              </div>
-              {activeSample && <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => { openSampleLabel(activeSample, activeOrder); dispatch({ type: 'PRINT_SAMPLE_LABEL', sampleId: activeSample.id }); }}><Printer className="h-4 w-4" /> Print Sample Label</Button><Button variant="secondary" onClick={() => dispatch({ type: 'NAVIGATE', pageId: 'lab-review' })}>Open Review Queue</Button></div>}
-              <div className="space-y-3">
-                {activeTests.map((test) => {
-                  const resultInfo = getResultForTest(data, activeOrder.id, test.id);
-                  const status = getTestStatus(data, activeOrder.id, test.id);
-                  const attachmentCount = (resultInfo.result?.files || []).filter((file) => !file.testId || file.testId === test.id).length;
-                  return (
-                    <div key={test.id} className="rounded-2xl border border-slate-200 p-4">
-                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                        <div><p className="font-black text-slate-950">{test.name}</p><p className="text-sm text-slate-500">{test.id} · {test.parameters?.length || 0} parameter(s){attachmentCount ? ` · ${attachmentCount} imported file(s)` : ''}</p></div>
-                        <div className="flex flex-wrap items-center gap-2"><StatusBadge status={status} /><Button disabled={status === 'Final / Released'} onClick={() => setEntryTestId(test.id)}><Edit3 className="h-4 w-4" /> {resultInfo.parameters.length ? 'Edit / View Entry' : 'Enter Results'}</Button></div>
-                      </div>
-                      <div className="mt-3 grid gap-2 md:grid-cols-2">
-                        {(test.parameters || []).slice(0, 4).map((parameter) => <div key={parameter.name} className="rounded-xl bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600"><span className="font-black text-slate-800">{parameter.name}</span> · {parameter.referenceRange || 'No range'} {parameter.unit ? `· ${parameter.unit}` : ''}</div>)}
-                      </div>
-                      {attachmentCount > 0 && <div className="mt-3 flex items-center gap-2 rounded-2xl bg-clinical-50 px-3 py-2 text-xs font-black text-clinical-800"><Paperclip className="h-4 w-4" /> {attachmentCount} imported result document(s) attached</div>}
-                    </div>
-                  );
-                })}
-              </div>
+      )}
+
+      {workspace === 'patient' && (
+        <Card>
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+              <Button variant="secondary" onClick={backToList}><ArrowLeft className="h-4 w-4" /> Back to Accepted Patients</Button>
+              <p className="text-sm font-black text-slate-700">{completedCount} of {activeItems.length} test(s) completed</p>
             </div>
-          )}
+
+            {!activeRow ? (
+              <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                <p className="font-black text-slate-900">No accepted patient selected.</p>
+                <p className="mt-2 text-sm text-slate-500">Go back and choose a patient before entering results.</p>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                <div className="grid gap-3 lg:grid-cols-4">
+                  <div className="rounded-2xl bg-slate-50 p-4"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Patient</p><p className="mt-1 font-black text-slate-950">{activeRow.order.patient?.fullName}</p><p className="text-sm text-slate-500">{activeRow.order.patient?.id} · {activeRow.order.patient?.phone}</p></div>
+                  <div className="rounded-2xl bg-slate-50 p-4"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Order / Sample</p><p className="mt-1 font-black text-slate-950">{activeRow.order.id}</p><p className="text-sm text-slate-500">{activeRow.sample.id}</p></div>
+                  <div className="rounded-2xl bg-slate-50 p-4"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Clinician</p><p className="mt-1 font-black text-slate-950">{activeRow.order.doctor?.name}</p><p className="text-sm text-slate-500">{activeRow.order.hospital?.name}</p></div>
+                  <div className="rounded-2xl bg-slate-50 p-4"><p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Accepted Time</p><p className="mt-1 font-black text-slate-950">{formatDateTime(activeRow.sample.acceptedAt || activeRow.sample.collectedAt)}</p><div className="mt-2"><StatusBadge status={activeRow.order.urgency || 'Routine'} /></div></div>
+                </div>
+
+                <div className="getlabs-lab-card rounded-3xl border border-slate-200 bg-white p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="font-black text-slate-950"><ListChecks className="mr-2 inline h-5 w-5 text-clinical-600" />Patient laboratory tests</p>
+                      <p className="mt-1 text-sm text-slate-500">Click a test to enter its results. Completed tests are marked automatically.</p>
+                    </div>
+                    <StatusBadge status={allComplete ? 'All Tests Completed' : 'Result Entry In Progress'} />
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {activeItems.map((item) => {
+                      const complete = completedTests[item.id];
+                      const fieldCount = parametersForItem(item).length;
+                      return (
+                        <div key={item.id} className="getlabs-lab-card grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-[1fr_auto] md:items-center">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-black text-slate-950"><FlaskConical className="mr-2 inline h-4 w-4 text-clinical-600" />{item.name}</p>
+                              <StatusBadge status={complete ? 'Completed' : 'Not Completed'} />
+                            </div>
+                            <p className="mt-1 text-sm text-slate-500">{fieldCount} result field{fieldCount === 1 ? '' : 's'} to complete.</p>
+                          </div>
+                          <div className="flex justify-end">
+                            <Button onClick={() => openTestPopup(item)} className="whitespace-nowrap">
+                              <FileText className="h-4 w-4" /> {complete ? 'Edit Result' : 'Enter Result'}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+                  <label className="block rounded-3xl border border-slate-200 p-4">
+                    <span className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Equipment / Analyzer</span>
+                    <input className={`${inputClass} mt-3`} value={equipment} onChange={(event) => setEquipment(event.target.value)} placeholder="e.g. Sysmex XN-1000" />
+                  </label>
+                  <label className="block rounded-3xl border border-slate-200 p-4">
+                    <span className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Report summary for clinician</span>
+                    <textarea className={`${inputClass} mt-3 min-h-[92px]`} value={reportText} onChange={(event) => setReportText(event.target.value)} placeholder="Add result interpretation, summary, or lab comments..." />
+                  </label>
+                </div>
+
+                <label className="block rounded-3xl border border-slate-200 p-4">
+                  <span className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Internal laboratory notes</span>
+                  <textarea className={`${inputClass} mt-3 min-h-[90px]`} value={technicianNotes} onChange={(event) => setTechnicianNotes(event.target.value)} placeholder="Internal notes, analyzer remarks, quality-control comments..." />
+                </label>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                  <div>
+                    <p className="font-black text-slate-950">{completedCount} of {activeItems.length} test(s) completed</p>
+                    <p className="text-sm text-slate-500">Complete every test before pushing the result to the clinician.</p>
+                  </div>
+                  <Button disabled={!allComplete} onClick={pushToClinician}><Send className="h-4 w-4" /> Push Results to Clinician</Button>
+                </div>
+              </div>
+            )}
+          </div>
         </Card>
-      </div>
-      <ResultEntryModal open={Boolean(entryTestId)} onClose={() => setEntryTestId('')} order={activeOrder} sample={activeSample} testItem={entryTest} data={data} dispatch={dispatch} />
+      )}
+
+      <TestResultModal
+        test={activeTest}
+        values={values}
+        files={files}
+        onChange={updateValue}
+        onFileSelection={handleFileSelection}
+        onRemoveFile={removeFile}
+        onClose={closeTestPopup}
+        onSave={saveTestResult}
+      />
     </div>
   );
 }
