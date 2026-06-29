@@ -1,7 +1,21 @@
-const CACHE_VERSION = 'diagnosis-center-phase9-v1';
+// Resolve every cached/served path relative to the service worker's own scope so
+// the app works whether it is served from the domain root or a GitHub Pages
+// subpath (e.g. https://user.github.io/frontend/). `new URL('./', self.location)`
+// yields the directory the SW is registered under ("/frontend/" or "/").
+const BASE_PATH = new URL('./', self.location).pathname;
+
+const CACHE_VERSION = 'diagnosis-center-phase9-v2';
 const APP_SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
-const APP_SHELL_URLS = ['/', '/index.html', '/offline.html', '/manifest.webmanifest', '/icons/icon.svg'];
+const INDEX_URL = `${BASE_PATH}index.html`;
+const OFFLINE_URL = `${BASE_PATH}offline.html`;
+const APP_SHELL_URLS = [
+  BASE_PATH,
+  INDEX_URL,
+  OFFLINE_URL,
+  `${BASE_PATH}manifest.webmanifest`,
+  `${BASE_PATH}icons/icon.svg`
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -38,11 +52,11 @@ function networkFirstNavigation(request) {
     .then((response) => {
       if (canCacheResponse(response)) {
         const copy = response.clone();
-        caches.open(APP_SHELL_CACHE).then((cache) => cache.put('/index.html', copy));
+        caches.open(APP_SHELL_CACHE).then((cache) => cache.put(INDEX_URL, copy));
       }
       return response;
     })
-    .catch(() => caches.match('/index.html').then((cached) => cached || caches.match('/offline.html')));
+    .catch(() => caches.match(INDEX_URL).then((cached) => cached || caches.match(OFFLINE_URL)));
 }
 
 function cacheFirstAsset(request) {
@@ -63,14 +77,14 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith('/api/')) return;
+  if (url.pathname.startsWith(`${BASE_PATH}api/`)) return;
 
   if (isNavigationRequest(request)) {
     event.respondWith(networkFirstNavigation(request));
     return;
   }
 
-  if (url.pathname.startsWith('/assets/') || url.pathname.endsWith('.webmanifest') || url.pathname.endsWith('.svg') || url.pathname.endsWith('.ico')) {
+  if (url.pathname.startsWith(`${BASE_PATH}assets/`) || url.pathname.endsWith('.webmanifest') || url.pathname.endsWith('.svg') || url.pathname.endsWith('.ico')) {
     event.respondWith(cacheFirstAsset(request));
   }
 });

@@ -1,4 +1,7 @@
-const SERVICE_WORKER_URL = '/sw.js';
+// Resolve the service worker relative to the app's deploy base so it works both
+// at the domain root and under a GitHub Pages subpath (e.g. /frontend/).
+// import.meta.env.BASE_URL reflects the Vite `base` config.
+const SERVICE_WORKER_URL = `${import.meta.env.BASE_URL}sw.js`;
 
 function shouldRegisterServiceWorker() {
   if (typeof window === 'undefined') return false;

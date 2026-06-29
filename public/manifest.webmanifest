@@ -2,8 +2,8 @@
   "name": "Diagnosis Center Platform",
   "short_name": "Diagnosis Center",
   "description": "Mobile-ready order, billing, laboratory, imaging, and results workflow platform.",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#f8fbff",
@@ -11,7 +11,7 @@
   "categories": ["medical", "productivity", "business"],
   "icons": [
     {
-      "src": "/icons/icon.svg",
+      "src": "./icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
@@ -21,13 +21,13 @@
     {
       "name": "Open Dashboard",
       "short_name": "Dashboard",
-      "url": "/#/overview",
+      "url": "./#/overview",
       "description": "Return to the main dashboard."
     },
     {
       "name": "Verify Report",
       "short_name": "Verify",
-      "url": "/#/verify-report/demo",
+      "url": "./#/verify-report/demo",
       "description": "Open the report verification screen."
     }
   ]
