@@ -1,54 +1,60 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { useAppStore } from '../store/AppStore';
 import { canAccessPage } from '../utils/permissions';
-import { OverviewPage } from '../pages/dashboards/OverviewPage';
-import { RoleDashboard } from '../pages/dashboards/RoleDashboard';
-import { PlaceholderPage } from '../pages/PlaceholderPage';
-import { AccessRestrictedPage } from '../pages/auth/AccessRestrictedPage';
-import { OrderRegistryPage } from '../pages/core/OrderRegistryPage';
-import { PatientRecordsPage } from '../pages/core/PatientRecordsPage';
-import { DoctorPortalPage } from '../pages/doctor/DoctorPortalPage';
-import { DoctorNewOrderPage } from '../pages/doctor/DoctorNewOrderPage';
-import { DoctorResultsPage } from '../pages/doctor/DoctorResultsPage';
-import { DoctorActiveOrdersPage } from '../pages/doctor/DoctorActiveOrdersPage';
-import { DoctorCompletedOrdersPage } from '../pages/doctor/DoctorCompletedOrdersPage';
-import { DoctorPatientTrendsPage } from '../pages/doctor/DoctorPatientTrendsPage';
-import { AuditLogPage } from '../pages/admin/AuditLogPage';
-import { UserManagementPage } from '../pages/admin/UserManagementPage';
-import { HospitalsPage } from '../pages/admin/HospitalsPage';
-import { NotificationSettingsPage } from '../pages/admin/NotificationSettingsPage';
-import { AdminSettingsPage } from '../pages/admin/AdminSettingsPage';
-import { ReportsPage } from '../pages/admin/ReportsPage';
-import { ResultsDeliveryPage } from '../pages/results/ResultsDeliveryPage';
-import { SecurityReliabilityPage } from '../pages/security/SecurityReliabilityPage';
-import { LabQueuePage } from '../pages/lab/LabQueuePage';
-import { SampleLogPage } from '../pages/lab/SampleLogPage';
-import { LabAcceptPage } from '../pages/lab/LabAcceptPage';
-import { AcceptedSamplesPage } from '../pages/lab/AcceptedSamplesPage';
-import { LabReviewPage } from '../pages/lab/LabReviewPage';
-import { LabResultsPage } from '../pages/lab/LabResultsPage';
-import { LabRejectedSamplesPage } from '../pages/lab/LabRejectedSamplesPage';
-import { ScanQueuePage } from '../pages/scan/ScanQueuePage';
-import { ScanAcceptPage } from '../pages/scan/ScanAcceptPage';
-import { AcceptedScansPage } from '../pages/scan/AcceptedScansPage';
-import { ScanReviewPage } from '../pages/scan/ScanReviewPage';
-import { ScanRejectedPage } from '../pages/scan/ScanRejectedPage';
-import { EquipmentBookingPage } from '../pages/scan/EquipmentBookingPage';
-import { IncomingOrdersPage } from '../pages/reception/IncomingOrdersPage';
-import { PatientCheckInPage } from '../pages/reception/PatientCheckInPage';
-import { ReceptionWalkInsPage } from '../pages/reception/ReceptionWalkInsPage';
-import { AppointmentsPage } from '../pages/reception/AppointmentsPage';
-import { ReceptionDailyVisitsPage } from '../pages/reception/ReceptionDailyVisitsPage';
-import { ReceptionResultsInboxPage } from '../pages/reception/ReceptionResultsInboxPage';
-import { InvoicesPage } from '../pages/billing/InvoicesPage';
-import { PriceCatalogPage } from '../pages/billing/PriceCatalogPage';
-import { FinanceShiftPage } from '../pages/billing/FinanceShiftPage';
-import { FloatTrackerPage } from '../pages/billing/FloatTrackerPage';
-import { ExpensesPage } from '../pages/billing/ExpensesPage';
-import { AccountLedgerPage } from '../pages/billing/AccountLedgerPage';
-import { BillingAnalyticsPage } from '../pages/billing/BillingAnalyticsPage';
-import { ApiReadinessPage } from '../pages/system/ApiReadinessPage';
 import { PAGE_META } from './routeRegistry';
+
+// Lazy-load every page so each becomes its own chunk, split out of the main
+// bundle and fetched on demand. `lazyPage` adapts our named page exports to the
+// default-export shape React.lazy expects.
+const lazyPage = (loader, name) => lazy(() => loader().then((m) => ({ default: m[name] })));
+
+const OverviewPage = lazyPage(() => import('../pages/dashboards/OverviewPage'), 'OverviewPage');
+const RoleDashboard = lazyPage(() => import('../pages/dashboards/RoleDashboard'), 'RoleDashboard');
+const PlaceholderPage = lazyPage(() => import('../pages/PlaceholderPage'), 'PlaceholderPage');
+const AccessRestrictedPage = lazyPage(() => import('../pages/auth/AccessRestrictedPage'), 'AccessRestrictedPage');
+const OrderRegistryPage = lazyPage(() => import('../pages/core/OrderRegistryPage'), 'OrderRegistryPage');
+const PatientRecordsPage = lazyPage(() => import('../pages/core/PatientRecordsPage'), 'PatientRecordsPage');
+const DoctorPortalPage = lazyPage(() => import('../pages/doctor/DoctorPortalPage'), 'DoctorPortalPage');
+const DoctorNewOrderPage = lazyPage(() => import('../pages/doctor/DoctorNewOrderPage'), 'DoctorNewOrderPage');
+const DoctorResultsPage = lazyPage(() => import('../pages/doctor/DoctorResultsPage'), 'DoctorResultsPage');
+const DoctorActiveOrdersPage = lazyPage(() => import('../pages/doctor/DoctorActiveOrdersPage'), 'DoctorActiveOrdersPage');
+const DoctorCompletedOrdersPage = lazyPage(() => import('../pages/doctor/DoctorCompletedOrdersPage'), 'DoctorCompletedOrdersPage');
+const DoctorPatientTrendsPage = lazyPage(() => import('../pages/doctor/DoctorPatientTrendsPage'), 'DoctorPatientTrendsPage');
+const AuditLogPage = lazyPage(() => import('../pages/admin/AuditLogPage'), 'AuditLogPage');
+const UserManagementPage = lazyPage(() => import('../pages/admin/UserManagementPage'), 'UserManagementPage');
+const HospitalsPage = lazyPage(() => import('../pages/admin/HospitalsPage'), 'HospitalsPage');
+const NotificationSettingsPage = lazyPage(() => import('../pages/admin/NotificationSettingsPage'), 'NotificationSettingsPage');
+const AdminSettingsPage = lazyPage(() => import('../pages/admin/AdminSettingsPage'), 'AdminSettingsPage');
+const ReportsPage = lazyPage(() => import('../pages/admin/ReportsPage'), 'ReportsPage');
+const ResultsDeliveryPage = lazyPage(() => import('../pages/results/ResultsDeliveryPage'), 'ResultsDeliveryPage');
+const SecurityReliabilityPage = lazyPage(() => import('../pages/security/SecurityReliabilityPage'), 'SecurityReliabilityPage');
+const LabQueuePage = lazyPage(() => import('../pages/lab/LabQueuePage'), 'LabQueuePage');
+const SampleLogPage = lazyPage(() => import('../pages/lab/SampleLogPage'), 'SampleLogPage');
+const LabAcceptPage = lazyPage(() => import('../pages/lab/LabAcceptPage'), 'LabAcceptPage');
+const AcceptedSamplesPage = lazyPage(() => import('../pages/lab/AcceptedSamplesPage'), 'AcceptedSamplesPage');
+const LabReviewPage = lazyPage(() => import('../pages/lab/LabReviewPage'), 'LabReviewPage');
+const LabResultsPage = lazyPage(() => import('../pages/lab/LabResultsPage'), 'LabResultsPage');
+const LabRejectedSamplesPage = lazyPage(() => import('../pages/lab/LabRejectedSamplesPage'), 'LabRejectedSamplesPage');
+const ScanQueuePage = lazyPage(() => import('../pages/scan/ScanQueuePage'), 'ScanQueuePage');
+const ScanAcceptPage = lazyPage(() => import('../pages/scan/ScanAcceptPage'), 'ScanAcceptPage');
+const AcceptedScansPage = lazyPage(() => import('../pages/scan/AcceptedScansPage'), 'AcceptedScansPage');
+const ScanReviewPage = lazyPage(() => import('../pages/scan/ScanReviewPage'), 'ScanReviewPage');
+const ScanRejectedPage = lazyPage(() => import('../pages/scan/ScanRejectedPage'), 'ScanRejectedPage');
+const EquipmentBookingPage = lazyPage(() => import('../pages/scan/EquipmentBookingPage'), 'EquipmentBookingPage');
+const IncomingOrdersPage = lazyPage(() => import('../pages/reception/IncomingOrdersPage'), 'IncomingOrdersPage');
+const PatientCheckInPage = lazyPage(() => import('../pages/reception/PatientCheckInPage'), 'PatientCheckInPage');
+const ReceptionWalkInsPage = lazyPage(() => import('../pages/reception/ReceptionWalkInsPage'), 'ReceptionWalkInsPage');
+const AppointmentsPage = lazyPage(() => import('../pages/reception/AppointmentsPage'), 'AppointmentsPage');
+const ReceptionDailyVisitsPage = lazyPage(() => import('../pages/reception/ReceptionDailyVisitsPage'), 'ReceptionDailyVisitsPage');
+const ReceptionResultsInboxPage = lazyPage(() => import('../pages/reception/ReceptionResultsInboxPage'), 'ReceptionResultsInboxPage');
+const InvoicesPage = lazyPage(() => import('../pages/billing/InvoicesPage'), 'InvoicesPage');
+const PriceCatalogPage = lazyPage(() => import('../pages/billing/PriceCatalogPage'), 'PriceCatalogPage');
+const FinanceShiftPage = lazyPage(() => import('../pages/billing/FinanceShiftPage'), 'FinanceShiftPage');
+const FloatTrackerPage = lazyPage(() => import('../pages/billing/FloatTrackerPage'), 'FloatTrackerPage');
+const ExpensesPage = lazyPage(() => import('../pages/billing/ExpensesPage'), 'ExpensesPage');
+const AccountLedgerPage = lazyPage(() => import('../pages/billing/AccountLedgerPage'), 'AccountLedgerPage');
+const BillingAnalyticsPage = lazyPage(() => import('../pages/billing/BillingAnalyticsPage'), 'BillingAnalyticsPage');
+const ApiReadinessPage = lazyPage(() => import('../pages/system/ApiReadinessPage'), 'ApiReadinessPage');
 
 const roleDashboardMap = {
   'doctor-dashboard': 'doctor',
@@ -59,23 +65,15 @@ const roleDashboardMap = {
   'admin-dashboard': 'admin'
 };
 
-export function AppRouter() {
-  const { state } = useAppStore();
-  const pageId = state.currentPage || 'overview';
-  const role = state.auth?.role || 'admin';
+function PageFallback() {
+  return (
+    <div role="status" aria-live="polite" style={{ padding: '2rem', textAlign: 'center', color: '#475569', fontWeight: 600 }}>
+      Loading…
+    </div>
+  );
+}
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-    const main = document.getElementById('main-content');
-    if (main) {
-      main.scrollTop = 0;
-      main.scrollLeft = 0;
-      main.focus({ preventScroll: true });
-    }
-  }, [pageId]);
-
+function resolvePage(pageId, role) {
   if (!canAccessPage(role, pageId)) {
     return <AccessRestrictedPage pageId={pageId} />;
   }
@@ -134,4 +132,24 @@ export function AppRouter() {
   };
 
   return <PlaceholderPage {...meta} />;
+}
+
+export function AppRouter() {
+  const { state } = useAppStore();
+  const pageId = state.currentPage || 'overview';
+  const role = state.auth?.role || 'admin';
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    const main = document.getElementById('main-content');
+    if (main) {
+      main.scrollTop = 0;
+      main.scrollLeft = 0;
+      main.focus({ preventScroll: true });
+    }
+  }, [pageId]);
+
+  return <Suspense fallback={<PageFallback />}>{resolvePage(pageId, role)}</Suspense>;
 }

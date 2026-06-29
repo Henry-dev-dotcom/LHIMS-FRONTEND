@@ -42,6 +42,14 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          # Optional: define these as repo Actions Variables
+          # (Settings -> Secrets and variables -> Actions -> Variables) to point
+          # the hosted app at a live backend. Leave unset for self-contained
+          # mock/demo mode. The API must be served over HTTPS (mixed content is
+          # blocked on the HTTPS Pages site) and must allow CORS from the Pages origin.
+          VITE_API_MODE: ${{ vars.VITE_API_MODE }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
