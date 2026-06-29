@@ -9,6 +9,8 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    // Disabled for production: source maps would publish the full readable
+    // source on a public GitHub Pages site and add ~2.4 MB to the deploy.
+    sourcemap: false
   }
 });

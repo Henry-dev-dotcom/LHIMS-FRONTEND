@@ -1,8 +1,0 @@
-<!doctype html><html><body><script>
-const params = new URLSearchParams(location.search);
-const page = params.get('page') || 'overview';
-const role = params.get('role') || 'admin';
-const auth = { role, userName: 'QA Admin', userId: 'AUTH-QA', landing: 'admin-dashboard', linkedDoctorId: 'DOC-001', hospitalId: 'HOSP-001', username: role, loginAt: new Date().toISOString() };
-localStorage.setItem('diagnosis-center-change-pack-v1-state', JSON.stringify({ auth, currentPage: page, ui: { sidebarOpen: false, toast: null } }));
-location.replace('/');
-</script></body></html>
